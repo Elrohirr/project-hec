@@ -6,9 +6,13 @@ const errorHandlerMiddleware = (err, req, res, next) => {
     statusCode: err.statusCode || StatusCodes.INTERNAL_SERVER_ERROR,
     msg: err.message || 'Algo deu errado, tente mais tarde'
   }
-  if (err.code && err.code === 11000) {
+  if (err.code === 11000 && err.keyValue.createdBy && err.keyValue.date) {
     customError.statusCode = StatusCodes.BAD_REQUEST
-    customError.msg = `O e-mail ${Object.keys(err.keyValue)} já está em uso. Tente outro`
+    customError.msg = `Não é permitido criar dois registros de hora extra para a mesma data.`
+  }
+  if (err.code === 11000 && err.keyValue.email) {
+    customError.statusCode = StatusCodes.BAD_REQUEST
+    customError.msg = `O ${Object.keys(err.keyValue)} inserido já está em uso. Tente outro`
   }
   if (err.name === 'ValidationError') {
     customError.statusCode = StatusCodes.BAD_REQUEST
@@ -16,13 +20,13 @@ const errorHandlerMiddleware = (err, req, res, next) => {
   }
   if (err.name === 'CastError' && err.kind === 'ObjectId') {
     customError.statusCode = StatusCodes.NOT_FOUND
-    customError.msg = `Nenhuma HE com o ID: ${err.value}`
+    customError.msg = `Nenhuma hora extra com o ID: ${err.value}`
   }
   if (err.name === 'CastError' && err.kind === 'date') {
     customError.statusCode = StatusCodes.BAD_REQUEST
     customError.msg = 'Data invalida'
   }
-  // return res.status(customError.statusCode).json({ err }) // --- just for testing errors
+  //return res.status(customError.statusCode).json({ err }) // --- just for testing errors
   return res.status(customError.statusCode).json({ msg: customError.msg })
 }
 

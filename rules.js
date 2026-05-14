@@ -1,10 +1,7 @@
-const User = require('./models/User')
 const { BadRequestError } = require('./errors')
 
-
 function calcDistribution(quantity, isDayOff, isHoliday) {
-
-    // regra de negócio
+    if (quantity <= 0 || quantity > 12) throw new BadRequestError('A quantidade de horas extras não pode ser menor igual a 0 ou maior que 12')
     if (isDayOff || isHoliday) {
         return {
             he50: 0,

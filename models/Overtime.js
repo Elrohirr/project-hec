@@ -14,7 +14,8 @@ const OvertimeSchema = new mongoose.Schema({
     quantity: {
         type: Number,
         required: [true, "Por favor, insira quantas horas extras foram feitas"],
-        maxlenght: 2,
+        min: 1,
+        max: 12
     },
     distribution: {
         he50: {
@@ -44,5 +45,7 @@ const OvertimeSchema = new mongoose.Schema({
     },
 
 })
+
+//OvertimeSchema.index({ createdBy: 1, date: 1 }, { unique: true })
 
 module.exports = mongoose.model('overtime', OvertimeSchema)

@@ -13,7 +13,7 @@ const auth = async (req, res, next) => {
     try {
         const payload = jwt.verify(token, process.env.JWT_SECRET)
         // attach the user to the tracker routes
-        req.user = { userId: payload.userId, name: payload.name }
+        req.user = { userId: payload.userId, name: payload.name, wage: payload.wage }
         next()
     } catch (error) {
         throw new UnauthenticatedError('Token not provided')

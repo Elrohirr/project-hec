@@ -7,8 +7,7 @@ const { BadRequestError, NotFoundError } = require('../errors')
 
 // --------------------------- GET todos os registros de hora extra do usuário -----------------------------------------------------
 const getAllOvertime = async (req, res) => {
-    const { user: { userId }, query: { isHoliday, isDayOff, startDate, endDate, sort } } = req
-    const { wage } = await User.findById(userId)
+    const { user: { userId, wage }, query: { isHoliday, isDayOff, startDate, endDate, sort } } = req
 
     const queryObject = { createdBy: new mongoose.Types.ObjectId(userId) }
     if (isHoliday) queryObject.isHoliday = isHoliday === 'true' ? true : false
@@ -18,7 +17,7 @@ const getAllOvertime = async (req, res) => {
         queryObject.date.$gte = new Date(startDate || '2000-01-01')
         queryObject.date.$lte = new Date(endDate || new Date())
     }
-    let result = Overtime.find(queryObject)
+    let result = Overtime.find(queryObject).lean()
     if (sort) {
         const sortedList = sort.split(',').join(' ')
         result = result.sort(sortedList)
@@ -42,16 +41,15 @@ const getAllOvertime = async (req, res) => {
     )[0]
 
     const values = defineValue(distribution || { he50: 0, he75: 0, he100: 0 }, wage)
-    const overtime = await result
+    const overtime = await result.lean()
     res.status(StatusCodes.OK).json({ distribution, values, overtime })
 }
 
 // --------------------------- GET apenas um registro de hora extra específico do usuário ------------------------------------------
 const getOvertime = async (req, res) => {
-    const { user: { userId }, params: { id: overtimeId } } = req
-    const overtime = await Overtime.findOne({ createdBy: userId, _id: overtimeId })
+    const { user: { userId, wage }, params: { id: overtimeId } } = req
+    const overtime = await Overtime.findOne({ createdBy: userId, _id: overtimeId }).lean()
     if (!overtime) throw new NotFoundError('Hora extra não encontrada')
-    const { wage } = await User.findById(userId)
 
     const values = defineValue(overtime.distribution, wage)
 
@@ -61,11 +59,8 @@ const getOvertime = async (req, res) => {
 // --------------------------- POST um registro de hora extra do usuário -------------------------------------------------------------
 const createOvertime = async (req, res) => {
     req.body.createdBy = req.user.userId
-    const { quantity, date, isDayOff, isHoliday } = req.body
+    const { body: { quantity, date, isDayOff, isHoliday } } = req
     if (!quantity || !date) throw new BadRequestError('Por favor, insira a quantidade de hora extra e o dia')
-
-    const existingOvertime = await Overtime.findOne({ createdBy: req.body.createdBy, date: date })
-    if (existingOvertime) throw new BadRequestError('Já existe um registro de hora extra para esta data. Por favor, insira outra data.')
 
     const payDate = extractPayDate(isHoliday, date)
     req.body.payDate = payDate
@@ -84,23 +79,16 @@ const updateOvertime = async (req, res) => {
     if (quantity === '' || date === '') throw new BadRequestError('Campos de quantidade e data não podem ser vazios')
 
     const oldOvertime = await Overtime.findOne({ createdBy: userId, _id: overtimeId })
-    const existingOvertime = await Overtime.findOne({ createdBy: userId, date: date })
-    if (existingOvertime && !existingOvertime._id.equals(oldOvertime._id)) {
-        throw new BadRequestError('Já existe um registro de hora extra para esta data. Por favor, insira outra data.')
-    }
 
     // update parcial
     const finalQuantity = req.body.quantity ?? oldOvertime.quantity
     const finalDate = req.body.date ?? oldOvertime.date
-    const finalIsHoliday = req.body.isHoliday ?? oldOvertime.isHoliday
     const finalIsDayOff = req.body.isDayOff ?? oldOvertime.isDayOff
+    const finalIsHoliday = req.body.isHoliday ?? oldOvertime.isHoliday
 
     //recalcular regras de negócio
-    const distribution = calcDistribution(finalQuantity, finalIsHoliday, finalIsDayOff)
-    req.body.distribution = distribution
-
-    const payDate = extractPayDate(finalIsHoliday, finalDate)
-    req.body.payDate = payDate
+    req.body.distribution = calcDistribution(finalQuantity, finalIsDayOff, finalIsHoliday)
+    req.body.payDate = extractPayDate(finalIsHoliday, finalDate)
 
     const newOvertime = await Overtime.findOneAndUpdate({ createdBy: userId, _id: overtimeId },
         req.body, {
@@ -114,9 +102,8 @@ const updateOvertime = async (req, res) => {
 const deleteOvertime = async (req, res) => {
     const { user: { userId }, params: { id: overtimeId } } = req
     const overtime = await Overtime.findOneAndDelete({ createdBy: userId, _id: overtimeId })
-    if (!overtime) {
-        throw new NotFoundError('Hora extra não encontrada')
-    }
+    if (!overtime) throw new NotFoundError('Hora extra não encontrada')
+
     res.status(StatusCodes.OK).json({ overtime })
 }
 
