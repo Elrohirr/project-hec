@@ -1,5 +1,4 @@
 const mongoose = require('mongoose')
-const { BadRequestError } = require('../errors')
 
 const OvertimeSchema = new mongoose.Schema({
     createdBy: {
@@ -46,6 +45,6 @@ const OvertimeSchema = new mongoose.Schema({
 
 })
 
-//OvertimeSchema.index({ createdBy: 1, date: 1 }, { unique: true })
+OvertimeSchema.index({ createdBy: 1, date: 1 }, { unique: true })
 
 module.exports = mongoose.model('overtime', OvertimeSchema)

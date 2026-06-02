@@ -1,4 +1,4 @@
-const { BadRequestError } = require('./errors')
+const { BadRequestError } = require('../errors')
 
 function calcDistribution(quantity, isDayOff, isHoliday) {
     if (quantity <= 0 || quantity > 12) throw new BadRequestError('A quantidade de horas extras não pode ser menor igual a 0 ou maior que 12')
@@ -8,7 +8,6 @@ function calcDistribution(quantity, isDayOff, isHoliday) {
             he75: 0,
             he100: quantity
         }
-
     }
     if (quantity <= 2) {
         return {
@@ -16,7 +15,6 @@ function calcDistribution(quantity, isDayOff, isHoliday) {
             he75: 0,
             he100: 0
         }
-
     }
     if (quantity > 2 && quantity <= 4) {
         return {
@@ -24,7 +22,6 @@ function calcDistribution(quantity, isDayOff, isHoliday) {
             he75: quantity - 2,
             he100: 0
         }
-
     }
     throw new BadRequestError("Só é possivel executar mais de 4 horas extras se for feriado ou dia de folga. Por favor, marque a opção correta")
 }
@@ -55,6 +52,20 @@ function defineValue(distribution, wage) {
     }
 }
 
-module.exports = { calcDistribution, extractPayDate, defineValue }
+function calcMealVoucher(quantity) {
+    if (quantity <= 0 || quantity > 12) throw new BadRequestError('A quantidade de horas extras não pode ser menor igual a 0 ou maior que 12')
+    if (quantity === 1) {
+        return 'OVERTIME_HALF'
+    }
+    if (quantity >= 2 && quantity <= 4) {
+        return 'OVERTIME_FULL'
+    }
+    if (quantity >= 6) {
+        return 'OVERTIME_DOUBLE'
+    }
+    throw new BadRequestError('Verifique se a quantidade de hora extra foi digitada corretamente')
+}
+
+module.exports = { calcDistribution, extractPayDate, defineValue, calcMealVoucher }
 
 

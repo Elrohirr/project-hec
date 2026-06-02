@@ -12,3 +12,19 @@
 5. Create function that indicates when that overtime will be paid based on isHoliday atribuite - [X]
 6. Add query functions for getAllOvertime controller (date, holiday, dayoff) - [X]
 7. Add pagination in getAllOvertime controller - []
+
+/ ------------------------------------------------------------------------------------------------------------------------------------------------------------- /
+
+1. Create MealVoucher Schema (createdBy, referenceId, source, rule/category, date, quantity) - [X]
+2. Create basic setup for mealVoucher controllers - [X]
+3. Create routers - [X]
+4. Create route /api/v1/mealvoucher in app.js - [X]
+5. Test routes in postman - [X]
+6. Create a schema that contains the source and rules of each mealVoucher - [X]
+7. Create function in rules.js to determinate which rule will be used to calculate the meal voucher of an overtime - [X]
+8. Create a service that create the doc in MealVoucherSchema and implement in createOvertime - [X]
+9. Refactor MealVoucher controllers (only getAllMealVoucher and getMealVoucher) - [X]
+10. Create service updateMealVoucher in services.js - [X]
+11. Create service deleteMealVoucger in services.js -[X]
+12. Implement transaction in createOvertime, updateOvertime and deleteOvertime controllers - [X]
+12. Refactor mealVoucher controllers for create, update and delete for the night shifts meal vouchers - [X]

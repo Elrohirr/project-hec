@@ -1,7 +1,8 @@
+const mongoose = require('mongoose')
 const Overtime = require('../models/Overtime')
 const User = require('../models/User')
-const { calcDistribution, extractPayDate, defineValue } = require('../rules')
-const mongoose = require('mongoose')
+const { calcDistribution, extractPayDate, defineValue } = require('../utils/rules')
+const { createMealVoucherService, updateMealVoucherService, deleteMealVoucherService } = require('../utils/services')
 const { StatusCodes } = require('http-status-codes')
 const { BadRequestError, NotFoundError } = require('../errors')
 
@@ -17,7 +18,7 @@ const getAllOvertime = async (req, res) => {
         queryObject.date.$gte = new Date(startDate || '2000-01-01')
         queryObject.date.$lte = new Date(endDate || new Date())
     }
-    let result = Overtime.find(queryObject).lean()
+    let result = Overtime.find(queryObject)
     if (sort) {
         const sortedList = sort.split(',').join(' ')
         result = result.sort(sortedList)
@@ -58,53 +59,77 @@ const getOvertime = async (req, res) => {
 
 // --------------------------- POST um registro de hora extra do usuário -------------------------------------------------------------
 const createOvertime = async (req, res) => {
-    req.body.createdBy = req.user.userId
-    const { body: { quantity, date, isDayOff, isHoliday } } = req
-    if (!quantity || !date) throw new BadRequestError('Por favor, insira a quantidade de hora extra e o dia')
+    const session = await mongoose.startSession()
+    try {
+        const result = await session.withTransaction(async () => {
+            req.body.createdBy = req.user.userId
+            const { body: { quantity, date, isDayOff, isHoliday } } = req
+            if (!quantity || !date) throw new BadRequestError('Por favor, insira a quantidade de hora extra e o dia')
 
-    const payDate = extractPayDate(isHoliday, date)
-    req.body.payDate = payDate
+            req.body.distribution = calcDistribution(quantity, isDayOff, isHoliday)
+            req.body.payDate = extractPayDate(isHoliday, date)
 
-    const distribution = calcDistribution(quantity, isDayOff, isHoliday)
-    req.body.distribution = distribution
-
-    const overtime = await Overtime.create({ ...req.body })
-    res.status(StatusCodes.CREATED).json({ overtime })
+            const [overtime] = await Overtime.create([{ ...req.body }], { session })
+            const [mealVoucher] = await createMealVoucherService(overtime, session)
+            return { overtime, mealVoucher }
+        })
+        res.status(StatusCodes.CREATED).json(result)
+    } finally {
+        await session.endSession()
+    }
 }
 
 // --------------------------- UPDATE apenas um registro de hora extra específico do usuário ------------------------------------------
 const updateOvertime = async (req, res) => {
-    const { body: { quantity, date, isHoliday, isDayOff }, user: { userId }, params: { id: overtimeId } } = req
+    const session = await mongoose.startSession()
+    try {
+        const result = await session.withTransaction(async () => {
+            const { body: { quantity, date, isHoliday, isDayOff }, user: { userId }, params: { id: overtimeId } } = req
+            if (quantity === '' || date === '') throw new BadRequestError('Campos de quantidade e data não podem ser vazios')
 
-    if (quantity === '' || date === '') throw new BadRequestError('Campos de quantidade e data não podem ser vazios')
+            const oldOvertime = await Overtime.findOne({ createdBy: userId, _id: overtimeId }).session(session)
+            if (!oldOvertime) throw new NotFoundError('Hora extra não encontrada')
 
-    const oldOvertime = await Overtime.findOne({ createdBy: userId, _id: overtimeId })
+            // update parcial
+            const finalQuantity = req.body.quantity ?? oldOvertime.quantity
+            const finalDate = req.body.date ?? oldOvertime.date
+            const finalIsDayOff = req.body.isDayOff ?? oldOvertime.isDayOff
+            const finalIsHoliday = req.body.isHoliday ?? oldOvertime.isHoliday
 
-    // update parcial
-    const finalQuantity = req.body.quantity ?? oldOvertime.quantity
-    const finalDate = req.body.date ?? oldOvertime.date
-    const finalIsDayOff = req.body.isDayOff ?? oldOvertime.isDayOff
-    const finalIsHoliday = req.body.isHoliday ?? oldOvertime.isHoliday
+            // recalcular regras de negócio
+            req.body.distribution = calcDistribution(finalQuantity, finalIsDayOff, finalIsHoliday)
+            req.body.payDate = extractPayDate(finalIsHoliday, finalDate)
 
-    //recalcular regras de negócio
-    req.body.distribution = calcDistribution(finalQuantity, finalIsDayOff, finalIsHoliday)
-    req.body.payDate = extractPayDate(finalIsHoliday, finalDate)
-
-    const newOvertime = await Overtime.findOneAndUpdate({ createdBy: userId, _id: overtimeId },
-        req.body, {
-        returnDocument: 'after',
-        runValidators: true
-    })
-    res.status(StatusCodes.OK).json({ newOvertime })
+            const newOvertime = await Overtime.findOneAndUpdate({ createdBy: userId, _id: overtimeId },
+                req.body, {
+                returnDocument: 'after',
+                runValidators: true,
+                session
+            })
+            const newMealVoucher = await updateMealVoucherService(newOvertime, session)
+            return { newOvertime, newMealVoucher }
+        })
+        res.status(StatusCodes.OK).json(result)
+    } finally {
+        await session.endSession()
+    }
 }
 
 // --------------------------- DELETE apenas um registro de hora extra específico do usuário ------------------------------------------
 const deleteOvertime = async (req, res) => {
-    const { user: { userId }, params: { id: overtimeId } } = req
-    const overtime = await Overtime.findOneAndDelete({ createdBy: userId, _id: overtimeId })
-    if (!overtime) throw new NotFoundError('Hora extra não encontrada')
-
-    res.status(StatusCodes.OK).json({ overtime })
+    const session = await mongoose.startSession()
+    try {
+        const result = await session.withTransaction(async () => {
+            const { user: { userId }, params: { id: overtimeId } } = req
+            const overtime = await Overtime.findOneAndDelete({ createdBy: userId, _id: overtimeId }, { session })
+            if (!overtime) throw new NotFoundError('Hora extra não encontrada')
+            const mealVoucher = await deleteMealVoucherService(overtime._id, session)
+            return { overtime, mealVoucher }
+        })
+        res.status(StatusCodes.OK).json(result)
+    } finally {
+        await session.endSession()
+    }
 }
 
 module.exports = { getAllOvertime, getOvertime, createOvertime, updateOvertime, deleteOvertime }
