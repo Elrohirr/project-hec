@@ -11,7 +11,7 @@
 4. Create rule that cant have two overtimes in the same day (create and update controllers)- [X]
 5. Create function that indicates when that overtime will be paid based on isHoliday atribuite - [X]
 6. Add query functions for getAllOvertime controller (date, holiday, dayoff) - [X]
-7. Add pagination in getAllOvertime controller - []
+7. Add pagination in getAllOvertime controller - [X]
 
 / ------------------------------------------------------------------------------------------------------------------------------------------------------------- /
 
@@ -28,3 +28,5 @@
 11. Create service deleteMealVoucger in services.js -[X]
 12. Implement transaction in createOvertime, updateOvertime and deleteOvertime controllers - [X]
 12. Refactor mealVoucher controllers for create, update and delete for the night shifts meal vouchers - [X]
+13. Add query functions for getAllMealVoucher controller (date, source) - [X]
+14. Add pagination in getAllMealVoucher controller - [X]

@@ -6,9 +6,36 @@ const { BadRequestError, NotFoundError } = require('../errors')
 
 // --------------------------- GET todos os registros de ticket do usuário -----------------------------------------------------
 const getAllMealVouchers = async (req, res) => {
-    const { user: { userId } } = req
-    const mealVoucher = await MealVoucher.find({ createdBy: userId })
-    res.status(StatusCodes.OK).json({ mealVoucher })
+    const { user: { userId }, query: { source, startDate, endDate, sort } } = req
+
+    const queryObject = { createdBy: new mongoose.Types.ObjectId(userId) }
+    if (source) queryObject.source = source
+    if (startDate || endDate) {
+        queryObject.date = {}
+        queryObject.date.$gte = new Date(startDate || '2000-01-01')
+        queryObject.date.$lte = new Date(endDate || new Date())
+    }
+    let result = MealVoucher.find(queryObject)
+    if (sort) {
+        const sortedList = sort.split(',').join(' ')
+        result = result.sort(sortedList)
+    }
+    else {
+        result = result.sort('-date')
+    }
+    const page = Number(req.query.page) || 1
+    const limit = Number(req.query.limit) || 10
+    const skip = (page - 1) * limit
+    result = result.skip(skip).limit(limit)
+    totalRecords = await MealVoucher.countDocuments(queryObject)
+
+    const mealVoucher = await result.lean()
+    res.status(StatusCodes.OK).json({
+        totalRecords,
+        numberOfPages: Math.ceil(totalRecords / limit),
+        currentPage: page,
+        mealVoucher
+    })
 }
 
 // --------------------------- GET apenas um registro de ticket específico do usuário ------------------------------------------

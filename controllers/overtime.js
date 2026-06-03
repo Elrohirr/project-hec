@@ -26,6 +26,10 @@ const getAllOvertime = async (req, res) => {
     else {
         result = result.sort('-date')
     }
+    const page = Number(req.query.page) || 1
+    const limit = Number(req.query.limit) || 10
+    const skip = (page - 1) * limit
+    result = result.skip(skip).limit(limit)
 
     const distribution = (
         await Overtime.aggregate([
@@ -43,7 +47,15 @@ const getAllOvertime = async (req, res) => {
 
     const values = defineValue(distribution || { he50: 0, he75: 0, he100: 0 }, wage)
     const overtime = await result.lean()
-    res.status(StatusCodes.OK).json({ distribution, values, overtime })
+    const totalRecords = await Overtime.countDocuments(queryObject)
+    res.status(StatusCodes.OK).json({
+        totalRecords,
+        numberOfPages: Math.ceil(totalRecords / limit),
+        currtenPage: page,
+        distribution,
+        values,
+        overtime
+    })
 }
 
 // --------------------------- GET apenas um registro de hora extra específico do usuário ------------------------------------------
