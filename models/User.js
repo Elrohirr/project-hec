@@ -6,14 +6,14 @@ const UserSchema = new mongoose.Schema({
     name: {
         type: String,
         required: [true, 'Por favor, insira um nome'],
-        minlenght: 4,
-        maxlenght: 20
+        minlength: 4,
+        maxlength: 20
     },
     surname: {
         type: String,
         required: [true, 'Por favor, insira um sobrenome'],
-        minlenght: 4,
-        maxlenght: 20
+        minlength: 4,
+        maxlength: 20
     },
     email: {
         type: String,
@@ -25,12 +25,12 @@ const UserSchema = new mongoose.Schema({
     password: {
         type: String,
         required: [true, 'Por favor, insira uma senha'],
-        minlenght: 4,
-        maxlenght: 15
+        minlength: 4,
+        maxlength: 15
     },
     wage: {
         type: Number,
-        require: [true, "Por favor, insira seu salário hora"]
+        required: [true, "Por favor, insira seu salário hora"]
     },
     isAdmin: {
         type: Boolean,

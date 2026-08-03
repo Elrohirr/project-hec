@@ -30,3 +30,21 @@
 12. Refactor mealVoucher controllers for create, update and delete for the night shifts meal vouchers - [X]
 13. Add query functions for getAllMealVoucher controller (date, source) - [X]
 14. Add pagination in getAllMealVoucher controller - [X]
+
+/ ------------------------------------------------------------------------------------------------------------------------------------------------------------- /
+
+1. Create Night shift Schema - [X]
+2. Create basic setup for mealVoucher controllers - [X]
+3. Create routers - [X]
+4. Create route /api/v1/nightshift in app.js - [X]
+5. Test routes in postman - [X]
+
+7. Create function in rules.js to determinate which rule will be used to calculate the meal voucher of an overtime - [ ]
+8. Create a service that create the doc in MealVoucherSchema and implement in createNightShift - [ ]
+9. Refactor Night Shift controllers - [ ]
+10. Create service updateMealVoucher in services.js - [X]
+11. Create service deleteMealVoucger in services.js -[X]
+12. Implement transaction in createOvertime, updateOvertime and deleteOvertime controllers - [X]
+12. Refactor mealVoucher controllers for create, update and delete for the night shifts meal vouchers - [X]
+13. Add query functions for getAllMealVoucher controller (date, source) - [X]
+14. Add pagination in getAllMealVoucher controller - [X]

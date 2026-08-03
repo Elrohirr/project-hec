@@ -16,7 +16,7 @@ const auth = async (req, res, next) => {
         req.user = { userId: payload.userId, name: payload.name, wage: payload.wage }
         next()
     } catch (error) {
-        throw new UnauthenticatedError('Token not provided')
+        throw new UnauthenticatedError('Token inválido ou expirado')
     }
 }
 

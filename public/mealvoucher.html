@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vale-refeição — Controle de Horas Extras</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="app-header">
+      <div class="header-left">
+        <p class="brand-name">Controle de Horas Extras</p>
+        <nav class="app-nav">
+          <a href="dashboard.html">Início</a>
+          <a href="overtime.html">Horas extras</a>
+          <a href="mealvoucher.html" class="active">Vale-refeição</a>
+          <a href="nightshift.html">Turno noturno</a>
+        </nav>
+      </div>
+      <div class="user-area">
+        <span id="user-greeting"></span>
+        <button id="logout-button" class="ghost-button" type="button">Sair</button>
+      </div>
+    </header>
+
+    <main class="app-content">
+      <div class="page-heading">
+        <h2>Vale-refeição</h2>
+      </div>
+
+      <!-- Resumo: soma do valor total só dos registros da página atual (a API não retorna um total agregado aqui) -->
+      <section class="summary-cards" id="summary-cards">
+        <div class="summary-card">
+          <span class="label">Vales nesta página</span>
+          <span class="value" id="summary-count">—</span>
+        </div>
+        <div class="summary-card total">
+          <span class="label">Subtotal (página atual)</span>
+          <span class="value" id="summary-subtotal">—</span>
+        </div>
+      </section>
+
+      <section class="table-card">
+        <div class="table-toolbar">
+          <label for="source-filter">Origem</label>
+          <select id="source-filter">
+            <option value="">Todas</option>
+            <option value="overtime">Hora extra</option>
+            <option value="nightShift">Turno noturno</option>
+          </select>
+        </div>
+
+        <div class="table-scroll">
+          <table class="overtime-table">
+            <thead>
+              <tr>
+                <th>Data</th>
+                <th>Origem</th>
+                <th>Regra</th>
+                <th>Quantidade</th>
+                <th>Valor unitário</th>
+                <th>Valor total</th>
+              </tr>
+            </thead>
+            <tbody id="mealvoucher-table-body">
+              <!-- linhas geradas via JS -->
+            </tbody>
+          </table>
+        </div>
+        <div id="empty-state" class="empty-state" hidden>Nenhum vale encontrado.</div>
+
+        <div class="table-footer">
+          <span id="page-indicator">—</span>
+          <div class="pagination-buttons">
+            <button type="button" id="prev-page-button">Anterior</button>
+            <button type="button" id="next-page-button">Próxima</button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/auth-guard.js"></script>
+  <script src="js/header.js"></script>
+  <script src="js/mealvoucher.js"></script>
+</body>
+</html>

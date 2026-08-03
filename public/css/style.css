@@ -1,0 +1,794 @@
+/* =========================================================
+   Design tokens
+   Tema: "cartão de ponto" — a referência visual é o relógio
+   de marcação de horas, com o âmbar marcando o que passou
+   da jornada (hora extra) e o grafite/teal marcando o normal.
+   ========================================================= */
+:root {
+  --ink: #161f2b;
+  --ink-soft: #3c4658;
+  --paper: #f2f4f1;
+  --paper-raised: #ffffff;
+  --line: #d8dcd3;
+  --amber: #e2a400;
+  --amber-ink: #7a5400;
+  --teal: #2f6f62;
+  --danger: #b3432b;
+
+  --font-display: 'Space Grotesk', 'Segoe UI', sans-serif;
+  --font-body: 'Inter', 'Segoe UI', sans-serif;
+  --font-mono: 'IBM Plex Mono', 'Courier New', monospace;
+
+  --radius: 6px;
+  --shadow-card: 0 2px 10px rgba(22, 31, 43, 0.08);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--paper);
+  color: var(--ink);
+  min-height: 100vh;
+}
+
+button {
+  font-family: inherit;
+}
+
+a {
+  color: var(--teal);
+}
+
+/* =========================================================
+   Tela de login
+   ========================================================= */
+.login-screen {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+  min-height: 100vh;
+}
+
+.login-brand {
+  background: var(--ink);
+  color: var(--paper);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 48px;
+  position: relative;
+  overflow: hidden;
+}
+
+.login-brand::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      rgba(242, 244, 241, 0.035) 0px,
+      rgba(242, 244, 241, 0.035) 1px,
+      transparent 1px,
+      transparent 28px
+    );
+  pointer-events: none;
+}
+
+.brand-name {
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  letter-spacing: 0.02em;
+  margin: 0;
+}
+
+.brand-tagline {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: rgba(242, 244, 241, 0.6);
+  margin-top: 4px;
+}
+
+/* --- Selo de ponto: elemento-assinatura da marca --- */
+.punch-stamp {
+  position: relative;
+  width: 220px;
+  height: 220px;
+  margin: auto;
+  border-radius: 50%;
+  border: 1.5px solid rgba(242, 244, 241, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.punch-stamp::before {
+  content: '';
+  position: absolute;
+  inset: 14px;
+  border-radius: 50%;
+  border: 1px dashed rgba(242, 244, 241, 0.2);
+}
+
+.punch-stamp .tick {
+  position: absolute;
+  width: 2px;
+  height: 10px;
+  background: rgba(242, 244, 241, 0.35);
+  top: 4px;
+  left: 50%;
+  transform-origin: 1px 106px;
+}
+
+.punch-stamp .hand {
+  position: absolute;
+  width: 3px;
+  height: 62px;
+  background: var(--amber);
+  bottom: 50%;
+  left: 50%;
+  transform-origin: bottom center;
+  border-radius: 2px;
+  animation: sweep 8s linear infinite;
+}
+
+.punch-stamp .hand-hour {
+  width: 3px;
+  height: 42px;
+  background: var(--paper);
+  animation: sweep 32s linear infinite;
+}
+
+.punch-stamp .hub {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: var(--amber);
+  border-radius: 50%;
+  z-index: 2;
+}
+
+.punch-stamp .stamp-label {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.15em;
+  color: rgba(242, 244, 241, 0.55);
+  position: absolute;
+  bottom: -34px;
+  text-align: center;
+  width: 100%;
+}
+
+@keyframes sweep {
+  from { transform: translateX(-50%) rotate(0deg); }
+  to { transform: translateX(-50%) rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .punch-stamp .hand,
+  .punch-stamp .hand-hour {
+    animation: none;
+  }
+}
+
+.brand-footnote {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: rgba(242, 244, 241, 0.45);
+}
+
+.login-form-panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  background: var(--paper);
+}
+
+.login-card {
+  width: 100%;
+  max-width: 380px;
+}
+
+.login-card h1 {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  margin: 0 0 4px;
+}
+
+.login-card .subtitle {
+  color: var(--ink-soft);
+  margin: 0 0 32px;
+  font-size: 0.95rem;
+}
+
+.field-row {
+  display: flex;
+  gap: 12px;
+}
+
+.field-row .field {
+  flex: 1;
+}
+
+.field {
+  margin-bottom: 18px;
+}
+
+.field label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  margin-bottom: 6px;
+  color: var(--ink-soft);
+}
+
+.field input {
+  width: 100%;
+  padding: 11px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--paper-raised);
+  font-size: 0.95rem;
+  color: var(--ink);
+}
+
+.field input:focus {
+  outline: 2px solid var(--teal);
+  outline-offset: 1px;
+  border-color: var(--teal);
+}
+
+.primary-button {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: var(--radius);
+  background: var(--ink);
+  color: var(--paper);
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.primary-button:hover:not(:disabled) {
+  background: var(--ink-soft);
+}
+
+.primary-button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.primary-button:focus-visible {
+  outline: 2px solid var(--amber);
+  outline-offset: 2px;
+}
+
+.switch-link {
+  margin-top: 20px;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  text-align: center;
+}
+
+.field .hint {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+  font-weight: 400;
+  margin-top: 4px;
+}
+
+.error-box {
+  background: rgba(179, 67, 43, 0.08);
+  border: 1px solid rgba(179, 67, 43, 0.25);
+  color: var(--danger);
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  font-size: 0.85rem;
+  margin-bottom: 18px;
+}
+
+.success-box {
+  background: rgba(47, 111, 98, 0.08);
+  border: 1px solid rgba(47, 111, 98, 0.3);
+  color: var(--teal);
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  font-size: 0.85rem;
+  margin-bottom: 18px;
+}
+
+@media (max-width: 860px) {
+  .login-screen {
+    grid-template-columns: 1fr;
+  }
+  .login-brand {
+    padding: 32px;
+    min-height: 220px;
+  }
+  .punch-stamp {
+    width: 140px;
+    height: 140px;
+    margin: 16px auto;
+  }
+}
+
+/* =========================================================
+   Área interna (dashboard e futuras telas)
+   ========================================================= */
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 32px;
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+
+.app-nav {
+  display: flex;
+  gap: 20px;
+}
+
+.app-nav a {
+  color: rgba(242, 244, 241, 0.6);
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  padding-bottom: 2px;
+  border-bottom: 2px solid transparent;
+}
+
+.app-nav a:hover {
+  color: var(--paper);
+}
+
+.app-nav a.active {
+  color: var(--paper);
+  border-bottom-color: var(--amber);
+}
+
+.app-header .brand-name {
+  font-size: 1.1rem;
+}
+
+.app-header .user-area {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 0.9rem;
+}
+
+.ghost-button {
+  background: transparent;
+  border: 1px solid rgba(242, 244, 241, 0.35);
+  color: var(--paper);
+  padding: 7px 14px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.ghost-button:hover {
+  border-color: var(--paper);
+}
+
+.app-content {
+  flex: 1;
+  padding: 40px 32px;
+  max-width: 1080px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.placeholder-card {
+  background: var(--paper-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+  padding: 32px;
+}
+
+.placeholder-card h2 {
+  font-family: var(--font-display);
+  margin-top: 0;
+}
+
+.placeholder-card p {
+  color: var(--ink-soft);
+  line-height: 1.6;
+}
+
+/* =========================================================
+   Tela de horas extras — resumo, formulário e tabela
+   ========================================================= */
+.page-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.page-heading h2 {
+  font-family: var(--font-display);
+  margin: 0;
+}
+
+.summary-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.summary-card {
+  background: var(--paper-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+  padding: 18px 20px;
+}
+
+.summary-card .label {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+  letter-spacing: 0.03em;
+  margin-bottom: 6px;
+}
+
+.summary-card .value {
+  font-family: var(--font-mono);
+  font-size: 1.4rem;
+  color: var(--ink);
+}
+
+.summary-card.total .value {
+  color: var(--amber-ink);
+}
+
+.overtime-layout {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+.form-card {
+  background: var(--paper-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+  padding: 24px;
+}
+
+.form-card h3 {
+  font-family: var(--font-display);
+  margin: 0 0 18px;
+  font-size: 1.05rem;
+}
+
+.checkbox-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.checkbox-field input {
+  width: 16px;
+  height: 16px;
+}
+
+.checkbox-field label {
+  font-size: 0.88rem;
+  color: var(--ink);
+  margin-bottom: 0;
+}
+
+.table-card {
+  background: var(--paper-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+.overtime-table {
+  width: 100%;
+  min-width: 720px;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+.overtime-table th,
+.overtime-table td {
+  text-align: left;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.overtime-table th {
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  background: var(--paper);
+}
+
+.overtime-table td.numeric {
+  font-family: var(--font-mono);
+}
+
+.overtime-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.badge.holiday {
+  background: rgba(226, 164, 0, 0.15);
+  color: var(--amber-ink);
+}
+
+.badge.day-off {
+  background: rgba(47, 111, 98, 0.12);
+  color: var(--teal);
+}
+
+.icon-button {
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--danger);
+  border-radius: var(--radius);
+  padding: 5px 10px;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.icon-button:hover {
+  background: rgba(179, 67, 43, 0.08);
+}
+
+.empty-state {
+  padding: 32px;
+  text-align: center;
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+}
+
+.table-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-top: 1px solid var(--line);
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+}
+
+.pagination-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.pagination-buttons button {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 5px 12px;
+  cursor: pointer;
+  font-size: 0.82rem;
+}
+
+.pagination-buttons button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+@media (max-width: 780px) {
+  .overtime-layout {
+    grid-template-columns: 1fr;
+  }
+  .summary-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* =========================================================
+   Dashboard — menu de módulos
+   ========================================================= */
+.module-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 18px;
+}
+
+.module-card {
+  position: relative;
+  display: block;
+  background: var(--paper-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+  padding: 24px;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+
+.module-card:not(.disabled):hover {
+  border-color: var(--teal);
+  transform: translateY(-2px);
+}
+
+.module-card .module-icon {
+  font-size: 1.6rem;
+  display: block;
+  margin-bottom: 12px;
+}
+
+.module-card h3 {
+  font-family: var(--font-display);
+  margin: 0 0 6px;
+  font-size: 1.05rem;
+}
+
+.module-card p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  line-height: 1.5;
+}
+
+.module-card.disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.module-badge {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  color: var(--ink-soft);
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+/* Formulário em modo de edição + ações da tabela */
+.ghost-button-light {
+  width: 100%;
+  margin-top: 8px;
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--ink-soft);
+  padding: 10px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.ghost-button-light:hover {
+  border-color: var(--ink-soft);
+  color: var(--ink);
+}
+
+.row-actions {
+  display: flex;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.icon-button.edit {
+  color: var(--teal);
+}
+
+.icon-button.edit:hover {
+  background: rgba(47, 111, 98, 0.08);
+}
+
+.table-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.table-toolbar label {
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+  font-weight: 600;
+}
+
+.table-toolbar select {
+  padding: 7px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--paper);
+  font-size: 0.85rem;
+  color: var(--ink);
+}
+
+.source-tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  background: rgba(22, 31, 43, 0.06);
+  color: var(--ink-soft);
+}
+
+.filters-toolbar {
+  flex-wrap: wrap;
+  row-gap: 12px;
+}
+
+.filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.filter-field label {
+  font-size: 0.7rem;
+  color: var(--ink-soft);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.filter-field input,
+.filter-field select {
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--paper);
+  font-size: 0.82rem;
+  color: var(--ink);
+}
+
+.ghost-button-light.small {
+  width: auto;
+  margin-top: 18px;
+  padding: 7px 14px;
+  font-size: 0.8rem;
+}

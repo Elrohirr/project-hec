@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Horas extras — Controle de Horas Extras</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="app-header">
+      <div class="header-left">
+        <p class="brand-name">Controle de Horas Extras</p>
+        <nav class="app-nav">
+          <a href="dashboard.html">Início</a>
+          <a href="overtime.html" class="active">Horas extras</a>
+          <a href="mealvoucher.html">Vale-refeição</a>
+          <a href="nightshift.html">Turno noturno</a>
+        </nav>
+      </div>
+      <div class="user-area">
+        <span id="user-greeting"></span>
+        <button id="logout-button" class="ghost-button" type="button">Sair</button>
+      </div>
+    </header>
+
+    <main class="app-content">
+      <div class="page-heading">
+        <h2>Horas extras</h2>
+      </div>
+
+      <!-- Resumo: totais de horas por faixa e valor monetário (vem de GET /overtime) -->
+      <section class="summary-cards" id="summary-cards">
+        <div class="summary-card">
+          <span class="label">HE 50%</span>
+          <span class="value" id="summary-he50">—</span>
+        </div>
+        <div class="summary-card">
+          <span class="label">HE 75%</span>
+          <span class="value" id="summary-he75">—</span>
+        </div>
+        <div class="summary-card">
+          <span class="label">HE 100%</span>
+          <span class="value" id="summary-he100">—</span>
+        </div>
+        <div class="summary-card total">
+          <span class="label">Total a receber</span>
+          <span class="value" id="summary-total">—</span>
+        </div>
+      </section>
+
+      <div class="overtime-layout">
+        <!-- Formulário de registro: POST /overtime -->
+        <section class="form-card">
+          <h3 id="form-title">Registrar hora extra</h3>
+
+          <div id="form-error-box" class="error-box" role="alert" hidden></div>
+          <div id="form-success-box" class="success-box" role="status" hidden></div>
+
+          <form id="overtime-form" novalidate>
+            <div class="field">
+              <label for="quantity">Quantidade (horas)</label>
+              <input type="number" id="quantity" name="quantity" min="0" step="0.5" required>
+            </div>
+            <div class="field">
+              <label for="date">Data</label>
+              <input type="date" id="date" name="date" required>
+            </div>
+            <div class="checkbox-field">
+              <input type="checkbox" id="is-day-off" name="isDayOff">
+              <label for="is-day-off">Feita em folga</label>
+            </div>
+            <div class="checkbox-field">
+              <input type="checkbox" id="is-holiday" name="isHoliday">
+              <label for="is-holiday">Feita em feriado</label>
+            </div>
+            <button type="submit" id="submit-button" class="primary-button">Registrar</button>
+            <button type="button" id="cancel-edit-button" class="ghost-button-light" hidden>Cancelar edição</button>
+          </form>
+        </section>
+
+        <!-- Listagem: GET /overtime -->
+        <section class="table-card">
+          <div class="table-toolbar filters-toolbar">
+            <div class="filter-field">
+              <label for="filter-start-date">De</label>
+              <input type="date" id="filter-start-date">
+            </div>
+            <div class="filter-field">
+              <label for="filter-end-date">Até</label>
+              <input type="date" id="filter-end-date">
+            </div>
+            <div class="filter-field">
+              <label for="filter-is-holiday">Feriado</label>
+              <select id="filter-is-holiday">
+                <option value="">Todos</option>
+                <option value="true">Sim</option>
+                <option value="false">Não</option>
+              </select>
+            </div>
+            <div class="filter-field">
+              <label for="filter-is-day-off">Folga</label>
+              <select id="filter-is-day-off">
+                <option value="">Todos</option>
+                <option value="true">Sim</option>
+                <option value="false">Não</option>
+              </select>
+            </div>
+            <div class="filter-field">
+              <label for="filter-sort">Ordenar por</label>
+              <select id="filter-sort">
+                <option value="-date">Mais recentes primeiro</option>
+                <option value="date">Mais antigos primeiro</option>
+                <option value="-quantity">Maior quantidade</option>
+                <option value="quantity">Menor quantidade</option>
+              </select>
+            </div>
+            <button type="button" id="apply-filters-button" class="ghost-button-light small">Filtrar</button>
+            <button type="button" id="clear-filters-button" class="ghost-button-light small">Limpar</button>
+          </div>
+
+          <div class="table-scroll">
+            <table class="overtime-table">
+              <thead>
+                <tr>
+                  <th>Data</th>
+                  <th>Quantidade</th>
+                  <th>HE 50%</th>
+                  <th>HE 75%</th>
+                  <th>HE 100%</th>
+                  <th>Valor total</th>
+                  <th>Mês pgto.</th>
+                  <th>Marcadores</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody id="overtime-table-body">
+                <!-- linhas geradas via JS -->
+              </tbody>
+            </table>
+          </div>
+          <div id="empty-state" class="empty-state" hidden>Nenhum registro encontrado.</div>
+
+          <div class="table-footer">
+            <span id="page-indicator">—</span>
+            <div class="pagination-buttons">
+              <button type="button" id="prev-page-button">Anterior</button>
+              <button type="button" id="next-page-button">Próxima</button>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/auth-guard.js"></script>
+  <script src="js/header.js"></script>
+  <script src="js/overtime.js"></script>
+</body>
+</html>

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Entrar — Controle de Horas Extras</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="login-screen">
+    <aside class="login-brand">
+      <div>
+        <p class="brand-name">Controle de Horas Extras</p>
+        <p class="brand-tagline">registro &amp; aprovação de jornada</p>
+      </div>
+
+      <div class="punch-stamp" aria-hidden="true">
+        <span class="tick" style="transform: translateX(-50%) rotate(0deg);"></span>
+        <span class="tick" style="transform: translateX(-50%) rotate(30deg);"></span>
+        <span class="tick" style="transform: translateX(-50%) rotate(60deg);"></span>
+        <span class="tick" style="transform: translateX(-50%) rotate(90deg);"></span>
+        <span class="tick" style="transform: translateX(-50%) rotate(120deg);"></span>
+        <span class="tick" style="transform: translateX(-50%) rotate(150deg);"></span>
+        <span class="tick" style="transform: translateX(-50%) rotate(180deg);"></span>
+        <span class="tick" style="transform: translateX(-50%) rotate(210deg);"></span>
+        <span class="tick" style="transform: translateX(-50%) rotate(240deg);"></span>
+        <span class="tick" style="transform: translateX(-50%) rotate(270deg);"></span>
+        <span class="tick" style="transform: translateX(-50%) rotate(300deg);"></span>
+        <span class="tick" style="transform: translateX(-50%) rotate(330deg);"></span>
+        <span class="hand hand-hour"></span>
+        <span class="hand"></span>
+        <span class="hub"></span>
+        <span class="stamp-label">PONTO REGISTRADO</span>
+      </div>
+
+      <p class="brand-footnote">v0.1 — projeto interno</p>
+    </aside>
+
+    <main class="login-form-panel">
+      <div class="login-card">
+        <h1>Bem-vindo de volta</h1>
+        <p class="subtitle">Entre com suas credenciais para acessar seu ponto.</p>
+
+        <div id="error-box" class="error-box" role="alert" hidden></div>
+
+        <form id="login-form" novalidate>
+          <div class="field">
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" autocomplete="username" required>
+          </div>
+          <div class="field">
+            <label for="password">Senha</label>
+            <input type="password" id="password" name="password" autocomplete="current-password" required>
+          </div>
+          <button type="submit" id="submit-button" class="primary-button">Entrar</button>
+        </form>
+
+        <p class="switch-link">Ainda não tem conta? <a href="register.html">Cadastre-se</a></p>
+      </div>
+    </main>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/login.js"></script>
+</body>
+</html>

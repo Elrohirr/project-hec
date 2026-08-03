@@ -8,18 +8,18 @@ const MealVoucherSchema = new mongoose.Schema({
         ref: 'User',
         required: [true, 'Por favor, insira um usuário']
     },
-    overtimeId: {
+    ref_Id: {
         type: mongoose.Types.ObjectId,
-        ref: 'Overtime'
+        refPath: 'source'
     },
     source: {
         type: String,
-        enum: ['overtime', 'night_shift'],
+        enum: ['overtime', 'nightShift'],
         required: true
     },
     ruleCode: {
         type: String,
-        enum: ['OVERTIME_HALF', 'OVERTIME_FULL', 'OVERTIME_DOUBLE', 'NIGHT_SHIFT'],
+        enum: ['OVERTIME_HALF', 'OVERTIME_FULL', 'OVERTIME_DOUBLE', 'NIGHTSHIFT'],
         required: true
     },
     date: {

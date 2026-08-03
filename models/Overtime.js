@@ -8,7 +8,7 @@ const OvertimeSchema = new mongoose.Schema({
     },
     createdAt: {
         type: Date,
-        default: Date.now()
+        default: Date.now
     },
     quantity: {
         type: Number,
@@ -17,15 +17,18 @@ const OvertimeSchema = new mongoose.Schema({
         max: 12
     },
     distribution: {
-        he50: {
-            type: Number
-        },
-        he75: {
-            type: Number
-        },
-        he100: {
-            type: Number,
-        }
+        he50: {type: Number},
+        he75: {type: Number},
+        he100: {type: Number}
+    },
+    values:{
+        valueHe50: { type: Number, default: 0 },
+        valueHe75: { type: Number, default: 0 },
+        valueHe100: { type: Number, default: 0 },
+        total: { type: Number, default: 0 }
+    },
+    wageAtCalculation:{
+        type:Number
     },
     date: {
         type: Date,
@@ -42,7 +45,6 @@ const OvertimeSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
-
 })
 
 OvertimeSchema.index({ createdBy: 1, date: 1 }, { unique: true })

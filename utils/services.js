@@ -4,18 +4,18 @@ const MealVoucherConfig = require('../models/MealVoucherConfig')
 const { calcMealVoucher } = require('./rules')
 const { NotFoundError } = require('../errors')
 
-// ------------------------------------ Service para criar ticket originado de uma hora extra ----------------------------------------------------------
-async function createMealVoucherService(overtime, session) {
-    const rule = calcMealVoucher(overtime.quantity)
-    const config = await MealVoucherConfig.findOne({ code: rule }).session(session)
+// ------------------------------------ Service para criar ticket originado de uma hora extra ou turno noturno ----------------------------------------------------------
+async function createMealVoucherService(ref, session) {
+    const rule = calcMealVoucher(ref.quantity, ref.totalNightHours)
+    const config = await MealVoucherConfig.findOne({ code: rule.rule }).session(session)
     if (!config) throw new NotFoundError('Regra não encontrada')
 
     const mealVoucherObject = {
-        createdBy: overtime.createdBy,
-        overtimeId: overtime._id,
-        source: 'overtime',
-        ruleCode: rule,
-        date: overtime.date,
+        createdBy: ref.createdBy,
+        ref_Id: ref._id,
+        source: rule.source,
+        ruleCode: rule.rule,
+        date: ref.date,
         quantity: config.quantity,
         unitValue: config.unitValue,
         totalValue: config.unitValue * config.quantity
@@ -24,19 +24,19 @@ async function createMealVoucherService(overtime, session) {
 }
 
 // ------------------------------------ Service para atualizar ticket originado de uma hora extra ----------------------------------------------------------
-async function updateMealVoucherService(overtime, session) {
-    const rule = calcMealVoucher(overtime.quantity)
-    const config = await MealVoucherConfig.findOne({ code: rule }).session(session)
+async function updateMealVoucherService(ref, session) {
+    const rule = calcMealVoucher(ref.quantity, ref.totalNightHours)
+    const config = await MealVoucherConfig.findOne({ code: rule.rule }).session(session)
     if (!config) throw new NotFoundError('Regra não encontrada')
 
     const mealVoucherObject = {
-        ruleCode: rule,
-        date: overtime.date,
+        ruleCode: rule.rule,
+        date: ref.date,
         quantity: config.quantity,
         unitValue: config.unitValue,
         totalValue: config.unitValue * config.quantity
     }
-    const mealVoucher = await MealVoucher.findOneAndUpdate({ overtimeId: overtime._id },
+    const mealVoucher = await MealVoucher.findOneAndUpdate({ ref_Id: ref._id },
         mealVoucherObject,
         {
             returnDocument: 'after',
@@ -48,8 +48,8 @@ async function updateMealVoucherService(overtime, session) {
 }
 
 // ----------------------------- Service para excluir ticket originado por hora extra ---------------------------------------------------------------     
-async function deleteMealVoucherService(overtimeId, session) {
-    const mealVoucher = await MealVoucher.findOneAndDelete({ overtimeId }, { session })
+async function deleteMealVoucherService(ref_Id, session) {
+    const mealVoucher = await MealVoucher.findOneAndDelete({ ref_Id }, { session })
     if (!mealVoucher) throw new NotFoundError('Ticket não encontrado')
     return mealVoucher
 }

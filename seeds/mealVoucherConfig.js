@@ -24,7 +24,7 @@ const seedMealVoucherConfig = async () => {
                 unitValue: 59.13
             },
             {
-                code: 'NIGHT_SHIFT',
+                code: 'NIGHTSHIFT',
                 label: 'VL Turno Noturno',
                 quantity: 1,
                 unitValue: 19.81

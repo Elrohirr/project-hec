@@ -45,13 +45,27 @@ const getAllOvertime = async (req, res) => {
         ])
     )[0]
 
-    const values = defineValue(distribution || { he50: 0, he75: 0, he100: 0 }, wage)
+    const values = (
+        await Overtime.aggregate([
+            { $match: queryObject },
+            {
+                $group: {
+                    _id: null,
+                    valueHe50: { $sum: "$values.valueHe50" },
+                    valueHe75: { $sum: "$values.valueHe75" },
+                    valueHe100: { $sum: "$values.valueHe100" },
+                    total: { $sum: "$values.total" }
+                }
+            }
+        ])
+    )[0] || { valueHe50: 0, valueHe75: 0, valueHe100: 0, total: 0 }
+
     const overtime = await result.lean()
     const totalRecords = await Overtime.countDocuments(queryObject)
     res.status(StatusCodes.OK).json({
         totalRecords,
         numberOfPages: Math.ceil(totalRecords / limit),
-        currtenPage: page,
+        currentPage: page,
         distribution,
         values,
         overtime
@@ -60,11 +74,11 @@ const getAllOvertime = async (req, res) => {
 
 // --------------------------- GET apenas um registro de hora extra específico do usuário ------------------------------------------
 const getOvertime = async (req, res) => {
-    const { user: { userId, wage }, params: { id: overtimeId } } = req
+    const { user: { userId }, params: { id: overtimeId } } = req
     const overtime = await Overtime.findOne({ createdBy: userId, _id: overtimeId }).lean()
     if (!overtime) throw new NotFoundError('Hora extra não encontrada')
 
-    const values = defineValue(overtime.distribution, wage)
+    const values = overtime.values || { valueHe50: 0, valueHe75: 0, valueHe100: 0, total: 0 }
 
     res.status(StatusCodes.OK).json({ values, overtime })
 }
@@ -79,7 +93,9 @@ const createOvertime = async (req, res) => {
             if (!quantity || !date) throw new BadRequestError('Por favor, insira a quantidade de hora extra e o dia')
 
             req.body.distribution = calcDistribution(quantity, isDayOff, isHoliday)
-            req.body.payDate = extractPayDate(isHoliday, date)
+            req.body.values = defineValue(req.body.distribution, req.user.wage)
+            req.body.wageAtCalculation = req.user.wage
+            req.body.payDate = extractPayDate(date, isHoliday)
 
             const [overtime] = await Overtime.create([{ ...req.body }], { session })
             const [mealVoucher] = await createMealVoucherService(overtime, session)
@@ -110,7 +126,9 @@ const updateOvertime = async (req, res) => {
 
             // recalcular regras de negócio
             req.body.distribution = calcDistribution(finalQuantity, finalIsDayOff, finalIsHoliday)
-            req.body.payDate = extractPayDate(finalIsHoliday, finalDate)
+            req.body.values = defineValue(req.body.distribution, req.user.wage)
+            req.body.wageAtCalculation = req.user.wage
+            req.body.payDate = extractPayDate(finalDate, finalIsHoliday)
 
             const newOvertime = await Overtime.findOneAndUpdate({ createdBy: userId, _id: overtimeId },
                 req.body, {

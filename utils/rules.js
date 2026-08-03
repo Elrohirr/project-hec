@@ -1,7 +1,7 @@
 const { BadRequestError } = require('../errors')
 
 function calcDistribution(quantity, isDayOff, isHoliday) {
-    if (quantity <= 0 || quantity > 12) throw new BadRequestError('A quantidade de horas extras não pode ser menor igual a 0 ou maior que 12')
+    if (quantity <= 0 || quantity > 12) throw new BadRequestError('A quantidade de horas extras não pode ser menor ou igual a 0 ou maior que 12')
     if (isDayOff || isHoliday) {
         return {
             he50: 0,
@@ -23,10 +23,10 @@ function calcDistribution(quantity, isDayOff, isHoliday) {
             he100: 0
         }
     }
-    throw new BadRequestError("Só é possivel executar mais de 4 horas extras se for feriado ou dia de folga. Por favor, marque a opção correta")
+    throw new BadRequestError("Só é possível executar mais de 4 horas extras se for feriado ou dia de folga. Por favor, marque a opção correta")
 }
 
-function extractPayDate(isHoliday, date) {
+function extractPayDate(date, isHoliday) {
     if (!date) return
     const newDate = new Date(date)
     if (isHoliday) {
@@ -52,16 +52,17 @@ function defineValue(distribution, wage) {
     }
 }
 
-function calcMealVoucher(quantity) {
-    if (quantity <= 0 || quantity > 12) throw new BadRequestError('A quantidade de horas extras não pode ser menor igual a 0 ou maior que 12')
+function calcMealVoucher(quantity, totalNightHours) {
+    if (totalNightHours) return {rule:'NIGHTSHIFT', source:'nightShift'}
+    if (quantity <= 0 || quantity > 12) throw new BadRequestError('A quantidade de horas extras não pode ser menor ou igual a 0 ou maior que 12')
     if (quantity === 1) {
-        return 'OVERTIME_HALF'
+        return {rule:'OVERTIME_HALF', source:'overtime'}
     }
     if (quantity >= 2 && quantity <= 4) {
-        return 'OVERTIME_FULL'
+        return {rule:'OVERTIME_FULL',source:'overtime'}
     }
     if (quantity >= 6) {
-        return 'OVERTIME_DOUBLE'
+        return {rule:'OVERTIME_DOUBLE',source:'overtime'}
     }
     throw new BadRequestError('Verifique se a quantidade de hora extra foi digitada corretamente')
 }

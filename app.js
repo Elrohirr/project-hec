@@ -1,5 +1,6 @@
 require('dotenv').config()
 const express = require('express')
+const path = require('path')
 const app = express()
 
 // connect DB
@@ -9,6 +10,7 @@ const authenticateUser = require('./middleware/authentication')
 // routers
 const authRouter = require('./routes/auth')
 const overtimeRouter = require('./routes/overtime')
+const nightShiftRouter = require('./routes/nightShift')
 const mealVoucherRouter = require('./routes/mealVouchers')
 
 // error handler
@@ -16,10 +18,12 @@ const notFoundMiddleware = require('./middleware/not-found')
 const errorHandlerMiddleware = require('./middleware/error-handler')
 
 app.use(express.json())
+app.use(express.static(path.join(__dirname,'public')))
 
 // routes
 app.use('/api/v1/auth', authRouter)
 app.use('/api/v1/overtime', authenticateUser, overtimeRouter)
+app.use('/api/v1/nightShift', authenticateUser, nightShiftRouter)
 app.use('/api/v1/mealvoucher', authenticateUser, mealVoucherRouter)
 
 app.use(notFoundMiddleware)
