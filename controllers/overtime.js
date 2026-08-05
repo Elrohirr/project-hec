@@ -89,12 +89,12 @@ const createOvertime = async (req, res) => {
     try {
         const result = await session.withTransaction(async () => {
             req.body.createdBy = req.user.userId
-            const { body: { quantity, date, isDayOff, isHoliday } } = req
+            const { body: { quantity, date, isDayOff, isHoliday }, user:{wage} } = req
             if (!quantity || !date) throw new BadRequestError('Por favor, insira a quantidade de hora extra e o dia')
 
             req.body.distribution = calcDistribution(quantity, isDayOff, isHoliday)
-            req.body.values = defineValue(req.body.distribution, req.user.wage)
-            req.body.wageAtCalculation = req.user.wage
+            req.body.values = defineValue(req.body.distribution, wage)
+            req.body.wageAtCalculation = wage
             req.body.payDate = extractPayDate(date, isHoliday)
 
             const [overtime] = await Overtime.create([{ ...req.body }], { session })
@@ -112,7 +112,7 @@ const updateOvertime = async (req, res) => {
     const session = await mongoose.startSession()
     try {
         const result = await session.withTransaction(async () => {
-            const { body: { quantity, date, isHoliday, isDayOff }, user: { userId }, params: { id: overtimeId } } = req
+            const { body: { quantity, date, isHoliday, isDayOff }, user: { userId, wage }, params: { id: overtimeId } } = req
             if (quantity === '' || date === '') throw new BadRequestError('Campos de quantidade e data não podem ser vazios')
 
             const oldOvertime = await Overtime.findOne({ createdBy: userId, _id: overtimeId }).session(session)
@@ -126,8 +126,8 @@ const updateOvertime = async (req, res) => {
 
             // recalcular regras de negócio
             req.body.distribution = calcDistribution(finalQuantity, finalIsDayOff, finalIsHoliday)
-            req.body.values = defineValue(req.body.distribution, req.user.wage)
-            req.body.wageAtCalculation = req.user.wage
+            req.body.values = defineValue(req.body.distribution, wage)
+            req.body.wageAtCalculation = wage
             req.body.payDate = extractPayDate(finalDate, finalIsHoliday)
 
             const newOvertime = await Overtime.findOneAndUpdate({ createdBy: userId, _id: overtimeId },

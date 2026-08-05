@@ -34,8 +34,15 @@
       <!-- Resumo -->
       <section class="summary-cards" id="summary-cards">
         <div class="summary-card">
-          <span class="label">Total de horas noturnas</span>
-          <span class="value" id="summary-total-night-hours">—</span>
+          <span class="label">Horas de relógio</span>
+          <span class="value" id="summary-total-clock">—</span>
+        </div>
+        <div class="summary-card">
+          <span class="label">
+            Horas reduzidas
+            <button type="button" class="info-button" id="info-reduced" aria-label="O que são horas reduzidas?">ⓘ</button>
+          </span>
+          <span class="value" id="summary-total-reduced">—</span>
         </div>
         <div class="summary-card">
           <span class="label">Adicional noturno</span>
@@ -47,6 +54,14 @@
         </div>
       </section>
 
+      <!-- Popup explicativo: hora noturna reduzida (art. 73, §1º CLT) -->
+      <div class="info-popup" id="info-popup" hidden>
+        <p><strong>O que são horas reduzidas?</strong></p>
+        <p>Conforme o art. 73, §1º da CLT, a hora noturna (22h às 5h) tem duração de <strong>52min30s</strong> de relógio. Ou seja, cada hora noturna trabalhada equivale a <strong>1h08min</strong> de hora reduzida.</p>
+        <p>Ex.: 7h de relógio → 8h reduzidas.</p>
+        <button type="button" class="ghost-button-light small" id="info-popup-close">Fechar</button>
+      </div>
+
       <div class="overtime-layout">
         <!-- Formulário de registro: POST /nightShift -->
         <section class="form-card">
@@ -57,8 +72,8 @@
 
           <form id="nightshift-form" novalidate>
             <div class="field">
-              <label for="total-night-hours">Quantidade de horas noturnas</label>
-              <input type="number" id="total-night-hours" name="totalNightHours" min="1" max="12" step="0.5" required>
+              <label for="total-night-hours">Horas noturnas (relógio)</label>
+              <input type="time" id="total-night-hours" name="nightHoursClock" min="00:00" max="07:00" step="60" required>
             </div>
             <div class="field">
               <label for="date">Data</label>
@@ -75,7 +90,8 @@
               <thead>
                 <tr>
                   <th>Data</th>
-                  <th>Horas noturnas</th>
+                  <th>Horário de relógio</th>
+                  <th>Horário reduzido</th>
                   <th>Adicional noturno</th>
                   <th>Data pgto.</th>
                   <th>Ações</th>

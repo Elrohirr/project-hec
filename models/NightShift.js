@@ -14,20 +14,25 @@ const NightShiftSchema = new mongoose.Schema({
         type:Date,
         required:[true,'Por favor insira uma data']
     },
-    totalNightHours:{
-        type:Number,
-        default:7,
-        min:1,
-        max:7
+    nightHoursClock:{
+        type:String,
+        default:'07:00'
+    },
+    nightHoursReduced:{
+        type:String,
+        default:'08:00'
     },
     nightShiftValue:{
         type:Number,
+        required:true
     },
     wageAtCalculation:{
         type:Number,
+        required:true
     },
     payDate:{
-        type:Date
+        type:Date,
+        required:true
     }
 })
 

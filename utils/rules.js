@@ -52,8 +52,8 @@ function defineValue(distribution, wage) {
     }
 }
 
-function calcMealVoucher(quantity, totalNightHours) {
-    if (totalNightHours) return {rule:'NIGHTSHIFT', source:'nightShift'}
+function calcMealVoucher(quantity, nightHoursClock) {
+    if (nightHoursClock) return {rule:'NIGHTSHIFT', source:'nightShift'}
     if (quantity <= 0 || quantity > 12) throw new BadRequestError('A quantidade de horas extras não pode ser menor ou igual a 0 ou maior que 12')
     if (quantity === 1) {
         return {rule:'OVERTIME_HALF', source:'overtime'}

@@ -116,10 +116,10 @@ const Api = {
     });
   },
 
-  async createNightShift({ date, totalNightHours }) {
+  async createNightShift({ date, nightHoursClock }) {
     return this.request('/nightShift', {
       method: 'POST',
-      body: JSON.stringify({ date, totalNightHours })
+      body: JSON.stringify({ date, nightHoursClock })
     });
   },
 

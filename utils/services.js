@@ -6,7 +6,7 @@ const { NotFoundError } = require('../errors')
 
 // ------------------------------------ Service para criar ticket originado de uma hora extra ou turno noturno ----------------------------------------------------------
 async function createMealVoucherService(ref, session) {
-    const rule = calcMealVoucher(ref.quantity, ref.totalNightHours)
+    const rule = calcMealVoucher(ref.quantity, ref.nightHoursClock)
     const config = await MealVoucherConfig.findOne({ code: rule.rule }).session(session)
     if (!config) throw new NotFoundError('Regra não encontrada')
 
@@ -23,9 +23,9 @@ async function createMealVoucherService(ref, session) {
     return await MealVoucher.create([{ ...mealVoucherObject }], { session })
 }
 
-// ------------------------------------ Service para atualizar ticket originado de uma hora extra ----------------------------------------------------------
+// ------------------------------------ Service para atualizar ticket originado de uma hora extra ou turno noturno ----------------------------------------------------------
 async function updateMealVoucherService(ref, session) {
-    const rule = calcMealVoucher(ref.quantity, ref.totalNightHours)
+    const rule = calcMealVoucher(ref.quantity, ref.nightHoursClock)
     const config = await MealVoucherConfig.findOne({ code: rule.rule }).session(session)
     if (!config) throw new NotFoundError('Regra não encontrada')
 
@@ -47,7 +47,7 @@ async function updateMealVoucherService(ref, session) {
     return mealVoucher
 }
 
-// ----------------------------- Service para excluir ticket originado por hora extra ---------------------------------------------------------------     
+// ----------------------------- Service para excluir ticket originado por hora extra ou turno noturno ---------------------------------------------------------------     
 async function deleteMealVoucherService(ref_Id, session) {
     const mealVoucher = await MealVoucher.findOneAndDelete({ ref_Id }, { session })
     if (!mealVoucher) throw new NotFoundError('Ticket não encontrado')
