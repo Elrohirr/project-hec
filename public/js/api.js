@@ -97,10 +97,10 @@ const Api = {
     });
   },
 
-  async createOvertime({ quantity, date, isDayOff, isHoliday }) {
+  async createOvertime({ workedHours, date, isDayOff, isHoliday }) {
     return this.request('/overtime', {
       method: 'POST',
-      body: JSON.stringify({ quantity, date, isDayOff, isHoliday })
+      body: JSON.stringify({ workedHours, date, isDayOff, isHoliday })
     });
   },
 
@@ -129,10 +129,10 @@ const Api = {
     });
   },
 
-  async updateOvertime(id, { quantity, date, isDayOff, isHoliday }) {
+  async updateOvertime(id, { workedHours, date, isDayOff, isHoliday }) {
     return this.request(`/overtime/${id}`, {
       method: 'PATCH',
-      body: JSON.stringify({ quantity, date, isDayOff, isHoliday })
+      body: JSON.stringify({ workedHours, date, isDayOff, isHoliday })
     });
   },
 

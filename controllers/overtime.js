@@ -2,6 +2,7 @@ const mongoose = require('mongoose')
 const Overtime = require('../models/Overtime')
 const User = require('../models/User')
 const { calcDistribution, extractPayDate, defineValue } = require('../utils/rules')
+const {timeToMinutes, minutesToTime, validateFormat} = require('../utils/timeConversion')
 const { createMealVoucherService, updateMealVoucherService, deleteMealVoucherService } = require('../utils/services')
 const { StatusCodes } = require('http-status-codes')
 const { BadRequestError, NotFoundError } = require('../errors')
@@ -37,9 +38,9 @@ const getAllOvertime = async (req, res) => {
             {
                 $group: {
                     _id: null,
-                    he50: { $sum: "$distribution.he50" },
-                    he75: { $sum: "$distribution.he75" },
-                    he100: { $sum: "$distribution.he100" }
+                    he50: { $sum: "$distributionMinutes.he50minutes" },
+                    he75: { $sum: "$distributionMinutes.he75minutes" },
+                    he100: { $sum: "$distributionMinutes.he100minutes" }
                 }
             }
         ])
@@ -89,11 +90,22 @@ const createOvertime = async (req, res) => {
     try {
         const result = await session.withTransaction(async () => {
             req.body.createdBy = req.user.userId
-            const { body: { quantity, date, isDayOff, isHoliday }, user:{wage} } = req
-            if (!quantity || !date) throw new BadRequestError('Por favor, insira a quantidade de hora extra e o dia')
+            const { body: { workedHours, date, isDayOff, isHoliday }, user:{wage} } = req
+            if (!workedHours || !date) throw new BadRequestError('Por favor, insira a quantidade de hora extra e o dia')
+            
+            // validar formato
+            validateFormat(workedHours)
 
-            req.body.distribution = calcDistribution(quantity, isDayOff, isHoliday)
-            req.body.values = defineValue(req.body.distribution, wage)
+            const workedMinutes = timeToMinutes(workedHours)
+            req.body.workedHours = workedHours
+            req.body.workedMinutes = workedMinutes
+            req.body.distributionMinutes = calcDistribution(workedMinutes, isDayOff, isHoliday)
+            req.body.distributionHours = {
+                he50hours: minutesToTime(req.body.distributionMinutes.he50minutes),
+                he75hours: minutesToTime(req.body.distributionMinutes.he75minutes),
+                he100hours: minutesToTime(req.body.distributionMinutes.he100minutes),
+            }
+            req.body.values = defineValue(req.body.distributionMinutes, wage)
             req.body.wageAtCalculation = wage
             req.body.payDate = extractPayDate(date, isHoliday)
 
@@ -112,21 +124,30 @@ const updateOvertime = async (req, res) => {
     const session = await mongoose.startSession()
     try {
         const result = await session.withTransaction(async () => {
-            const { body: { quantity, date, isHoliday, isDayOff }, user: { userId, wage }, params: { id: overtimeId } } = req
-            if (quantity === '' || date === '') throw new BadRequestError('Campos de quantidade e data não podem ser vazios')
+            const { body: { workedHours, date, isHoliday, isDayOff }, user: { userId, wage }, params: { id: overtimeId } } = req
+            if (workedHours === '' || date === '') throw new BadRequestError('Campos de quantidade e data não podem ser vazios')
 
             const oldOvertime = await Overtime.findOne({ createdBy: userId, _id: overtimeId }).session(session)
             if (!oldOvertime) throw new NotFoundError('Hora extra não encontrada')
 
             // update parcial
-            const finalQuantity = req.body.quantity ?? oldOvertime.quantity
+            const finalWorkedHours = req.body.workedHours ?? oldOvertime.workedHours
             const finalDate = req.body.date ?? oldOvertime.date
             const finalIsDayOff = req.body.isDayOff ?? oldOvertime.isDayOff
             const finalIsHoliday = req.body.isHoliday ?? oldOvertime.isHoliday
 
-            // recalcular regras de negócio
-            req.body.distribution = calcDistribution(finalQuantity, finalIsDayOff, finalIsHoliday)
-            req.body.values = defineValue(req.body.distribution, wage)
+            // recalcular regras de negócio (sempre, usando os valores finais)
+            validateFormat(finalWorkedHours)
+            const finalWorkedMinutes = timeToMinutes(finalWorkedHours)
+            req.body.workedHours = finalWorkedHours
+            req.body.workedMinutes = finalWorkedMinutes
+            req.body.distributionMinutes = calcDistribution(finalWorkedMinutes, finalIsDayOff, finalIsHoliday)
+            req.body.distributionHours = {
+                he50hours: minutesToTime(req.body.distributionMinutes.he50minutes),
+                he75hours: minutesToTime(req.body.distributionMinutes.he75minutes),
+                he100hours: minutesToTime(req.body.distributionMinutes.he100minutes),
+            }
+            req.body.values = defineValue(req.body.distributionMinutes, wage)
             req.body.wageAtCalculation = wage
             req.body.payDate = extractPayDate(finalDate, finalIsHoliday)
 

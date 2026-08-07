@@ -12,12 +12,12 @@
   <div class="app-shell">
     <header class="app-header">
       <div class="header-left">
-        <p class="brand-name">Controle de Horas Extras</p>
+        <p class="brand-name">Hour Flow - Controle de Horas e Pagamentos</p>
         <nav class="app-nav">
           <a href="dashboard.html">Início</a>
           <a href="overtime.html" class="active">Horas extras</a>
-          <a href="mealvoucher.html">Vale-refeição</a>
           <a href="nightshift.html">Turno noturno</a>
+          <a href="mealvoucher.html">Vale-refeição</a>
         </nav>
       </div>
       <div class="user-area">
@@ -61,8 +61,8 @@
 
           <form id="overtime-form" novalidate>
             <div class="field">
-              <label for="quantity">Quantidade (horas)</label>
-              <input type="number" id="quantity" name="quantity" min="0" step="0.5" required>
+              <label for="worked-hours">Horas extras (HH:MM)</label>
+              <input type="time" id="worked-hours" name="workedHours" min="00:00" max="13:30" step="60" required>
             </div>
             <div class="field">
               <label for="date">Data</label>
@@ -113,8 +113,8 @@
               <select id="filter-sort">
                 <option value="-date">Mais recentes primeiro</option>
                 <option value="date">Mais antigos primeiro</option>
-                <option value="-quantity">Maior quantidade</option>
-                <option value="quantity">Menor quantidade</option>
+                <option value="-workedMinutes">Maior quantidade</option>
+                <option value="workedMinutes">Menor quantidade</option>
               </select>
             </div>
             <button type="button" id="apply-filters-button" class="ghost-button-light small">Filtrar</button>
@@ -126,7 +126,7 @@
               <thead>
                 <tr>
                   <th>Data</th>
-                  <th>Quantidade</th>
+                  <th>Horas extras</th>
                   <th>HE 50%</th>
                   <th>HE 75%</th>
                   <th>HE 100%</th>

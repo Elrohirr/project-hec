@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
   const form = document.getElementById('overtime-form');
   const formTitle = document.getElementById('form-title');
-  const quantityInput = document.getElementById('quantity');
+  const workedHoursInput = document.getElementById('worked-hours');
   const dateInput = document.getElementById('date');
   const isDayOffInput = document.getElementById('is-day-off');
   const isHolidayInput = document.getElementById('is-holiday');
@@ -55,15 +55,23 @@ document.addEventListener('DOMContentLoaded', () => {
   return payDateFormatter.format(new Date(isoString));
   }
 
+  // Converte um total de minutos para o formato HH:MM usado na exibição
+  function minutesToHHMM(totalMinutes) {
+    const total = Math.max(0, Math.round(totalMinutes || 0));
+    const h = String(Math.floor(total / 60)).padStart(2, '0');
+    const m = String(total % 60).padStart(2, '0');
+    return `${h}:${m}`;
+  }
+
   // Formato esperado pelo <input type="date">: YYYY-MM-DD
   function toDateInputValue(isoString) {
     return new Date(isoString).toISOString().slice(0, 10);
   }
 
   function updateSummary({ distribution, values }) {
-    summaryHe50.textContent = `${distribution?.he50 ?? 0}h`;
-    summaryHe75.textContent = `${distribution?.he75 ?? 0}h`;
-    summaryHe100.textContent = `${distribution?.he100 ?? 0}h`;
+    summaryHe50.textContent = minutesToHHMM(distribution?.he50);
+    summaryHe75.textContent = minutesToHHMM(distribution?.he75);
+    summaryHe100.textContent = minutesToHHMM(distribution?.he100);
     summaryTotal.textContent = currencyFormatter.format(values?.total ?? 0);
   }
 
@@ -76,10 +84,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     tr.innerHTML = `
       <td>${formatDate(record.date)}</td>
-      <td class="numeric">${record.quantity}h</td>
-      <td class="numeric">${record.distribution?.he50 ?? 0}h</td>
-      <td class="numeric">${record.distribution?.he75 ?? 0}h</td>
-      <td class="numeric">${record.distribution?.he100 ?? 0}h</td>
+      <td class="numeric">${record.workedHours ?? '00:00'}</td>
+      <td class="numeric">${record.distributionHours?.he50hours ?? '00:00'}</td>
+      <td class="numeric">${record.distributionHours?.he75hours ?? '00:00'}</td>
+      <td class="numeric">${record.distributionHours?.he100hours ?? '00:00'}</td>
       <td class="numeric">${currencyFormatter.format(record.values?.total ?? 0)}</td>
       <td>${formatPayDate(record.payDate)}</td>
       <td>${badges.join(' ') || '—'}</td>
@@ -130,7 +138,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function enterEditMode(record) {
     editingId = record._id;
-    quantityInput.value = record.quantity;
+    workedHoursInput.value = record.workedHours ?? '00:00';
     dateInput.value = toDateInputValue(record.date);
     isDayOffInput.checked = !!record.isDayOff;
     isHolidayInput.checked = !!record.isHoliday;
@@ -221,23 +229,23 @@ document.addEventListener('DOMContentLoaded', () => {
     event.preventDefault();
     hideFormMessages();
 
-    const quantity = Number(quantityInput.value);
+    const workedHours = workedHoursInput.value;
     const date = dateInput.value;
     const isDayOff = isDayOffInput.checked;
     const isHoliday = isHolidayInput.checked;
 
-    if (!quantity || quantity <= 0 || !date) {
-      showFormError('Informe a quantidade de horas e a data.');
+    if (!workedHours || !date) {
+      showFormError('Informe as horas extras e a data.');
       return;
     }
 
     setLoading(true);
     try {
       if (editingId) {
-        await Api.updateOvertime(editingId, { quantity, date, isDayOff, isHoliday });
+        await Api.updateOvertime(editingId, { workedHours, date, isDayOff, isHoliday });
         formSuccessBox.textContent = 'Registro atualizado com sucesso!';
       } else {
-        await Api.createOvertime({ quantity, date, isDayOff, isHoliday });
+        await Api.createOvertime({ workedHours, date, isDayOff, isHoliday });
         formSuccessBox.textContent = 'Hora extra registrada com sucesso!';
       }
       formSuccessBox.hidden = false;

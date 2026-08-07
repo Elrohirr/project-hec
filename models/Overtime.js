@@ -10,32 +10,41 @@ const OvertimeSchema = new mongoose.Schema({
         type: Date,
         default: Date.now
     },
-    quantity: {
-        type: Number,
-        required: [true, "Por favor, insira quantas horas extras foram feitas"],
-        min: 1,
-        max: 12
+    workedHours:{
+        type:String,
+        required:[true, "Por favor, insira quantas horas extras foram feitas"]
     },
-    distribution: {
-        he50: {type: Number},
-        he75: {type: Number},
-        he100: {type: Number}
+    workedMinutes:{
+        type:Number,
+        required:true
+    },
+    distributionMinutes: {
+        he50minutes: {type: Number},
+        he75minutes: {type: Number},
+        he100minutes: {type: Number},
+    },
+    distributionHours:{
+        he50hours: {type: String},
+        he75hours: {type: String},
+        he100hours: {type: String},
     },
     values:{
         valueHe50: { type: Number, default: 0 },
         valueHe75: { type: Number, default: 0 },
         valueHe100: { type: Number, default: 0 },
-        total: { type: Number, default: 0 }
+        total: { type: Number, default: 0 },
     },
     wageAtCalculation:{
-        type:Number
+        type:Number,
+        required:true
     },
     date: {
         type: Date,
         required: [true, "Por favor, insira uma data"]
     },
     payDate: {
-        type: Date
+        type: Date,
+        required:true
     },
     isDayOff: {
         type: Boolean,

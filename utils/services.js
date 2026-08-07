@@ -6,7 +6,7 @@ const { NotFoundError } = require('../errors')
 
 // ------------------------------------ Service para criar ticket originado de uma hora extra ou turno noturno ----------------------------------------------------------
 async function createMealVoucherService(ref, session) {
-    const rule = calcMealVoucher(ref.quantity, ref.nightHoursClock)
+    const rule = calcMealVoucher(ref.workedMinutes, ref.nightHoursClock)
     const config = await MealVoucherConfig.findOne({ code: rule.rule }).session(session)
     if (!config) throw new NotFoundError('Regra não encontrada')
 
@@ -25,7 +25,7 @@ async function createMealVoucherService(ref, session) {
 
 // ------------------------------------ Service para atualizar ticket originado de uma hora extra ou turno noturno ----------------------------------------------------------
 async function updateMealVoucherService(ref, session) {
-    const rule = calcMealVoucher(ref.quantity, ref.nightHoursClock)
+    const rule = calcMealVoucher(ref.workedMinutes, ref.nightHoursClock)
     const config = await MealVoucherConfig.findOne({ code: rule.rule }).session(session)
     if (!config) throw new NotFoundError('Regra não encontrada')
 

@@ -1,29 +1,29 @@
 const { BadRequestError } = require('../errors')
 
-function calcDistribution(quantity, isDayOff, isHoliday) {
-    if (quantity <= 0 || quantity > 12) throw new BadRequestError('A quantidade de horas extras não pode ser menor ou igual a 0 ou maior que 12')
+function calcDistribution(minutes, isDayOff, isHoliday) {
+    if (minutes <= 0 || minutes > 810) throw new BadRequestError('A quantidade de horas extras não pode ser menor ou igual a 0 ou maior que 13 horas')
     if (isDayOff || isHoliday) {
         return {
-            he50: 0,
-            he75: 0,
-            he100: quantity
+            he50minutes: 0,
+            he75minutes: 0,
+            he100minutes: minutes
         }
     }
-    if (quantity <= 2) {
+    if (minutes <= 120) {
         return {
-            he50: quantity,
-            he75: 0,
-            he100: 0
+            he50minutes: minutes,
+            he75minutes: 0,
+            he100minutes: 0
         }
     }
-    if (quantity > 2 && quantity <= 4) {
+    if (minutes > 120 && minutes <= 300) {
         return {
-            he50: 2,
-            he75: quantity - 2,
-            he100: 0
+            he50minutes: 120,
+            he75minutes: minutes - 120,
+            he100minutes: 0
         }
     }
-    throw new BadRequestError("Só é possível executar mais de 4 horas extras se for feriado ou dia de folga. Por favor, marque a opção correta")
+    throw new BadRequestError("Só é possível executar mais de 5 horas extras se for feriado ou dia de folga. Por favor, marque a opção correta")
 }
 
 function extractPayDate(date, isHoliday) {
@@ -37,9 +37,9 @@ function extractPayDate(date, isHoliday) {
 
 function defineValue(distribution, wage) {
 
-    const he50 = distribution.he50
-    const he75 = distribution.he75
-    const he100 = distribution.he100
+    const he50 = distribution.he50minutes/60
+    const he75 = distribution.he75minutes/60
+    const he100 = distribution.he100minutes/60
 
     const valueHe50 = he50 * 1.5 * wage
     const valueHe75 = he75 * 1.75 * wage
@@ -52,16 +52,17 @@ function defineValue(distribution, wage) {
     }
 }
 
-function calcMealVoucher(quantity, nightHoursClock) {
+function calcMealVoucher(minutes, nightHoursClock) {
     if (nightHoursClock) return {rule:'NIGHTSHIFT', source:'nightShift'}
-    if (quantity <= 0 || quantity > 12) throw new BadRequestError('A quantidade de horas extras não pode ser menor ou igual a 0 ou maior que 12')
-    if (quantity === 1) {
+    // 810 minutos pois raramente há momento que a hora extra de 12 horas pode chegar a 13 horas
+    if (minutes <= 0 || minutes > 810) throw new BadRequestError('A quantidade de horas extras não pode ser menor ou igual a 0 ou maior que 13 horas')
+    if (minutes >= 60 && minutes < 120) {
         return {rule:'OVERTIME_HALF', source:'overtime'}
     }
-    if (quantity >= 2 && quantity <= 4) {
+    if (minutes >= 120 && minutes < 300) {
         return {rule:'OVERTIME_FULL',source:'overtime'}
     }
-    if (quantity >= 6) {
+    if (minutes >= 360) {
         return {rule:'OVERTIME_DOUBLE',source:'overtime'}
     }
     throw new BadRequestError('Verifique se a quantidade de hora extra foi digitada corretamente')

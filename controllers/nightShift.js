@@ -2,7 +2,7 @@ const mongoose = require('mongoose')
 const User = require('../models/User')
 const NightShift = require('../models/NightShift')
 const { createMealVoucherService, updateMealVoucherService, deleteMealVoucherService } = require('../utils/services')
-const {timeToMinutes, minutesToTime, convertToReducedNightMinutes} = require('../utils/timeConversion')
+const {timeToMinutes, minutesToTime, convertToReducedNightMinutes, validateFormat} = require('../utils/timeConversion')
 const { StatusCodes } = require('http-status-codes')
 const { BadRequestError, NotFoundError } = require('../errors')
 const { extractPayDate } = require('../utils/rules')
@@ -29,15 +29,7 @@ const createNightShift = async (req,res) => {
             const nightHoursClock = req.body.nightHoursClock || '07:00'
             if (!date) throw new BadRequestError('Por favor, insira a data do turno noturno')
 
-            // validar formato HH:MM
-            const formatRegex = /^\d{1,2}:\d{2}$/
-            if (!formatRegex.test(nightHoursClock)) throw new BadRequestError('Informe as horas noturnas no formato HH:MM')
-
-            // validar minutos e horas dentro de faixa numérica válida
-            const [hoursStr, minutesStr] = nightHoursClock.split(':')
-            const hours = Number(hoursStr)
-            const minutes = Number(minutesStr)
-            if (hours < 0 || minutes < 0 || minutes >= 60) throw new BadRequestError('Informe as horas noturnas no formato HH:MM')
+            validateFormat(nightHoursClock)
 
             // validar range de negócio (00:00 até 07:00)
             const clockMinutesTotal = timeToMinutes(nightHoursClock)

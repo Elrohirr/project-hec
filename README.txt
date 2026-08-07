@@ -43,3 +43,5 @@
 9. Refactor getNightShift, updateNightShift and deleteNightShift controllers - [ ]
 10. Add query functions for getAllNightShifts controller (date) - [ ]
 11. Add pagination in getAllNightShifts controller - [ ]
+
+/ ------------------------------------------------------------------------------------------------------------------------------------------------------------- /
