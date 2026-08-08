@@ -1,8 +1,10 @@
 document.addEventListener('DOMContentLoaded', () => {
   const form = document.getElementById('nightshift-form');
+  const formTitle = document.getElementById('form-title');
   const totalNightHoursInput = document.getElementById('total-night-hours');
   const dateInput = document.getElementById('date');
   const submitButton = document.getElementById('submit-button');
+  const cancelEditButton = document.getElementById('cancel-edit-button');
   const formErrorBox = document.getElementById('form-error-box');
   const formSuccessBox = document.getElementById('form-success-box');
 
@@ -33,6 +35,9 @@ document.addEventListener('DOMContentLoaded', () => {
     year: 'numeric'
   });
 
+  let editingId = null; // null = criando novo registro; string = editando esse _id
+  let recordsCache = []; // registros carregados, usados para preencher o form ao editar
+
   function formatDate(isoString) {
     return dateFormatter.format(new Date(isoString));
   }
@@ -40,6 +45,11 @@ document.addEventListener('DOMContentLoaded', () => {
   function formatPayDate(isoString) {
     if (!isoString) return '—';
     return payDateFormatter.format(new Date(isoString));
+  }
+
+  // Formato esperado pelo <input type="date">: YYYY-MM-DD
+  function toDateInputValue(isoString) {
+    return new Date(isoString).toISOString().slice(0, 10);
   }
 
   function hhmmToMinutes(hhmm) {
@@ -76,12 +86,14 @@ document.addEventListener('DOMContentLoaded', () => {
       <td>${formatPayDate(record.payDate)}</td>
       <td>
         <div class="row-actions">
+          <button type="button" class="icon-button edit" data-id="${record._id}">Editar</button>
           <button type="button" class="icon-button" data-id="${record._id}">Excluir</button>
         </div>
       </td>
     `;
 
-    tr.querySelector('.icon-button').addEventListener('click', () => handleDelete(record._id));
+    tr.querySelector('.icon-button.edit').addEventListener('click', () => handleEditClick(record._id));
+    tr.querySelector('.icon-button:not(.edit)').addEventListener('click', () => handleDelete(record._id));
     return tr;
   }
 
@@ -99,17 +111,52 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!confirm('Excluir este registro de turno noturno?')) return;
     try {
       await Api.deleteNightShift(id);
+      // se o registro excluído era o que estava sendo editado, sai do modo edição
+      if (editingId === id) exitEditMode();
       await loadNightShifts();
     } catch (err) {
       alert(err.message || 'Não foi possível excluir o registro.');
     }
   }
 
+  async function handleEditClick(id) {
+    hideFormMessages();
+    const record = recordsCache.find((r) => r._id === id);
+    if (!record) {
+      showFormError('Não foi possível carregar o registro para edição.');
+      return;
+    }
+    enterEditMode(record);
+  }
+
+  function enterEditMode(record) {
+    editingId = record._id;
+    totalNightHoursInput.value = record.nightHoursClock ?? '07:00';
+    dateInput.value = toDateInputValue(record.date);
+
+    formTitle.textContent = 'Editar turno noturno';
+    submitButton.textContent = 'Salvar alterações';
+    cancelEditButton.hidden = false;
+
+    form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function exitEditMode() {
+    editingId = null;
+    form.reset();
+    formTitle.textContent = 'Registrar turno noturno';
+    submitButton.textContent = 'Registrar';
+    cancelEditButton.hidden = true;
+  }
+
+  cancelEditButton.addEventListener('click', exitEditMode);
+
   async function loadNightShifts() {
     try {
       const data = await Api.getNightShifts();
       const records = Array.isArray(data) ? data : [];
 
+      recordsCache = records;
       renderTable(records);
       updateSummary(records);
 
@@ -122,7 +169,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function setLoading(isLoading) {
     submitButton.disabled = isLoading;
-    submitButton.textContent = isLoading ? 'Registrando…' : 'Registrar';
+    submitButton.textContent = isLoading
+      ? (editingId ? 'Salvando…' : 'Registrando…')
+      : (editingId ? 'Salvar alterações' : 'Registrar');
   }
 
   function showFormError(message) {
@@ -179,9 +228,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     setLoading(true);
     try {
-      await Api.createNightShift({ date, nightHoursClock });
-      showFormSuccess('Turno noturno registrado com sucesso!');
-      form.reset();
+      if (editingId) {
+        await Api.updateNightShift(editingId, { date, nightHoursClock });
+        showFormSuccess('Turno noturno atualizado com sucesso!');
+      } else {
+        await Api.createNightShift({ date, nightHoursClock });
+        showFormSuccess('Turno noturno registrado com sucesso!');
+      }
+      exitEditMode();
       await loadNightShifts();
     } catch (err) {
       showFormError(err.message || 'Não foi possível salvar o registro.');

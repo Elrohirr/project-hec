@@ -2,7 +2,7 @@ const mongoose = require('mongoose')
 const Overtime = require('../models/Overtime')
 const User = require('../models/User')
 const { calcDistribution, extractPayDate, defineValue } = require('../utils/rules')
-const {timeToMinutes, minutesToTime, validateFormat} = require('../utils/timeConversion')
+const { timeToMinutes, minutesToTime, validateFormat } = require('../utils/timeConversion')
 const { createMealVoucherService, updateMealVoucherService, deleteMealVoucherService } = require('../utils/services')
 const { StatusCodes } = require('http-status-codes')
 const { BadRequestError, NotFoundError } = require('../errors')
@@ -94,7 +94,7 @@ const createOvertime = async (req, res) => {
             if (!workedHours || !date) throw new BadRequestError('Por favor, insira a quantidade de hora extra e o dia')
             
             // validar formato
-            validateFormat(workedHours)
+            validateFormat(workedHours, false)
 
             const workedMinutes = timeToMinutes(workedHours)
             req.body.workedHours = workedHours
@@ -137,7 +137,7 @@ const updateOvertime = async (req, res) => {
             const finalIsHoliday = req.body.isHoliday ?? oldOvertime.isHoliday
 
             // recalcular regras de negócio (sempre, usando os valores finais)
-            validateFormat(finalWorkedHours)
+            validateFormat(finalWorkedHours, false)
             const finalWorkedMinutes = timeToMinutes(finalWorkedHours)
             req.body.workedHours = finalWorkedHours
             req.body.workedMinutes = finalWorkedMinutes

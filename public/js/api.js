@@ -129,6 +129,13 @@ const Api = {
     });
   },
 
+  async updateNightShift(id, { date, nightHoursClock }) {
+    return this.request(`/nightShift/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ date, nightHoursClock })
+    });
+  },
+
   async updateOvertime(id, { workedHours, date, isDayOff, isHoliday }) {
     return this.request(`/overtime/${id}`, {
       method: 'PATCH',

@@ -675,10 +675,22 @@ a {
 }
 
 .module-card.disabled {
-  opacity: 0.55;
   cursor: default;
+  border-style: dashed;
 }
 
+.module-card.disabled:hover {
+  border-color: var(--line);
+  transform: none;
+}
+
+.module-card.disabled .module-icon,
+.module-card.disabled h3,
+.module-card.disabled p {
+  opacity: 0.55;
+}
+
+/* Selo de status do módulo */
 .module-badge {
   position: absolute;
   top: 16px;
@@ -686,11 +698,26 @@ a {
   font-size: 0.68rem;
   font-weight: 600;
   letter-spacing: 0.03em;
-  background: var(--paper);
-  border: 1px solid var(--line);
-  color: var(--ink-soft);
+  text-transform: uppercase;
   padding: 2px 8px;
   border-radius: 999px;
+}
+
+/* Variantes prontas: escolha a cor conforme o status */
+.module-badge--soon {
+  background: var(--paper-raised);
+  border: 1px solid var(--teal);
+  color: var(--teal);
+}
+
+.module-badge--ready {
+  background: var(--teal);
+  color: var(--paper-raised);
+}
+
+.module-badge--new {
+  background: var(--amber);
+  color: var(--ink);
 }
 
 /* Formulário em modo de edição + ações da tabela */
