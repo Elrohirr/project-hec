@@ -16,7 +16,10 @@ const getAllNightShift = async (req,res) => {
 
 // --------------------------- GET apenas um registro de turno noturno do usuário -----------------------------------------------------
 const getNightShift = async (req,res) => {
-    res.send('get single night shift')
+    const {user:{userId}, params:{id:nightShiftId}} = req
+    const nightShift = await NightShift.findOne({createdBy:userId, _id:nightShiftId})
+    if (!nightShift) throw new NotFoundError('Registro de turno noturno não encontrado')
+    res.status(StatusCodes.OK).json(nightShift)
 }
 
 // --------------------------- CREATE apenas um registro de turno noturno do usuário -----------------------------------------------------
@@ -39,7 +42,7 @@ const createNightShift = async (req,res) => {
             req.body.payDate = extractPayDate(date,true) // segundo parametro como true pois o pagamento de todo AD Noturno é no mês seguinte
 
             const [nightShift] = await NightShift.create([{ ...req.body }], { session })
-            const [mealVoucher] = await createMealVoucherService(nightShift, session)
+            const mealVoucher = await createMealVoucherService(nightShift, session)
             return { nightShift, mealVoucher }
         })
         res.status(StatusCodes.CREATED).json(result)

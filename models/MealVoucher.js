@@ -41,6 +41,6 @@ const MealVoucherSchema = new mongoose.Schema({
     }
 })
 
-MealVoucherSchema.index({ createdBy: 1, date: 1 }, { unique: true })
+MealVoucherSchema.index({ createdBy: 1, date: 1, source: 1 }, { unique: true })
 
 module.exports = mongoose.model('MealVoucher', MealVoucherSchema)

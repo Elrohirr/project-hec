@@ -1,3 +1,4 @@
+const { timeToMinutes } = require('./timeConversion')
 const { BadRequestError } = require('../errors')
 
 function calcDistribution(minutes, isDayOff, isHoliday) {
@@ -53,7 +54,10 @@ function defineValue(distribution, wage) {
 }
 
 function calcMealVoucher(minutes, nightHoursClock) {
-    if (nightHoursClock) return {rule:'NIGHTSHIFT', source:'nightShift'}
+    if (nightHoursClock) {
+        if (timeToMinutes(nightHoursClock) === 420) return {rule:'NIGHTSHIFT', source:'nightShift'}
+        return null
+    }
     // 810 minutos pois raramente há momento que a hora extra de 12 horas pode chegar a 13 horas
     if (minutes <= 0 || minutes > 810) throw new BadRequestError('A quantidade de horas extras não pode ser menor ou igual a 0 ou maior que 13 horas')
     if (minutes >= 60 && minutes < 120) {

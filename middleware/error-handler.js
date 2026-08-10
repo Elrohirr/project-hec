@@ -8,8 +8,14 @@ const errorHandlerMiddleware = (err, req, res, next) => {
   }
   if (err.code === 11000 && err.keyValue.createdBy && err.keyValue.date) {
     customError.statusCode = StatusCodes.BAD_REQUEST
-    customError.msg = `Não é permitido criar dois registros de hora extra para a mesma data.`
+    // o erro E11000 do Mongo traz o nome da coleção no err.message; diferencia a origem do conflito
+    if (/mealvouchers/i.test(err.message)) {
+      customError.msg = `Não é permitido gerar dois vale-refeição para a mesma data e categoria.`
+    } else {
+      customError.msg = `Não é permitido criar dois registros de hora extra para a mesma data.`
+    }
   }
+  // erro de e-mail já cadastrado
   if (err.code === 11000 && err.keyValue.email) {
     customError.statusCode = StatusCodes.BAD_REQUEST
     customError.msg = `O ${Object.keys(err.keyValue)} inserido já está em uso. Tente outro`

@@ -40,7 +40,7 @@
 5. Test routes in postman - [X]
 6. Adapt function calcMealVocuher in rules.js to include night shifts - [X]
 7. Refactor createNightShift (accepting HH:MM format) and getAllNightShifts - [X]
-9. Refactor getNightShift, updateNightShift and deleteNightShift controllers - [ ]
+9. Refactor getNightShift, updateNightShift and deleteNightShift controllers - [X]
 10. Add query functions for getAllNightShifts controller (date) - [ ]
 11. Add pagination in getAllNightShifts controller - [ ]
 

@@ -110,7 +110,7 @@ const createOvertime = async (req, res) => {
             req.body.payDate = extractPayDate(date, isHoliday)
 
             const [overtime] = await Overtime.create([{ ...req.body }], { session })
-            const [mealVoucher] = await createMealVoucherService(overtime, session)
+            const mealVoucher = await createMealVoucherService(overtime, session)
             return { overtime, mealVoucher }
         })
         res.status(StatusCodes.CREATED).json(result)
