@@ -9,7 +9,7 @@ const { BadRequestError, NotFoundError } = require('../errors')
 
 // --------------------------- GET todos os registros de hora extra do usuário -----------------------------------------------------
 const getAllOvertime = async (req, res) => {
-    const { user: { userId, wage }, query: { isHoliday, isDayOff, startDate, endDate, sort } } = req
+    const { user: { userId, wage }, query: { isHoliday, isDayOff, startDate, endDate, startPayDate, endPayDate, sort } } = req
 
     const queryObject = { createdBy: new mongoose.Types.ObjectId(userId) }
     if (isHoliday) queryObject.isHoliday = isHoliday === 'true' ? true : false
@@ -18,6 +18,11 @@ const getAllOvertime = async (req, res) => {
         queryObject.date = {}
         queryObject.date.$gte = new Date(startDate || '2000-01-01')
         queryObject.date.$lte = new Date(endDate || new Date())
+    }
+    if (startPayDate || endPayDate){
+        queryObject.payDate = {}
+        queryObject.payDate.$gte = new Date(startPayDate || '2000-01-01')
+        queryObject.payDate.$lte = new Date(endPayDate || new Date())
     }
     let result = Overtime.find(queryObject)
     if (sort) {
@@ -89,27 +94,35 @@ const createOvertime = async (req, res) => {
     const session = await mongoose.startSession()
     try {
         const result = await session.withTransaction(async () => {
-            req.body.createdBy = req.user.userId
-            const { body: { workedHours, date, isDayOff, isHoliday }, user:{wage} } = req
+            const { body: { workedHours, date, isDayOff, isHoliday }, user:{userId, wage} } = req
             if (!workedHours || !date) throw new BadRequestError('Por favor, insira a quantidade de hora extra e o dia')
             
-            // validar formato
+            //validar formato
             validateFormat(workedHours, false)
 
+            //criar whitelist
             const workedMinutes = timeToMinutes(workedHours)
-            req.body.workedHours = workedHours
-            req.body.workedMinutes = workedMinutes
-            req.body.distributionMinutes = calcDistribution(workedMinutes, isDayOff, isHoliday)
-            req.body.distributionHours = {
-                he50hours: minutesToTime(req.body.distributionMinutes.he50minutes),
-                he75hours: minutesToTime(req.body.distributionMinutes.he75minutes),
-                he100hours: minutesToTime(req.body.distributionMinutes.he100minutes),
-            }
-            req.body.values = defineValue(req.body.distributionMinutes, wage)
-            req.body.wageAtCalculation = wage
-            req.body.payDate = extractPayDate(date, isHoliday)
+            const distributionMinutes = calcDistribution(workedMinutes, isDayOff, isHoliday)
 
-            const [overtime] = await Overtime.create([{ ...req.body }], { session })
+            const createFields = {
+                createdBy:userId,
+                workedHours,
+                workedMinutes,
+                date,
+                distributionMinutes,
+                distributionHours:{
+                    he50hours: minutesToTime(distributionMinutes.he50minutes),
+                    he75hours: minutesToTime(distributionMinutes.he75minutes),
+                    he100hours: minutesToTime(distributionMinutes.he100minutes)
+                },
+                values: defineValue(distributionMinutes, wage),
+                wageAtCalculation:wage,
+                payDate:extractPayDate(date, isHoliday),
+                isDayOff: isDayOff ?? false,
+                isHoliday: isHoliday ?? false
+            }
+
+            const [overtime] = await Overtime.create([createFields], { session })
             const mealVoucher = await createMealVoucherService(overtime, session)
             return { overtime, mealVoucher }
         })
@@ -129,30 +142,37 @@ const updateOvertime = async (req, res) => {
 
             const oldOvertime = await Overtime.findOne({ createdBy: userId, _id: overtimeId }).session(session)
             if (!oldOvertime) throw new NotFoundError('Hora extra não encontrada')
-
+            
             // update parcial
-            const finalWorkedHours = req.body.workedHours ?? oldOvertime.workedHours
+            const finalWorkedHours = (req.body.workedHours ?? oldOvertime.workedHours).trim()
             const finalDate = req.body.date ?? oldOvertime.date
             const finalIsDayOff = req.body.isDayOff ?? oldOvertime.isDayOff
             const finalIsHoliday = req.body.isHoliday ?? oldOvertime.isHoliday
 
-            // recalcular regras de negócio (sempre, usando os valores finais)
+            //whitelist e recaulcular regras de negócio
             validateFormat(finalWorkedHours, false)
             const finalWorkedMinutes = timeToMinutes(finalWorkedHours)
-            req.body.workedHours = finalWorkedHours
-            req.body.workedMinutes = finalWorkedMinutes
-            req.body.distributionMinutes = calcDistribution(finalWorkedMinutes, finalIsDayOff, finalIsHoliday)
-            req.body.distributionHours = {
-                he50hours: minutesToTime(req.body.distributionMinutes.he50minutes),
-                he75hours: minutesToTime(req.body.distributionMinutes.he75minutes),
-                he100hours: minutesToTime(req.body.distributionMinutes.he100minutes),
+            const distributionMinutes = calcDistribution(finalWorkedMinutes, finalIsDayOff, finalIsHoliday)
+
+            const updateFields = {
+                workedHours: finalWorkedHours,
+                workedMinutes: finalWorkedMinutes,
+                date:finalDate,
+                distributionMinutes,
+                distributionHours :{
+                    he50hours: minutesToTime(distributionMinutes.he50minutes),
+                    he75hours: minutesToTime(distributionMinutes.he75minutes),
+                    he100hours: minutesToTime(distributionMinutes.he100minutes)
+                },
+                values : defineValue(distributionMinutes, wage),
+                wageAtCalculation : wage,
+                payDate : extractPayDate(finalDate, finalIsHoliday),
+                isDayOff : finalIsDayOff,
+                isHoliday : finalIsHoliday
             }
-            req.body.values = defineValue(req.body.distributionMinutes, wage)
-            req.body.wageAtCalculation = wage
-            req.body.payDate = extractPayDate(finalDate, finalIsHoliday)
 
             const newOvertime = await Overtime.findOneAndUpdate({ createdBy: userId, _id: overtimeId },
-                req.body, {
+                updateFields, {
                 returnDocument: 'after',
                 runValidators: true,
                 session

@@ -12,6 +12,7 @@ const authRouter = require('./routes/auth')
 const overtimeRouter = require('./routes/overtime')
 const nightShiftRouter = require('./routes/nightShift')
 const mealVoucherRouter = require('./routes/mealVouchers')
+const userRouter = require('./routes/user')
 
 // error handler
 const notFoundMiddleware = require('./middleware/not-found')
@@ -25,6 +26,7 @@ app.use('/api/v1/auth', authRouter)
 app.use('/api/v1/overtime', authenticateUser, overtimeRouter)
 app.use('/api/v1/nightShift', authenticateUser, nightShiftRouter)
 app.use('/api/v1/mealvoucher', authenticateUser, mealVoucherRouter)
+app.use('/api/v1/user',authenticateUser,userRouter)
 
 app.use(notFoundMiddleware)
 app.use(errorHandlerMiddleware)

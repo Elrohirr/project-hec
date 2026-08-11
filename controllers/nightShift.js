@@ -9,9 +9,39 @@ const { extractPayDate } = require('../utils/rules')
 
 // --------------------------- GET todos os registros de turno noturno do usuário -----------------------------------------------------
 const getAllNightShift = async (req,res) => {
-    const {user:{userId}} = req
-    const nightShift = await NightShift.find({createdBy:userId})
-    res.status(StatusCodes.OK).json(nightShift)
+    const {user:{userId}, query:{startDate, endDate, startPayDate, endPayDate, sort}} = req
+    const queryObject = {createdBy: new mongoose.Types.ObjectId(userId)}
+    if (startDate || endDate) {
+        queryObject.date = {}
+        queryObject.date.$gte = new Date(startDate || '2000-01-01')
+        queryObject.date.$lte = new Date(endDate || new Date())
+    }
+    if (startPayDate || endPayDate){
+        queryObject.payDate = {}
+        queryObject.payDate.$gte = new Date(startPayDate || '2000-01-01')
+        queryObject.payDate.$lte = new Date(endPayDate || new Date())
+    }
+    let result = NightShift.find(queryObject)
+    if (sort){
+        const sortedList = sort.split(',').join(' ')
+        result = result.sort(sortedList)
+    }
+    else{
+        result = result.sort('-date')
+    }
+    const page = Number(req.query.page) || 1
+    const limit = Number(req.query.limit) || 10
+    const skip = (page - 1) * limit
+    result = result.skip(skip).limit(limit)
+
+    const nightShift = await result.lean()
+    const totalRecords = await NightShift.countDocuments(queryObject)
+    res.status(StatusCodes.OK).json({
+        totalRecords,
+        numberOfPages: Math.ceil(totalRecords/limit),
+        currentPage:page, 
+        nightShift
+    })
 }
 
 // --------------------------- GET apenas um registro de turno noturno do usuário -----------------------------------------------------

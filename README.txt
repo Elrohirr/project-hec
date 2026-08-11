@@ -10,7 +10,7 @@
  -delete Overtime - [X]
 4. Create rule that cant have two overtimes in the same day (create and update controllers)- [X]
 5. Create function that indicates when that overtime will be paid based on isHoliday atribuite - [X]
-6. Add query functions for getAllOvertime controller (date, holiday, dayoff) - [X]
+6. Add query functions for getAllOvertime controller (date, payDate, holiday, dayoff) - [X]
 7. Add pagination in getAllOvertime controller - [X]
 
 / ------------------------------------------------------------------------------------------------------------------------------------------------------------- /
@@ -41,7 +41,7 @@
 6. Adapt function calcMealVocuher in rules.js to include night shifts - [X]
 7. Refactor createNightShift (accepting HH:MM format) and getAllNightShifts - [X]
 9. Refactor getNightShift, updateNightShift and deleteNightShift controllers - [X]
-10. Add query functions for getAllNightShifts controller (date) - [ ]
-11. Add pagination in getAllNightShifts controller - [ ]
+10. Add query functions for getAllNightShifts controller (date, payDate) - [X]
+11. Add pagination in getAllNightShifts controller - [X]
 
 / ------------------------------------------------------------------------------------------------------------------------------------------------------------- /
