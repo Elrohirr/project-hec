@@ -22,6 +22,7 @@
       </div>
       <div class="user-area">
         <span id="user-greeting"></span>
+        <a href="account.html">Minha conta</a>
         <button id="logout-button" class="ghost-button" type="button">Sair</button>
       </div>
     </header>
@@ -86,6 +87,36 @@
 
         <!-- Listagem: GET /nightShift -->
         <section class="table-card">
+          <div class="table-toolbar filters-toolbar">
+            <div class="filter-field">
+              <label for="filter-start-date">De</label>
+              <input type="date" id="filter-start-date">
+            </div>
+            <div class="filter-field">
+              <label for="filter-end-date">Até</label>
+              <input type="date" id="filter-end-date">
+            </div>
+            <div class="filter-field">
+              <label for="filter-pay-month-start">Pgto. de</label>
+              <input type="month" id="filter-pay-month-start">
+            </div>
+            <div class="filter-field">
+              <label for="filter-pay-month-end">Pgto. até</label>
+              <input type="month" id="filter-pay-month-end">
+            </div>
+            <div class="filter-field">
+              <label for="filter-sort">Ordenar por</label>
+              <select id="filter-sort">
+                <option value="-date">Mais recentes primeiro</option>
+                <option value="date">Mais antigos primeiro</option>
+                <option value="-nightShiftValue">Maior adicional</option>
+                <option value="nightShiftValue">Menor adicional</option>
+              </select>
+            </div>
+            <button type="button" id="apply-filters-button" class="ghost-button-light small">Filtrar</button>
+            <button type="button" id="clear-filters-button" class="ghost-button-light small">Limpar</button>
+          </div>
+
           <div class="table-scroll">
             <table class="overtime-table">
               <thead>
@@ -107,6 +138,10 @@
 
           <div class="table-footer">
             <span id="page-indicator">—</span>
+            <div class="pagination-buttons">
+              <button type="button" id="prev-page-button">Anterior</button>
+              <button type="button" id="next-page-button">Próxima</button>
+            </div>
           </div>
         </section>
       </div>

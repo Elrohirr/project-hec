@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Minha conta - Hour Flow</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="app-header">
+      <div class="header-left">
+        <p class="brand-name">Hour Flow - Controle de Horas e Pagamentos</p>
+        <nav class="app-nav">
+          <a href="dashboard.html">Início</a>
+          <a href="overtime.html">Horas extras</a>
+          <a href="nightshift.html">Turno noturno</a>
+          <a href="mealvoucher.html">Vale-refeição</a>
+        </nav>
+      </div>
+      <div class="user-area">
+        <span id="user-greeting"></span>
+        <a href="account.html" class="active">Minha conta</a>
+        <button id="logout-button" class="ghost-button" type="button">Sair</button>
+      </div>
+    </header>
+
+    <main class="app-content">
+      <div class="page-heading">
+        <h2>Minha conta</h2>
+      </div>
+
+      <div class="account-layout">
+        <!-- Dados do perfil: PATCH /user/profile -->
+        <section class="account-section">
+          <h3>Dados do perfil</h3>
+          <p class="section-hint">Atualize suas informações cadastrais.</p>
+
+          <div id="profile-error-box" class="error-box" role="alert" hidden></div>
+          <div id="profile-success-box" class="success-box" role="status" hidden></div>
+
+          <form id="profile-form" novalidate>
+            <div class="field-row">
+              <div class="field">
+                <label for="profile-name">Nome</label>
+                <input type="text" id="profile-name" name="name" autocomplete="given-name" required>
+              </div>
+              <div class="field">
+                <label for="profile-surname">Sobrenome</label>
+                <input type="text" id="profile-surname" name="surname" autocomplete="family-name" required>
+              </div>
+            </div>
+            <div class="field">
+              <label for="profile-email">Email</label>
+              <input type="email" id="profile-email" name="email" autocomplete="email" required>
+            </div>
+            <div class="field">
+              <label for="profile-wage">Salário-hora (R$)</label>
+              <input type="number" id="profile-wage" name="wage" min="0" step="0.01" inputmode="decimal" required>
+              <span class="hint">Usado para calcular o valor das horas extras.</span>
+            </div>
+            <button type="submit" id="profile-submit-button" class="primary-button">Salvar alterações</button>
+          </form>
+        </section>
+
+        <!-- Alterar senha: PATCH /user/password -->
+        <section class="account-section">
+          <h3>Alterar senha</h3>
+          <p class="section-hint">Você precisará informar sua senha atual antes de definir uma nova.</p>
+
+          <div id="password-error-box" class="error-box" role="alert" hidden></div>
+          <div id="password-success-box" class="success-box" role="status" hidden></div>
+
+          <form id="password-form" novalidate>
+            <div class="field">
+              <label for="current-password">Senha atual</label>
+              <input type="password" id="current-password" name="currentPassword" autocomplete="current-password" required>
+            </div>
+            <div class="field">
+              <label for="new-password">Nova senha</label>
+              <input type="password" id="new-password" name="newPassword" autocomplete="new-password" minlength="4" required>
+            </div>
+            <div class="field">
+              <label for="new-password-confirm">Confirmar nova senha</label>
+              <input type="password" id="new-password-confirm" name="newPasswordConfirm" autocomplete="new-password" required>
+            </div>
+            <button type="submit" id="password-submit-button" class="primary-button">Alterar senha</button>
+          </form>
+        </section>
+      </div>
+
+      <!-- Excluir conta (zona de perigo): DELETE /user -->
+      <section class="account-section danger-zone">
+        <h3>Excluir conta</h3>
+        <p class="section-hint">Esta ação é permanente e apaga sua conta e todos os seus registros de horas extras, turnos noturnos e vale-refeição.</p>
+
+        <div id="delete-error-box" class="error-box" role="alert" hidden></div>
+        <div id="delete-success-box" class="success-box" role="status" hidden></div>
+
+        <form id="delete-form" novalidate>
+          <div class="field">
+            <label for="delete-password">Digite sua senha para confirmar</label>
+            <input type="password" id="delete-password" name="password" autocomplete="current-password" required>
+          </div>
+          <button type="submit" id="delete-submit-button" class="danger-button">Excluir minha conta</button>
+        </form>
+      </section>
+    </main>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/auth-guard.js"></script>
+  <script src="js/header.js"></script>
+  <script src="js/account.js"></script>
+</body>
+</html>

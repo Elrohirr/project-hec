@@ -110,8 +110,9 @@ const Api = {
     });
   },
 
-  async getNightShifts() {
-    return this.request('/nightShift', {
+  async getNightShifts(params = {}) {
+    const query = new URLSearchParams(params).toString();
+    return this.request(`/nightShift${query ? `?${query}` : ''}`, {
       method: 'GET'
     });
   },
@@ -153,6 +154,31 @@ const Api = {
     const query = new URLSearchParams(params).toString();
     return this.request(`/mealvoucher${query ? `?${query}` : ''}`, {
       method: 'GET'
+    });
+  },
+
+  async getProfile() {
+    return this.request('/user/profile', { method: 'GET' });
+  },
+
+  async updateProfile({ name, surname, wage, email }) {
+    return this.request('/user/profile', {
+      method: 'PATCH',
+      body: JSON.stringify({ name, surname, wage, email })
+    });
+  },
+
+  async updatePassword({ currentPassword, newPassword }) {
+    return this.request('/user/password', {
+      method: 'PATCH',
+      body: JSON.stringify({ currentPassword, newPassword })
+    });
+  },
+
+  async deleteAccount({ password }) {
+    return this.request('/user', {
+      method: 'DELETE',
+      body: JSON.stringify({ password })
     });
   },
 

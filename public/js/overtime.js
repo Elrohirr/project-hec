@@ -25,6 +25,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const filterEndDate = document.getElementById('filter-end-date');
   const filterIsHoliday = document.getElementById('filter-is-holiday');
   const filterIsDayOff = document.getElementById('filter-is-day-off');
+  const filterPayMonthStart = document.getElementById('filter-pay-month-start');
+  const filterPayMonthEnd = document.getElementById('filter-pay-month-end');
   const filterSort = document.getElementById('filter-sort');
   const applyFiltersButton = document.getElementById('apply-filters-button');
   const clearFiltersButton = document.getElementById('clear-filters-button');
@@ -160,12 +162,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
   cancelEditButton.addEventListener('click', exitEditMode);
 
+  function monthStartDate(monthValue) {
+    return `${monthValue}-01`;
+  }
+
+  function monthEndDate(monthValue) {
+    const [year, month] = monthValue.split('-').map(Number);
+    const lastDay = new Date(Date.UTC(year, month, 0)).getUTCDate();
+    return `${monthValue}-${String(lastDay).padStart(2, '0')}`;
+  }
+
   function getActiveFilters() {
     const filters = {};
     if (filterStartDate.value) filters.startDate = filterStartDate.value;
     if (filterEndDate.value) filters.endDate = filterEndDate.value;
     if (filterIsHoliday.value) filters.isHoliday = filterIsHoliday.value;
     if (filterIsDayOff.value) filters.isDayOff = filterIsDayOff.value;
+    if (filterPayMonthStart.value) filters.startPayDate = monthStartDate(filterPayMonthStart.value);
+    if (filterPayMonthEnd.value) filters.endPayDate = monthEndDate(filterPayMonthEnd.value);
     if (filterSort.value) filters.sort = filterSort.value;
     return filters;
   }
@@ -195,6 +209,8 @@ document.addEventListener('DOMContentLoaded', () => {
     filterEndDate.value = '';
     filterIsHoliday.value = '';
     filterIsDayOff.value = '';
+    filterPayMonthStart.value = '';
+    filterPayMonthEnd.value = '';
     filterSort.value = '-date';
     loadOvertimes(1);
   });

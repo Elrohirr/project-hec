@@ -382,6 +382,24 @@ a {
   font-size: 0.9rem;
 }
 
+.app-header .user-area a {
+  color: rgba(242, 244, 241, 0.6);
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  padding-bottom: 2px;
+  border-bottom: 2px solid transparent;
+}
+
+.app-header .user-area a:hover {
+  color: var(--paper);
+}
+
+.app-header .user-area a.active {
+  color: var(--paper);
+  border-bottom-color: var(--amber);
+}
+
 .ghost-button {
   background: transparent;
   border: 1px solid rgba(242, 244, 241, 0.35);
@@ -399,7 +417,7 @@ a {
 .app-content {
   flex: 1;
   padding: 40px 32px;
-  max-width: 1080px;
+  max-width: 1360px;
   width: 100%;
   margin: 0 auto;
 }
@@ -523,7 +541,7 @@ a {
 
 .overtime-table {
   width: 100%;
-  min-width: 720px;
+  min-width: 1000px;
   border-collapse: collapse;
   font-size: 0.88rem;
 }
@@ -868,4 +886,77 @@ a {
 
 .info-popup .ghost-button-light.small {
   margin-top: 6px;
+}
+
+/* =========================================================
+   Minha conta - dados do perfil, senha e exclusao
+   ========================================================= */
+.account-layout {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+  align-items: start;
+  margin-bottom: 24px;
+}
+
+.account-section {
+  background: var(--paper-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+  padding: 24px;
+}
+
+.account-section h3 {
+  font-family: var(--font-display);
+  margin: 0 0 4px;
+  font-size: 1.05rem;
+}
+
+.section-hint {
+  margin: 0 0 18px;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  line-height: 1.5;
+}
+
+.account-section .field {
+  margin-bottom: 16px;
+}
+
+.danger-zone {
+  border-color: rgba(179, 67, 43, 0.4);
+  border-left: 4px solid var(--danger);
+}
+
+.danger-zone h3 {
+  color: var(--danger);
+}
+
+.danger-button {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: var(--radius);
+  background: var(--danger);
+  color: var(--paper-raised);
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.danger-button:hover:not(:disabled) {
+  background: #8f3522;
+}
+
+.danger-button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+@media (max-width: 860px) {
+  .account-layout {
+    grid-template-columns: 1fr;
+  }
 }

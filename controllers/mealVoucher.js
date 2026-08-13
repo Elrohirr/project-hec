@@ -12,8 +12,8 @@ const getAllMealVouchers = async (req, res) => {
     if (source) queryObject.source = source
     if (startDate || endDate) {
         queryObject.date = {}
-        queryObject.date.$gte = new Date(startDate || '2000-01-01')
-        queryObject.date.$lte = new Date(endDate || new Date())
+        if (startDate) queryObject.date.$gte = new Date(startDate)
+        if (endDate) queryObject.date.$lte = new Date(endDate)
     }
     let result = MealVoucher.find(queryObject)
     if (sort) {

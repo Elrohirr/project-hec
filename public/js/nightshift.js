@@ -11,6 +11,16 @@ document.addEventListener('DOMContentLoaded', () => {
   const tableBody = document.getElementById('nightshift-table-body');
   const emptyState = document.getElementById('empty-state');
   const pageIndicator = document.getElementById('page-indicator');
+  const prevPageButton = document.getElementById('prev-page-button');
+  const nextPageButton = document.getElementById('next-page-button');
+
+  const filterStartDate = document.getElementById('filter-start-date');
+  const filterEndDate = document.getElementById('filter-end-date');
+  const filterPayMonthStart = document.getElementById('filter-pay-month-start');
+  const filterPayMonthEnd = document.getElementById('filter-pay-month-end');
+  const filterSort = document.getElementById('filter-sort');
+  const applyFiltersButton = document.getElementById('apply-filters-button');
+  const clearFiltersButton = document.getElementById('clear-filters-button');
 
   const summaryTotalClock = document.getElementById('summary-total-clock');
   const summaryTotalReduced = document.getElementById('summary-total-reduced');
@@ -37,6 +47,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let editingId = null; // null = criando novo registro; string = editando esse _id
   let recordsCache = []; // registros carregados, usados para preencher o form ao editar
+  let currentPage = 1;
+  let totalPages = 1;
 
   function formatDate(isoString) {
     return dateFormatter.format(new Date(isoString));
@@ -113,7 +125,7 @@ document.addEventListener('DOMContentLoaded', () => {
       await Api.deleteNightShift(id);
       // se o registro excluído era o que estava sendo editado, sai do modo edição
       if (editingId === id) exitEditMode();
-      await loadNightShifts();
+      await loadNightShifts(currentPage);
     } catch (err) {
       alert(err.message || 'Não foi possível excluir o registro.');
     }
@@ -151,21 +163,65 @@ document.addEventListener('DOMContentLoaded', () => {
 
   cancelEditButton.addEventListener('click', exitEditMode);
 
-  async function loadNightShifts() {
+  function monthStartDate(monthValue) {
+    return `${monthValue}-01`;
+  }
+
+  function monthEndDate(monthValue) {
+    const [year, month] = monthValue.split('-').map(Number);
+    const lastDay = new Date(Date.UTC(year, month, 0)).getUTCDate();
+    return `${monthValue}-${String(lastDay).padStart(2, '0')}`;
+  }
+
+  function getActiveFilters() {
+    const filters = {};
+    if (filterStartDate.value) filters.startDate = filterStartDate.value;
+    if (filterEndDate.value) filters.endDate = filterEndDate.value;
+    if (filterPayMonthStart.value) filters.startPayDate = monthStartDate(filterPayMonthStart.value);
+    if (filterPayMonthEnd.value) filters.endPayDate = monthEndDate(filterPayMonthEnd.value);
+    if (filterSort.value) filters.sort = filterSort.value;
+    return filters;
+  }
+
+  async function loadNightShifts(page = 1) {
     try {
-      const data = await Api.getNightShifts();
-      const records = Array.isArray(data) ? data : [];
+      const data = await Api.getNightShifts({ page, limit: 10, ...getActiveFilters() });
+      const records = data.nightShift || [];
+
+      currentPage = data.currentPage || page;
+      totalPages = data.numberOfPages || 1;
 
       recordsCache = records;
       renderTable(records);
       updateSummary(records);
 
-      pageIndicator.textContent = `${records.length} registro(s)`;
+      pageIndicator.textContent = `Página ${currentPage} de ${totalPages} · ${data.totalRecords} registro(s)`;
+      prevPageButton.disabled = currentPage <= 1;
+      nextPageButton.disabled = currentPage >= totalPages;
     } catch (err) {
       emptyState.hidden = false;
       emptyState.textContent = err.message || 'Não foi possível carregar os registros.';
     }
   }
+
+  applyFiltersButton.addEventListener('click', () => loadNightShifts(1));
+
+  clearFiltersButton.addEventListener('click', () => {
+    filterStartDate.value = '';
+    filterEndDate.value = '';
+    filterPayMonthStart.value = '';
+    filterPayMonthEnd.value = '';
+    filterSort.value = '-date';
+    loadNightShifts(1);
+  });
+
+  prevPageButton.addEventListener('click', () => {
+    if (currentPage > 1) loadNightShifts(currentPage - 1);
+  });
+
+  nextPageButton.addEventListener('click', () => {
+    if (currentPage < totalPages) loadNightShifts(currentPage + 1);
+  });
 
   function setLoading(isLoading) {
     submitButton.disabled = isLoading;
@@ -228,6 +284,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     setLoading(true);
     try {
+      const wasEditing = !!editingId;
       if (editingId) {
         await Api.updateNightShift(editingId, { date, nightHoursClock });
         showFormSuccess('Turno noturno atualizado com sucesso!');
@@ -236,7 +293,7 @@ document.addEventListener('DOMContentLoaded', () => {
         showFormSuccess('Turno noturno registrado com sucesso!');
       }
       exitEditMode();
-      await loadNightShifts();
+      await loadNightShifts(wasEditing ? currentPage : 1);
     } catch (err) {
       showFormError(err.message || 'Não foi possível salvar o registro.');
     } finally {
