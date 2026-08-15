@@ -1,4 +1,3 @@
-const mongoose = require('mongoose')
 const MealVoucherConfig = require('../models/MealVoucherConfig')
 
 const seedMealVoucherConfig = async () => {

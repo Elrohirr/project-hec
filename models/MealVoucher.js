@@ -1,6 +1,4 @@
 const mongoose = require('mongoose')
-const User = require('./User')
-const Overtime = require('./Overtime')
 
 const MealVoucherSchema = new mongoose.Schema({
     createdBy: {
@@ -25,6 +23,10 @@ const MealVoucherSchema = new mongoose.Schema({
     date: {
         type: Date,
         required: [true, "Por favor, insira uma data"]
+    },
+    payDate: {
+        type: Date,
+        required: [true, "Informe a data de pagamento"]
     },
     quantity: {
         type: Number,

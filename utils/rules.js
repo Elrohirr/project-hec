@@ -76,6 +76,14 @@ function calcMealVoucher(minutes, nightHoursClock) {
     throw new BadRequestError('Verifique se a quantidade de hora extra foi digitada corretamente')
 }
 
-module.exports = { calcDistribution, defineValue, defineNightValue, extractPayDate, calcMealVoucher }
+function getLabel(code) {
+    if (code === 'OVERTIME_HALF') return { label: 'Meio VL Hora Extra', quantity: 0.5 }
+    if (code === 'OVERTIME_FULL') return { label: 'VL Completo Hora Extra', quantity: 1 }
+    if (code === 'OVERTIME_DOUBLE') return { label: '2 VL Hora Extra', quantity: 2 }
+    if (code === 'NIGHTSHIFT') return { label: 'VL Turno Noturno', quantity: 1 }
+    throw new BadRequestError('Código de ticket inválido')
+}
+
+module.exports = { calcDistribution, defineValue, defineNightValue, extractPayDate, calcMealVoucher, getLabel }
 
 

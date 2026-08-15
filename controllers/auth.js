@@ -4,7 +4,14 @@ const { BadRequestError, UnauthenticatedError } = require('../errors')
 
 // ----- funcionalidade cadastrar
 const register = async (req, res) => {
-    const user = await User.create({ ...req.body })
+    const createFields = {
+        name: req.body.name,
+        surname: req.body.surname,
+        email: req.body.email,
+        password: req.body.password,
+        wage: req.body.wage,
+    }
+    const user = await User.create(createFields)
     const token = user.createJWT()
     res.status(StatusCodes.CREATED).json({ user: { name: user.name + " " + user.surname }, token })
 }

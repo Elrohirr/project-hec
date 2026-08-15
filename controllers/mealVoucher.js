@@ -6,7 +6,7 @@ const { BadRequestError, NotFoundError } = require('../errors')
 
 // --------------------------- GET todos os registros de vale-refeição do usuário -----------------------------------------------------
 const getAllMealVouchers = async (req, res) => {
-    const { user: { userId }, query: { source, startDate, endDate, sort } } = req
+    const { user: { userId }, query: { source, startDate, endDate, startPayDate, endPayDate, sort } } = req
 
     const queryObject = { createdBy: new mongoose.Types.ObjectId(userId) }
     if (source) queryObject.source = source
@@ -14,6 +14,11 @@ const getAllMealVouchers = async (req, res) => {
         queryObject.date = {}
         if (startDate) queryObject.date.$gte = new Date(startDate)
         if (endDate) queryObject.date.$lte = new Date(endDate)
+    }
+    if (startPayDate || endPayDate) {
+        queryObject.payDate = {}
+        if (startPayDate) queryObject.payDate.$gte = new Date(startPayDate)
+        if (endPayDate) queryObject.payDate.$lte = new Date(endPayDate)
     }
     let result = MealVoucher.find(queryObject)
     if (sort) {
@@ -46,4 +51,4 @@ const getMealVoucher = async (req, res) => {
     res.status(StatusCodes.OK).json({ mealVoucher })
 }
 
-module.exports = { getAllMealVouchers, getMealVoucher}
+module.exports = { getAllMealVouchers, getMealVoucher }

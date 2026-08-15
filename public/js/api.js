@@ -4,6 +4,29 @@
  * erros sejam tratados de um jeito só em todo o projeto.
  */
 
+/**
+ * Decodifica o payload de um JWT (segmento base64url) sem validar assinatura.
+ * Usado no frontend apenas para ler dados não sensíveis do token,
+ * como o flag `isAdmin` emitido no login (ver models/User.js -> createJWT).
+ */
+function decodeJwtPayload(token) {
+  try {
+    const base64Url = token.split('.')[1];
+    if (!base64Url) return null;
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const padded = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), '=');
+    const json = decodeURIComponent(
+      atob(padded)
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    return JSON.parse(json);
+  } catch {
+    return null;
+  }
+}
+
 const Api = {
   getToken() {
     return localStorage.getItem(APP_CONFIG.TOKEN_STORAGE_KEY);
@@ -28,6 +51,25 @@ const Api = {
 
   isAuthenticated() {
     return !!this.getToken();
+  },
+
+  /**
+   * Decodifica o payload do token JWT armazenado (não valida assinatura).
+   * @returns {object|null} payload do token ou null quando indisponível/inválido.
+   */
+  decodeToken() {
+    const token = this.getToken();
+    if (!token) return null;
+    return decodeJwtPayload(token);
+  },
+
+  /**
+   * Verifica se o usuário autenticado é admin olhando o payload do token,
+   * que inclui o campo `isAdmin` (ver middleware/authorizeAdmin.js no backend).
+   */
+  isAdmin() {
+    const payload = this.decodeToken();
+    return payload && payload.isAdmin === true;
   },
 
   /**
@@ -157,8 +199,28 @@ const Api = {
     });
   },
 
-  async getProfile() {
-    return this.request('/user/profile', { method: 'GET' });
+  // ---- Admin (protegido no backend por middleware/authorizeAdmin) ----------
+
+  /** Lista todas as configurações de vale-refeição cadastradas (GET /admin). */
+  async getMealVoucherConfigs() {
+    return this.request('/admin', {
+      method: 'GET'
+    });
+  },
+
+  /** Cria uma nova configuração de vale-refeição ativa (POST /admin). */
+  async createMealVoucherConfig({ code, unitValue }) {
+    return this.request('/admin', {
+      method: 'POST',
+      body: JSON.stringify({ code, unitValue })
+    });
+  },
+
+  /** Ativa uma configuração de vale-refeição existente (PATCH /admin/:id). */
+  async activateMealVoucherConfig(id) {
+    return this.request(`/admin/${id}`, {
+      method: 'PATCH'
+    });
   },
 
   async updateProfile({ name, surname, wage, email }) {

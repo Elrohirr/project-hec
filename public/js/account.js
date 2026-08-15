@@ -41,19 +41,17 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ---- Carregar dados atuais do perfil (GET /user/profile) ------------------
-  async function loadProfile() {
-    setLoading(profileSubmit, true, 'Salvar alterações', 'Carregando…');
-    try {
-      const user = await Api.getProfile();
-      profileName.value = user.name || '';
-      profileSurname.value = user.surname || '';
-      profileEmail.value = user.email || '';
-      profileWage.value = formatWage(user.wage);
-    } catch (err) {
-      setMessages(profileError, profileSuccess, { error: err.message || 'Não foi possível carregar seus dados de perfil.' });
-    } finally {
-      setLoading(profileSubmit, false, 'Salvar alterações', 'Carregando…');
-    }
+  function loadProfile() {
+    // O backend não expõe mais GET /user/profile.
+    // Preenchemos nome e sobrenome a partir do nome armazenado na sessão.
+    const userName = Api.getUser()?.name || '';
+    const nameParts = userName.split(' ');
+    profileName.value = nameParts[0] || '';
+    profileSurname.value = nameParts.slice(1).join(' ') || '';
+    // Email e salário ficam em branco; o usuário pode digitá-los novamente
+    // e submeter o formulário (PATCH /user/profile faz update parcial).
+    profileEmail.placeholder = 'Informe novamente para atualizar';
+    profileWage.placeholder = 'Informe novamente para atualizar';
   }
 
   // ---- Atualizar perfil (PATCH /user/profile) -------------------------------

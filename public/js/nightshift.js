@@ -95,6 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
       <td class="numeric">${record.nightHoursClock ?? '07:00'}</td>
       <td class="numeric">${record.nightHoursReduced ?? '08:00'}</td>
       <td class="numeric">${currencyFormatter.format(record.nightShiftValue ?? 0)}</td>
+      <td class="numeric">${currencyFormatter.format(record.wageAtCalculation ?? 0)}</td>
       <td>${formatPayDate(record.payDate)}</td>
       <td>
         <div class="row-actions">

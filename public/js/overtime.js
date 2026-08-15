@@ -91,6 +91,7 @@ document.addEventListener('DOMContentLoaded', () => {
       <td class="numeric">${record.distributionHours?.he75hours ?? '00:00'}</td>
       <td class="numeric">${record.distributionHours?.he100hours ?? '00:00'}</td>
       <td class="numeric">${currencyFormatter.format(record.values?.total ?? 0)}</td>
+      <td class="numeric">${currencyFormatter.format(record.wageAtCalculation ?? 0)}</td>
       <td>${formatPayDate(record.payDate)}</td>
       <td>${badges.join(' ') || '—'}</td>
       <td>

@@ -3,8 +3,8 @@ const mongoose = require('mongoose')
 const MealVoucherConfigSchema = new mongoose.Schema({
     code: {
         type: String,
+        enum: ['OVERTIME_HALF', 'OVERTIME_FULL', 'OVERTIME_DOUBLE', 'NIGHTSHIFT'],
         required: true,
-        unique: true
     },
 
     label: {
@@ -34,5 +34,10 @@ const MealVoucherConfigSchema = new mongoose.Schema({
         default: true
     }
 }, { timestamps: true })
+
+MealVoucherConfigSchema.index(
+    { code: 1 },
+    { unique: true, partialFilterExpression: { active: true } }
+)
 
 module.exports = mongoose.model('MealVoucherConfig', MealVoucherConfigSchema)

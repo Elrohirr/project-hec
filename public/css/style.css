@@ -4,6 +4,13 @@
    de marcação de horas, com o âmbar marcando o que passou
    da jornada (hora extra) e o grafite/teal marcando o normal.
    ========================================================= */
+/* =========================================================
+   Utilitário: hidden (autor sobrepõe UA para evitar conflitos)
+   ========================================================= */
+[hidden] {
+  display: none !important;
+}
+
 :root {
   --ink: #161f2b;
   --ink-soft: #3c4658;
@@ -422,24 +429,6 @@ a {
   margin: 0 auto;
 }
 
-.placeholder-card {
-  background: var(--paper-raised);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-card);
-  padding: 32px;
-}
-
-.placeholder-card h2 {
-  font-family: var(--font-display);
-  margin-top: 0;
-}
-
-.placeholder-card p {
-  color: var(--ink-soft);
-  line-height: 1.6;
-}
-
 /* =========================================================
    Tela de horas extras — resumo, formulário e tabela
    ========================================================= */
@@ -728,16 +717,6 @@ a {
   color: var(--teal);
 }
 
-.module-badge--ready {
-  background: var(--teal);
-  color: var(--paper-raised);
-}
-
-.module-badge--new {
-  background: var(--amber);
-  color: var(--ink);
-}
-
 /* Formulário em modo de edição + ações da tabela */
 .ghost-button-light {
   width: 100%;
@@ -768,6 +747,29 @@ a {
 
 .icon-button.edit:hover {
   background: rgba(47, 111, 98, 0.08);
+}
+
+.icon-button.activate {
+  color: var(--teal);
+}
+
+.icon-button.activate:hover {
+  background: rgba(47, 111, 98, 0.08);
+}
+
+/* Alinhamento da coluna "Ações" da tabela admin:
+   o "—" das configs ativas e o botão "Ativar" usam o mesmo container .row-actions */
+.admin-configs-table td:last-child {
+  vertical-align: middle;
+}
+
+.admin-configs-table .row-actions {
+  align-items: center;
+}
+
+.admin-configs-table .no-action {
+  color: var(--ink-soft);
+  white-space: nowrap;
 }
 
 .table-toolbar {
@@ -886,6 +888,27 @@ a {
 
 .info-popup .ghost-button-light.small {
   margin-top: 6px;
+}
+
+/* =========================================================
+   Admin — lista de configurações
+   ========================================================= */
+.admin-list-title {
+  font-family: var(--font-display);
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.admin-create-card {
+  margin-bottom: 24px;
+}
+
+/* variante "inativo" do selo .source-tag (mesmo visual dos badges de origem) */
+.source-tag--inactive {
+  background: rgba(22, 31, 43, 0.06);
+  color: var(--ink-soft);
+  border: 1px solid var(--line);
 }
 
 /* =========================================================

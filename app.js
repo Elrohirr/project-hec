@@ -6,27 +6,30 @@ const app = express()
 // connect DB
 const connectDB = require('./db/connectDB')
 const authenticateUser = require('./middleware/authentication')
+const authorizeUser = require('./middleware/authorizeAdmin')
 
 // routers
 const authRouter = require('./routes/auth')
 const overtimeRouter = require('./routes/overtime')
 const nightShiftRouter = require('./routes/nightShift')
-const mealVoucherRouter = require('./routes/mealVouchers')
+const mealVoucherRouter = require('./routes/mealVoucher')
 const userRouter = require('./routes/user')
+const adminRouter = require('./routes/admin')
 
 // error handler
 const notFoundMiddleware = require('./middleware/not-found')
 const errorHandlerMiddleware = require('./middleware/error-handler')
 
 app.use(express.json())
-app.use(express.static(path.join(__dirname,'public')))
+app.use(express.static(path.join(__dirname, 'public')))
 
 // routes
 app.use('/api/v1/auth', authRouter)
 app.use('/api/v1/overtime', authenticateUser, overtimeRouter)
 app.use('/api/v1/nightShift', authenticateUser, nightShiftRouter)
 app.use('/api/v1/mealvoucher', authenticateUser, mealVoucherRouter)
-app.use('/api/v1/user',authenticateUser,userRouter)
+app.use('/api/v1/user', authenticateUser, userRouter)
+app.use('/api/v1/admin', authenticateUser, authorizeUser, adminRouter)
 
 app.use(notFoundMiddleware)
 app.use(errorHandlerMiddleware)

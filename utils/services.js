@@ -1,14 +1,13 @@
-const mongoose = require('mongoose')
 const MealVoucher = require('../models/MealVoucher')
 const MealVoucherConfig = require('../models/MealVoucherConfig')
-const { calcMealVoucher } = require('./rules')
+const { calcMealVoucher, extractPayDate } = require('./rules')
 const { NotFoundError } = require('../errors')
 
 // ------------------------------------ Service para criar ticket originado de uma hora extra ou turno noturno ----------------------------------------------------------
 async function createMealVoucherService(ref, session) {
     const rule = calcMealVoucher(ref.workedMinutes, ref.nightHoursClock)
     if (!rule) return null
-    const config = await MealVoucherConfig.findOne({ code: rule.rule }).session(session)
+    const config = await MealVoucherConfig.findOne({ code: rule.rule, active: true }).session(session)
     if (!config) throw new NotFoundError('Regra não encontrada')
 
     const mealVoucherObject = {
@@ -17,6 +16,7 @@ async function createMealVoucherService(ref, session) {
         source: rule.source,
         ruleCode: rule.rule,
         date: ref.date,
+        payDate: extractPayDate(ref.date, true), // segundo argumento como true para cair na regra de pagamento do mês seguinte
         quantity: config.quantity,
         unitValue: config.unitValue,
         totalValue: config.unitValue * config.quantity
@@ -35,7 +35,7 @@ async function updateMealVoucherService(ref, session) {
         return null
     }
 
-    const config = await MealVoucherConfig.findOne({ code: rule.rule }).session(session)
+    const config = await MealVoucherConfig.findOne({ code: rule.rule, active: true }).session(session)
     if (!config) throw new NotFoundError('Regra não encontrada')
 
     const mealVoucherObject = {
@@ -44,6 +44,7 @@ async function updateMealVoucherService(ref, session) {
         source: rule.source,
         ruleCode: rule.rule,
         date: ref.date,
+        payDate: extractPayDate(ref.date, true), // segundo argumento como true para cair na regra de pagamento do mês seguinte
         quantity: config.quantity,
         unitValue: config.unitValue,
         totalValue: config.unitValue * config.quantity

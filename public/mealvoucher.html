@@ -45,13 +45,34 @@
       </section>
 
       <section class="table-card">
-        <div class="table-toolbar">
-          <label for="source-filter">Origem</label>
-          <select id="source-filter">
-            <option value="">Todas</option>
-            <option value="overtime">Hora extra</option>
-            <option value="nightShift">Turno noturno</option>
-          </select>
+        <div class="table-toolbar filters-toolbar">
+          <div class="filter-field">
+            <label for="source-filter">Origem</label>
+            <select id="source-filter">
+              <option value="">Todas</option>
+              <option value="overtime">Hora extra</option>
+              <option value="nightShift">Turno noturno</option>
+            </select>
+          </div>
+          <div class="filter-field">
+            <label for="filter-pay-month-start">Pgto. de</label>
+            <input type="month" id="filter-pay-month-start">
+          </div>
+          <div class="filter-field">
+            <label for="filter-pay-month-end">Pgto. até</label>
+            <input type="month" id="filter-pay-month-end">
+          </div>
+          <div class="filter-field">
+            <label for="filter-sort">Ordenar por</label>
+            <select id="filter-sort">
+              <option value="-date">Mais recentes primeiro</option>
+              <option value="date">Mais antigos primeiro</option>
+              <option value="-payDate">Pagamento mais recente</option>
+              <option value="payDate">Pagamento mais antigo</option>
+            </select>
+          </div>
+          <button type="button" id="apply-filters-button" class="ghost-button-light small">Filtrar</button>
+          <button type="button" id="clear-filters-button" class="ghost-button-light small">Limpar</button>
         </div>
 
         <div class="table-scroll">
@@ -64,6 +85,7 @@
                 <th>Quantidade</th>
                 <th>Valor unitário</th>
                 <th>Valor total</th>
+                <th>Mês pgto.</th>
               </tr>
             </thead>
             <tbody id="mealvoucher-table-body">

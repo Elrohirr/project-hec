@@ -3,7 +3,6 @@ const User = require("../models/User")
 const Overtime = require('../models/Overtime')
 const NightShift = require('../models/NightShift')
 const MealVoucher = require('../models/MealVoucher');
-const bcrypt = require('bcryptjs')
 const { StatusCodes } = require("http-status-codes");
 const { BadRequestError, NotFoundError } = require("../errors");
 

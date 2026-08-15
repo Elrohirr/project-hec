@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Administração — Hour Flow</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="app-header">
+      <div class="header-left">
+        <p class="brand-name">Hour Flow - Controle de Horas e Pagamentos</p>
+        <nav class="app-nav">
+          <a href="dashboard.html">Início</a>
+          <a href="overtime.html">Horas extras</a>
+          <a href="nightshift.html">Turno noturno</a>
+          <a href="mealvoucher.html">Vale-refeição</a>
+          <a href="admin.html" class="active">Administração</a>
+        </nav>
+      </div>
+      <div class="user-area">
+        <span id="user-greeting"></span>
+        <a href="account.html">Minha conta</a>
+        <button id="logout-button" class="ghost-button" type="button">Sair</button>
+      </div>
+    </header>
+
+    <main class="app-content">
+      <div class="page-heading">
+        <h2>Administração</h2>
+      </div>
+
+      <p class="section-hint">Gerencie as configurações dos vale-refeição. Uma configuração ativa é a que vale para os novos registros (hora extra e turno noturno).</p>
+
+      <!-- Criar nova configuração: POST /api/v1/admin -->
+      <section class="form-card admin-create-card">
+        <h3>Nova configuração de vale-refeição</h3>
+
+        <div id="create-error-box" class="error-box" role="alert" hidden></div>
+        <div id="create-success-box" class="success-box" role="status" hidden></div>
+
+        <form id="admin-create-form" novalidate>
+          <div class="field">
+            <label for="config-code">Regra / Código</label>
+            <select id="config-code" name="code" required>
+              <option value="" disabled selected>Selecione a regra</option>
+              <option value="OVERTIME_HALF">OVERTIME_HALF — Meio VL Hora Extra</option>
+              <option value="OVERTIME_FULL">OVERTIME_FULL — VL Completo Hora Extra</option>
+              <option value="OVERTIME_DOUBLE">OVERTIME_DOUBLE — 2 VL Hora Extra</option>
+              <option value="NIGHTSHIFT">NIGHTSHIFT — VL Turno Noturno</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="config-unit-value">Valor unitário (R$)</label>
+            <input type="number" id="config-unit-value" name="unitValue" min="0" step="0.01" inputmode="decimal" placeholder="Ex.: 59.13" required>
+            <span class="hint">O novo valor passa a valer imediatamente para essa regra, desativando a configuração anterior.</span>
+          </div>
+          <button type="submit" id="create-submit-button" class="primary-button">Criar configuração</button>
+        </form>
+      </section>
+
+      <!-- Configurações cadastradas no banco: GET /api/v1/admin -->
+      <section class="table-card">
+        <div class="table-toolbar">
+          <h3 class="admin-list-title">Configurações cadastradas</h3>
+        </div>
+
+        <div class="table-scroll">
+          <table class="overtime-table admin-configs-table">
+            <thead>
+              <tr>
+                <th>Código</th>
+                <th>Rótulo</th>
+                <th>Qtde.</th>
+                <th>Valor unit.</th>
+                <th>Vigência</th>
+                <th>Status</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="config-table-body">
+              <!-- linhas geradas via JS -->
+            </tbody>
+          </table>
+        </div>
+        <div id="empty-state" class="empty-state" hidden>
+          Nenhuma configuração cadastrada ainda.
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/auth-guard.js"></script>
+  <script src="js/admin-guard.js"></script>
+  <script src="js/header.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>

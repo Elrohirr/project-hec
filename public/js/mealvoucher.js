@@ -5,6 +5,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const prevPageButton = document.getElementById('prev-page-button');
   const nextPageButton = document.getElementById('next-page-button');
   const sourceFilter = document.getElementById('source-filter');
+  const filterPayMonthStart = document.getElementById('filter-pay-month-start');
+  const filterPayMonthEnd = document.getElementById('filter-pay-month-end');
+  const filterSort = document.getElementById('filter-sort');
+  const applyFiltersButton = document.getElementById('apply-filters-button');
+  const clearFiltersButton = document.getElementById('clear-filters-button');
 
   const summaryCount = document.getElementById('summary-count');
   const summarySubtotal = document.getElementById('summary-subtotal');
@@ -16,6 +21,12 @@ document.addEventListener('DOMContentLoaded', () => {
   // timeZone: 'UTC' evita que o navegador mostre um dia a menos
   // (o backend salva as datas como UTC meia-noite).
   const dateFormatter = new Intl.DateTimeFormat('pt-BR', { timeZone: 'UTC' });
+
+  const payDateFormatter = new Intl.DateTimeFormat('pt-BR', {
+    timeZone: 'UTC',
+    month: '2-digit',
+    year: 'numeric'
+  });
 
   const sourceLabels = {
     overtime: 'Hora extra',
@@ -29,6 +40,30 @@ document.addEventListener('DOMContentLoaded', () => {
     return dateFormatter.format(new Date(isoString));
   }
 
+  function formatPayDate(isoString) {
+    if (!isoString) return '—';
+    return payDateFormatter.format(new Date(isoString));
+  }
+
+  function monthStartDate(monthValue) {
+    return `${monthValue}-01`;
+  }
+
+  function monthEndDate(monthValue) {
+    const [year, month] = monthValue.split('-').map(Number);
+    const lastDay = new Date(Date.UTC(year, month, 0)).getUTCDate();
+    return `${monthValue}-${String(lastDay).padStart(2, '0')}`;
+  }
+
+  function getActiveFilters() {
+    const filters = {};
+    if (sourceFilter.value) filters.source = sourceFilter.value;
+    if (filterPayMonthStart.value) filters.startPayDate = monthStartDate(filterPayMonthStart.value);
+    if (filterPayMonthEnd.value) filters.endPayDate = monthEndDate(filterPayMonthEnd.value);
+    if (filterSort.value) filters.sort = filterSort.value;
+    return filters;
+  }
+
   function renderRow(voucher) {
     const tr = document.createElement('tr');
     const sourceLabel = sourceLabels[voucher.source] || voucher.source;
@@ -40,6 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
       <td class="numeric">${voucher.quantity}</td>
       <td class="numeric">${currencyFormatter.format(voucher.unitValue)}</td>
       <td class="numeric">${currencyFormatter.format(voucher.totalValue)}</td>
+      <td>${formatPayDate(voucher.payDate)}</td>
     `;
     return tr;
   }
@@ -62,10 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function loadMealVouchers(page = 1) {
     try {
-      const params = { page, limit: 10 };
-      if (sourceFilter.value) params.source = sourceFilter.value;
-
-      const data = await Api.getMealVouchers(params);
+      const data = await Api.getMealVouchers({ page, limit: 10, ...getActiveFilters() });
       currentPage = data.currentPage || page;
       totalPages = data.numberOfPages || 1;
 
@@ -80,7 +113,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  sourceFilter.addEventListener('change', () => loadMealVouchers(1));
+  applyFiltersButton.addEventListener('click', () => loadMealVouchers(1));
+
+  clearFiltersButton.addEventListener('click', () => {
+    sourceFilter.value = '';
+    filterPayMonthStart.value = '';
+    filterPayMonthEnd.value = '';
+    filterSort.value = '-date';
+    loadMealVouchers(1);
+  });
 
   prevPageButton.addEventListener('click', () => {
     if (currentPage > 1) loadMealVouchers(currentPage - 1);
