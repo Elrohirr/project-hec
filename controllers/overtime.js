@@ -45,7 +45,8 @@ const getAllOvertime = async (req, res) => {
                     _id: null,
                     he50: { $sum: "$distributionMinutes.he50minutes" },
                     he75: { $sum: "$distributionMinutes.he75minutes" },
-                    he100: { $sum: "$distributionMinutes.he100minutes" }
+                    he100: { $sum: "$distributionMinutes.he100minutes" },
+                    heHoliday: { $sum: { $cond: [{ $eq: ["$isHoliday", true] }, "$workedMinutes", 0] } }
                 }
             }
         ])
@@ -95,7 +96,7 @@ const createOvertime = async (req, res) => {
     try {
         const result = await session.withTransaction(async () => {
             const { body: { workedHours, date, isDayOff, isHoliday }, user: { userId } } = req
-            if (!workedHours || !date) throw new BadRequestError('Por favor, insira a quantidade de hora extra e o dia')
+            if (!workedHours || !date) throw new BadRequestError('Por favor, informe quantas horas extras foram feitas e a data')
             const wage = await User.findById(userId).select('wage')
 
             //validar formato

@@ -19,6 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const summaryHe50 = document.getElementById('summary-he50');
   const summaryHe75 = document.getElementById('summary-he75');
   const summaryHe100 = document.getElementById('summary-he100');
+  const summaryHeHoliday = document.getElementById('summary-he-holiday');
   const summaryTotal = document.getElementById('summary-total');
 
   const filterStartDate = document.getElementById('filter-start-date');
@@ -71,9 +72,14 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function updateSummary({ distribution, values }) {
+    const he100Minutes = distribution?.he100 || 0;
+    const heHolidayMinutes = distribution?.heHoliday || 0;
+
     summaryHe50.textContent = minutesToHHMM(distribution?.he50);
     summaryHe75.textContent = minutesToHHMM(distribution?.he75);
-    summaryHe100.textContent = minutesToHHMM(distribution?.he100);
+    // HE 100% sem os minutos que já são contados como feriado (card HE (Feriado))
+    summaryHe100.textContent = minutesToHHMM(he100Minutes - heHolidayMinutes);
+    summaryHeHoliday.textContent = minutesToHHMM(heHolidayMinutes);
     summaryTotal.textContent = currencyFormatter.format(values?.total ?? 0);
   }
 

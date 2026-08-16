@@ -36,15 +36,23 @@
       <section class="summary-cards" id="summary-cards">
         <div class="summary-card">
           <span class="label">HE 50%</span>
+          <span class="hint">Enc. Banco Horas 50%</span>
           <span class="value" id="summary-he50">—</span>
         </div>
         <div class="summary-card">
           <span class="label">HE 75%</span>
+          <span class="hint">Enc. Banco Horas 75%</span>
           <span class="value" id="summary-he75">—</span>
         </div>
         <div class="summary-card">
           <span class="label">HE 100%</span>
+          <span class="hint">Enc. Banco Horas 100%</span>
           <span class="value" id="summary-he100">—</span>
+        </div>
+        <div class="summary-card">
+          <span class="label">HE (Feriado)</span>
+          <span class="hint">HE - 100%</span>
+          <span class="value" id="summary-he-holiday">—</span>
         </div>
         <div class="summary-card total">
           <span class="label">Total a receber</span>
@@ -94,6 +102,14 @@
               <input type="date" id="filter-end-date">
             </div>
             <div class="filter-field">
+              <label for="filter-pay-month-start">Pgto. de</label>
+              <input type="month" id="filter-pay-month-start">
+            </div>
+            <div class="filter-field">
+              <label for="filter-pay-month-end">Pgto. até</label>
+              <input type="month" id="filter-pay-month-end">
+            </div>
+            <div class="filter-field">
               <label for="filter-is-holiday">Feriado</label>
               <select id="filter-is-holiday">
                 <option value="">Todos</option>
@@ -108,14 +124,6 @@
                 <option value="true">Sim</option>
                 <option value="false">Não</option>
               </select>
-            </div>
-            <div class="filter-field">
-              <label for="filter-pay-month-start">Pgto. de</label>
-              <input type="month" id="filter-pay-month-start">
-            </div>
-            <div class="filter-field">
-              <label for="filter-pay-month-end">Pgto. até</label>
-              <input type="month" id="filter-pay-month-end">
             </div>
             <div class="filter-field">
               <label for="filter-sort">Ordenar por</label>

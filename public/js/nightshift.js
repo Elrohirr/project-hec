@@ -271,15 +271,11 @@ document.addEventListener('DOMContentLoaded', () => {
     hideFormMessages();
 
     const date = dateInput.value;
-    const nightHoursClock = totalNightHoursInput.value;
+    // Se o campo vier vazio, usa o fallback '07:00' (mesmo padrão do backend).
+    const nightHoursClock = totalNightHoursInput.value || '07:00';
 
     if (!date) {
       showFormError('Informe a data do turno noturno.');
-      return;
-    }
-
-    if (!nightHoursClock) {
-      showFormError('Informe as horas noturnas.');
       return;
     }
 

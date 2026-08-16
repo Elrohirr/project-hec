@@ -446,7 +446,7 @@ a {
 
 .summary-cards {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
   gap: 16px;
   margin-bottom: 32px;
 }
@@ -465,6 +465,15 @@ a {
   color: var(--ink-soft);
   letter-spacing: 0.03em;
   margin-bottom: 6px;
+}
+
+/* Subtítulo com a descrição que aparece no contracheque */
+.summary-card .hint {
+  display: block;
+  font-size: 0.68rem;
+  color: var(--ink-soft);
+  line-height: 1.35;
+  margin: -2px 0 6px;
 }
 
 .summary-card .value {

@@ -36,6 +36,7 @@
       <section class="summary-cards" id="summary-cards">
         <div class="summary-card">
           <span class="label">Horas de relógio</span>
+          <span class="hint">Horário que vem do ponto</span>
           <span class="value" id="summary-total-clock">—</span>
         </div>
         <div class="summary-card">
@@ -43,10 +44,12 @@
             Horas reduzidas
             <button type="button" class="info-button" id="info-reduced" aria-label="O que são horas reduzidas?">ⓘ</button>
           </span>
+          <span class="hint">Formato que vem no contracheque</span>
           <span class="value" id="summary-total-reduced">—</span>
         </div>
         <div class="summary-card">
           <span class="label">Adicional noturno</span>
+          <span class="hint">Adic-Noturno</span>
           <span class="value" id="summary-total-night-value">—</span>
         </div>
         <div class="summary-card total">
@@ -73,8 +76,8 @@
 
           <form id="nightshift-form" novalidate>
             <div class="field">
-              <label for="total-night-hours">Horas noturnas (relógio)</label>
-              <input type="time" id="total-night-hours" name="nightHoursClock" min="00:00" max="07:00" step="60" required>
+              <label for="total-night-hours">Horas noturnas (relógio) — padrão 07:00</label>
+              <input type="time" id="total-night-hours" name="nightHoursClock" min="00:00" max="07:00" step="60" value="07:00">
             </div>
             <div class="field">
               <label for="date">Data</label>

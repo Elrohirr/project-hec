@@ -93,15 +93,16 @@ const updateNightShift = async (req, res) => {
     const session = await mongoose.startSession()
     try {
         const result = await session.withTransaction(async () => {
-            const { body: { nightHoursClock, date }, user: { userId }, params: { id: nightShiftId } } = req
-            if (nightHoursClock === "" || date === "") throw new BadRequestError('Horas noturnas e data não podem ser vazias')
+            const { body: { date }, user: { userId }, params: { id: nightShiftId } } = req
+            if (date === "") throw new BadRequestError('A data não pode ser vazia')
+
             const wage = await User.findById(userId).select('wage')
 
             const oldNightShift = await NightShift.findOne({ createdBy: userId, _id: nightShiftId }).session(session)
             if (!oldNightShift) throw new NotFoundError("Registro de turno noturno não encontrado")
 
-            // update parcial
-            const finalNightHoursClock = (req.body.nightHoursClock ?? oldNightShift.nightHoursClock).trim()
+            // update parcial: se `nightHoursClock` vier vazio, aplica o mesmo fallback '07:00' do CREATE
+            const finalNightHoursClock = ((req.body.nightHoursClock ?? oldNightShift.nightHoursClock) || '07:00').trim()
             const finalDate = req.body.date ?? oldNightShift.date
 
             //validar formato, whitelist e recaulcular regras de negócio

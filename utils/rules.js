@@ -24,7 +24,7 @@ function calcDistribution(minutes, isDayOff, isHoliday) {
             he100minutes: 0
         }
     }
-    throw new BadRequestError("Só é possível executar mais de 5 horas extras se for feriado ou dia de folga. Por favor, marque a opção correta")
+    throw new BadRequestError("Só é possível executar mais de 5 horas extras se for feriado ou dia de folga.")
 }
 
 function defineValue(distribution, wage) {
@@ -62,8 +62,7 @@ function calcMealVoucher(minutes, nightHoursClock) {
         if (timeToMinutes(nightHoursClock) === 420) return { rule: 'NIGHTSHIFT', source: 'nightShift' }
         return null
     }
-    // 810 minutos pois raramente há momento que a hora extra de 12 horas pode chegar a 13 horas
-    if (minutes <= 0 || minutes > 810) throw new BadRequestError('A quantidade de horas extras não pode ser menor ou igual a 0 ou maior que 13 horas')
+    if (minutes <= 0 || minutes > 840) throw new BadRequestError('A quantidade de horas extras não pode ser menor ou igual a 0 ou maior que 14 horas')
     if (minutes >= 60 && minutes < 120) {
         return { rule: 'OVERTIME_HALF', source: 'overtime' }
     }
@@ -73,7 +72,7 @@ function calcMealVoucher(minutes, nightHoursClock) {
     if (minutes >= 360) {
         return { rule: 'OVERTIME_DOUBLE', source: 'overtime' }
     }
-    throw new BadRequestError('Verifique se a quantidade de hora extra foi digitada corretamente')
+    return null
 }
 
 function getLabel(code) {
