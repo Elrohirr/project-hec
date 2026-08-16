@@ -16,6 +16,46 @@ document.addEventListener('DOMContentLoaded', () => {
     window.location.href = 'index.html';
   });
 
+  // ---- Menu mobile (hambúrguer) -------------------------------------
+  // O botão é injetado aqui para valer em todas as páginas internas sem
+  // duplicar marcação no HTML. Ele alterna a classe `nav-open` no <header>,
+  // que o CSS usa para abrir/recolher a navegação em telas estreitas.
+  const header = document.querySelector('.app-header');
+  if (header) {
+    const toggle = document.createElement('button');
+    toggle.type = 'button';
+    toggle.id = 'menu-toggle';
+    toggle.className = 'menu-toggle';
+    toggle.setAttribute('aria-label', 'Abrir menu');
+    toggle.setAttribute('aria-expanded', 'false');
+    toggle.innerHTML =
+      '<span class="menu-toggle-bar"></span>' +
+      '<span class="menu-toggle-bar"></span>' +
+      '<span class="menu-toggle-bar"></span>';
+
+    const headerLeft = header.querySelector('.header-left');
+    headerLeft?.appendChild(toggle);
+
+    const setMenu = (open) => {
+      header.classList.toggle('nav-open', open);
+      toggle.setAttribute('aria-expanded', String(open));
+      toggle.setAttribute('aria-label', open ? 'Fechar menu' : 'Abrir menu');
+    };
+
+    toggle.addEventListener('click', () => {
+      setMenu(!header.classList.contains('nav-open'));
+    });
+
+    // Fecha o menu ao escolher qualquer item (links e o botão "Sair").
+    // Usa delegação para que links injetados depois (ex.: "Administração",
+    // adicionado abaixo) também fechem o menu automaticamente.
+    header.addEventListener('click', (event) => {
+      if (event.target.closest('.app-nav a, .user-area a, .user-area button')) {
+        setMenu(false);
+      }
+    });
+  }
+
   // ---- Área administrativa: só aparece para quem é admin ----
   if (Api.isAdmin()) {
     // Card do módulo "Administração" no dashboard (existe somente lá)
