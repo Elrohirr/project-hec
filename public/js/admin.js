@@ -14,6 +14,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const tableBody = document.getElementById('config-table-body');
   const emptyState = document.getElementById('empty-state');
 
+  const usersTableBody = document.getElementById('users-table-body');
+  const usersEmptyState = document.getElementById('users-empty-state');
+
   const currencyFormatter = new Intl.NumberFormat('pt-BR', {
     style: 'currency',
     currency: 'BRL'
@@ -137,6 +140,41 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // ---- Usuários do sistema (GET /admin/users) ------------------------------------
+  function renderUserRow(user) {
+    const tr = document.createElement('tr');
+    const isAdmin = user.isAdmin === true;
+    const profileClass = isAdmin ? 'source-tag source-tag--admin' : 'source-tag';
+    const profileText = isAdmin ? 'Admin' : 'Usuário';
+
+    tr.innerHTML = `
+      <td>${[user.name, user.surname].filter(Boolean).join(' ') || '—'}</td>
+      <td>${user.email || '—'}</td>
+      <td><span class="${profileClass}">${profileText}</span></td>
+    `;
+    return tr;
+  }
+
+  function renderUsers(users) {
+    usersTableBody.innerHTML = '';
+    if (!users.length) {
+      usersEmptyState.hidden = false;
+      return;
+    }
+    usersEmptyState.hidden = true;
+    users.forEach((user) => usersTableBody.appendChild(renderUserRow(user)));
+  }
+
+  async function loadUsers() {
+    try {
+      const data = await Api.getAllUsers();
+      renderUsers(Array.isArray(data) ? data : []);
+    } catch (err) {
+      usersEmptyState.hidden = false;
+      usersEmptyState.textContent = err.message || 'Não foi possível carregar os usuários.';
+    }
+  }
+
   // ---- Criar nova configuração (POST /admin) -------------------------------------
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
@@ -174,4 +212,5 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   loadConfigs();
+  loadUsers();
 });

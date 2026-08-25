@@ -1,11 +1,11 @@
 const mongoose = require('mongoose')
 const User = require('../models/User')
 const NightShift = require('../models/NightShift')
+const { defineNightValue, extractPayDate, getReceivableDateRange } = require('../utils/rules')
 const { createMealVoucherService, updateMealVoucherService, deleteMealVoucherService } = require('../utils/services')
 const { timeToMinutes, minutesToTime, convertToReducedNightMinutes, validateFormat } = require('../utils/timeConversion')
 const { StatusCodes } = require('http-status-codes')
 const { BadRequestError, NotFoundError } = require('../errors')
-const { defineNightValue, extractPayDate } = require('../utils/rules')
 
 // --------------------------- GET todos os registros de turno noturno do usuário -----------------------------------------------------
 const getAllNightShift = async (req, res) => {
@@ -34,12 +34,25 @@ const getAllNightShift = async (req, res) => {
     const skip = (page - 1) * limit
     result = result.skip(skip).limit(limit)
 
+    const totals = (await NightShift.aggregate([
+        { $match: queryObject },
+        {
+            $group: {
+                _id: null,
+                nightMinutesClock: { $sum: "$nightMinutesClock" },
+                nightMinutesReduced: { $sum: "$nightMinutesReduced" },
+                nightShiftValue: { $sum: "$nightShiftValue" },
+            }
+        }
+    ]))[0] || { nightMinutesClock: 0, nightMinutesReduced: 0, nightShiftValue: 0 }
+
     const nightShift = await result.lean()
     const totalRecords = await NightShift.countDocuments(queryObject)
     res.status(StatusCodes.OK).json({
         totalRecords,
         numberOfPages: Math.ceil(totalRecords / limit),
         currentPage: page,
+        totals,
         nightShift
     })
 }
@@ -69,9 +82,11 @@ const createNightShift = async (req, res) => {
             //whitelist
             const createFields = {
                 createdBy: userId,
-                nightHoursClock,
                 date,
+                nightHoursClock,
+                nightMinutesClock: timeToMinutes(nightHoursClock),
                 nightHoursReduced: minutesToTime(reducedMinutes),
+                nightMinutesReduced: reducedMinutes,
                 nightShiftValue: defineNightValue(reducedMinutes, wage.wage),
                 wageAtCalculation: wage.wage,
                 payDate: extractPayDate(date, true) // segundo parametro como true pois o pagamento de todo AD Noturno é no mês seguinte
@@ -111,7 +126,9 @@ const updateNightShift = async (req, res) => {
 
             const updateFields = {
                 nightHoursClock: finalNightHoursClock,
+                nightMinutesClock: timeToMinutes(finalNightHoursClock),
                 nightHoursReduced: minutesToTime(reducedMinutes),
+                nightMinutesReduced: reducedMinutes,
                 date: finalDate,
                 nightShiftValue: defineNightValue(reducedMinutes, wage.wage),
                 wageAtCalculation: wage.wage,
@@ -151,4 +168,27 @@ const deleteNightShift = async (req, res) => {
     }
 }
 
-module.exports = { getAllNightShift, getNightShift, createNightShift, updateNightShift, deleteNightShift }
+const getNightShiftReceivable = async (req, res) => {
+    const { user: { userId }, query: { scope } } = req
+
+    const aggregationObject = {
+        createdBy: new mongoose.Types.ObjectId(userId),
+        payDate: getReceivableDateRange(scope, new Date())
+    }
+
+    const totals = (
+        await NightShift.aggregate([
+            { $match: aggregationObject },
+            {
+                $group: {
+                    _id: null,
+                    nightMinutesClock: { $sum: "$nightMinutesClock" },
+                    nightMinutesReduced: { $sum: "$nightMinutesReduced" },
+                    nightShiftValue: { $sum: "$nightShiftValue" }
+                }
+            }
+        ]))[0] || { nightMinutesClock: 0, nightMinutesReduced: 0, nightShiftValue: 0 }
+    res.status(StatusCodes.OK).json(totals)
+}
+
+module.exports = { getAllNightShift, getNightShift, createNightShift, updateNightShift, deleteNightShift, getNightShiftReceivable }

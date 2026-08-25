@@ -4,6 +4,18 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Vale-refeição — Controle de Horas Extras</title>
+    <script>
+    // Aplica o tema salvo antes do primeiro paint, para evitar o "flash"
+    // de tema claro seguido de escuro. Mantido inline (sem depender de
+    // js/theme.js, que só carrega depois do CSS/HTML).
+    (function () {
+      try {
+        if (localStorage.getItem('hourflow_theme') === 'dark') {
+          document.documentElement.setAttribute('data-theme', 'dark');
+        }
+      } catch (e) {}
+    })();
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
@@ -96,6 +108,16 @@
         <div id="empty-state" class="empty-state" hidden>Nenhum vale encontrado.</div>
 
         <div class="table-footer">
+          <div class="limit-field">
+            <label for="page-limit">Registros por página</label>
+            <select id="page-limit" class="scope-select">
+              <option value="10">10</option>
+              <option value="20">20</option>
+              <option value="30">30</option>
+              <option value="40">40</option>
+              <option value="50">50</option>
+            </select>
+          </div>
           <span id="page-indicator">—</span>
           <div class="pagination-buttons">
             <button type="button" id="prev-page-button">Anterior</button>
@@ -110,6 +132,8 @@
   <script src="js/api.js"></script>
   <script src="js/auth-guard.js"></script>
   <script src="js/header.js"></script>
+  <script src="js/filterState.js"></script>
   <script src="js/mealvoucher.js"></script>
+  <script src="js/theme.js"></script>
 </body>
 </html>

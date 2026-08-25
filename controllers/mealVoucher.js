@@ -1,6 +1,7 @@
+const mongoose = require('mongoose')
 const MealVoucher = require('../models/MealVoucher')
 const MealVoucherConfig = require('../models/MealVoucherConfig')
-const mongoose = require('mongoose')
+const { getReceivableDateRange } = require('../utils/rules')
 const { StatusCodes } = require('http-status-codes')
 const { BadRequestError, NotFoundError } = require('../errors')
 
@@ -32,6 +33,17 @@ const getAllMealVouchers = async (req, res) => {
     const limit = Number(req.query.limit) || 10
     const skip = (page - 1) * limit
     result = result.skip(skip).limit(limit)
+
+    const totals = (await MealVoucher.aggregate([
+        { $match: queryObject },
+        {
+            $group: {
+                _id: null,
+                totalCount: { $sum: "$quantity" },
+                totalValue: { $sum: "$totalValue" }
+            }
+        }
+    ]))[0] || { quantity: 0, totalValue: 0 }
     const totalRecords = await MealVoucher.countDocuments(queryObject)
 
     const mealVoucher = await result.lean()
@@ -39,6 +51,7 @@ const getAllMealVouchers = async (req, res) => {
         totalRecords,
         numberOfPages: Math.ceil(totalRecords / limit),
         currentPage: page,
+        totals,
         mealVoucher
     })
 }
@@ -51,4 +64,34 @@ const getMealVoucher = async (req, res) => {
     res.status(StatusCodes.OK).json({ mealVoucher })
 }
 
-module.exports = { getAllMealVouchers, getMealVoucher }
+const getMealVoucherReceivable = async (req, res) => {
+    const { user: { userId }, query: { scope } } = req
+
+    const aggregateObject = {
+        createdBy: new mongoose.Types.ObjectId(userId),
+        payDate: getReceivableDateRange(scope, new Date())
+    }
+
+    const totals = (await MealVoucher.aggregate([
+        { $match: aggregateObject },
+        {
+            $group: {
+                _id: null,
+                mealVoucherOvertime: {
+                    $sum: {
+                        $cond: [{ $eq: ["$source", "overtime"] }, "$totalValue", 0]
+                    }
+                },
+                mealVoucherNightShift: {
+                    $sum: {
+                        $cond: [{ $eq: ["$source", "nightShift"] }, "$totalValue", 0]
+                    }
+                },
+                total: { $sum: '$totalValue' }
+            }
+        }
+    ]))[0] || { mealVoucherOvertime: 0, mealVoucherNightShift: 0, total: 0 }
+    res.status(StatusCodes.OK).json(totals)
+}
+
+module.exports = { getAllMealVouchers, getMealVoucher, getMealVoucherReceivable }

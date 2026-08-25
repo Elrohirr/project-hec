@@ -45,7 +45,7 @@ function defineValue(distribution, wage) {
 }
 
 function defineNightValue(reducedMinutes, wage) {
-    return Math.round((reducedMinutes / 60) * wage * 0.38 * 100) / 100
+    return Math.round((reducedMinutes / 60) * wage * 0.3828 * 100) / 100
 }
 
 function extractPayDate(date, isHoliday) {
@@ -83,6 +83,24 @@ function getLabel(code) {
     throw new BadRequestError('Código de ticket inválido')
 }
 
-module.exports = { calcDistribution, defineValue, defineNightValue, extractPayDate, calcMealVoucher, getLabel }
+function getReceivableDateRange(scope, now) {
+    // pagamento do mês atual
+    const startDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1))
+
+    if (scope === 'previous') {
+        const prevDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1))
+        return { $gte: prevDate, $lt: startDate }
+    }
+
+    if (scope === 'next') {
+        const endDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1))
+        return { $gte: startDate, $lt: endDate }
+    }
+
+    // tudo que ainda for receber a partir do mês atual
+    return { $gte: startDate }
+}
+
+module.exports = { calcDistribution, defineValue, defineNightValue, extractPayDate, calcMealVoucher, getLabel, getReceivableDateRange }
 
 

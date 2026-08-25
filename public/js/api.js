@@ -104,6 +104,12 @@ const Api = {
     const data = isJson ? await response.json().catch(() => null) : null;
 
     if (!response.ok) {
+      // Auto-logoff: só dispoara se HAVIA um token sendo enviado
+      // Sem essa checagem, um 401 de login/senha errada (sem token) também deslogaria/redirecionaria à toa
+      if (response.status === 401 && token) {
+        window.location.href = '/index.html'
+        throw new ApiError('Sessão expirada', 401)
+      }
       const message = data?.msg || data?.message || data?.error || 'Ocorreu um erro inesperado.';
       throw new ApiError(message, response.status);
     }
@@ -179,6 +185,13 @@ const Api = {
     });
   },
 
+  /** Adicional noturno a receber — GET /nightShift/receivable (scope=next|total). */
+  async getNightShiftReceivable(scope = 'next') {
+    return this.request(`/nightShift/receivable?scope=${encodeURIComponent(scope)}`, {
+      method: 'GET'
+    });
+  },
+
   async updateOvertime(id, { workedHours, date, isDayOff, isHoliday }) {
     return this.request(`/overtime/${id}`, {
       method: 'PATCH',
@@ -192,9 +205,23 @@ const Api = {
     });
   },
 
+  /** Horas extras a receber — GET /overtime/receivable (scope=next|total). */
+  async getOvertimeReceivable(scope = 'next') {
+    return this.request(`/overtime/receivable?scope=${encodeURIComponent(scope)}`, {
+      method: 'GET'
+    });
+  },
+
   async getMealVouchers(params = {}) {
     const query = new URLSearchParams(params).toString();
     return this.request(`/mealvoucher${query ? `?${query}` : ''}`, {
+      method: 'GET'
+    });
+  },
+
+  /** Vale-refeição a receber — GET /mealvoucher/receivable (scope=next|total|previous). */
+  async getMealVoucherReceivable(scope = 'next') {
+    return this.request(`/mealvoucher/receivable?scope=${encodeURIComponent(scope)}`, {
       method: 'GET'
     });
   },
@@ -204,6 +231,13 @@ const Api = {
   /** Lista todas as configurações de vale-refeição cadastradas (GET /admin). */
   async getMealVoucherConfigs() {
     return this.request('/admin', {
+      method: 'GET'
+    });
+  },
+
+  /** Lista todos os usuários do sistema (somente admin — GET /admin/users). */
+  async getAllUsers() {
+    return this.request('/admin/users', {
       method: 'GET'
     });
   },

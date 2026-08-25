@@ -5,8 +5,6 @@ const app = express()
 
 // connect DB
 const connectDB = require('./db/connectDB')
-const authenticateUser = require('./middleware/authentication')
-const authorizeUser = require('./middleware/authorizeAdmin')
 
 // routers
 const authRouter = require('./routes/auth')
@@ -15,6 +13,11 @@ const nightShiftRouter = require('./routes/nightShift')
 const mealVoucherRouter = require('./routes/mealVoucher')
 const userRouter = require('./routes/user')
 const adminRouter = require('./routes/admin')
+const importRouter = require('./routes/import')
+
+// middlewares
+const authenticateUser = require('./middleware/authentication')
+const authorizeUser = require('./middleware/authorizeAdmin')
 
 // error handler
 const notFoundMiddleware = require('./middleware/not-found')
@@ -30,6 +33,7 @@ app.use('/api/v1/nightShift', authenticateUser, nightShiftRouter)
 app.use('/api/v1/mealvoucher', authenticateUser, mealVoucherRouter)
 app.use('/api/v1/user', authenticateUser, userRouter)
 app.use('/api/v1/admin', authenticateUser, authorizeUser, adminRouter)
+app.use('/api/v1/import', authenticateUser, importRouter)
 
 app.use(notFoundMiddleware)
 app.use(errorHandlerMiddleware)

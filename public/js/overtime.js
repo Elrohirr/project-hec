@@ -15,6 +15,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const pageIndicator = document.getElementById('page-indicator');
   const prevPageButton = document.getElementById('prev-page-button');
   const nextPageButton = document.getElementById('next-page-button');
+  const pageLimitSelect = document.getElementById('page-limit');
+
+  const FILTER_PAGE_KEY = 'overtime';
 
   const summaryHe50 = document.getElementById('summary-he50');
   const summaryHe75 = document.getElementById('summary-he75');
@@ -46,6 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
    });
 
   let currentPage = 1;
+  let pageLimit = 10;
   let totalPages = 1;
   let editingId = null; // null = criando um novo registro; string = editando esse _id
 
@@ -193,7 +197,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function loadOvertimes(page = 1) {
     try {
-      const data = await Api.getOvertimes({ page, limit: 10, ...getActiveFilters() });
+      const data = await Api.getOvertimes({ page, limit: pageLimit, ...getActiveFilters() });
       currentPage = data.currentPage || page;
       totalPages = data.numberOfPages || 1;
 
@@ -209,9 +213,21 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  applyFiltersButton.addEventListener('click', () => loadOvertimes(1));
+  applyFiltersButton.addEventListener('click', () => {
+    saveFilterState(FILTER_PAGE_KEY, {
+      startDate: filterStartDate.value,
+      endDate: filterEndDate.value,
+      isHoliday: filterIsHoliday.value,
+      isDayOff: filterIsDayOff.value,
+      startPayDate: filterPayMonthStart.value,
+      endPayDate: filterPayMonthEnd.value,
+      sort: filterSort.value
+    });
+    loadOvertimes(1);
+  });
 
   clearFiltersButton.addEventListener('click', () => {
+    clearFilterState(FILTER_PAGE_KEY);
     filterStartDate.value = '';
     filterEndDate.value = '';
     filterIsHoliday.value = '';
@@ -282,5 +298,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  pageLimitSelect.addEventListener('change', () => {
+    pageLimit = Number(pageLimitSelect.value);
+    loadOvertimes(1);
+  });
+
+  restoreFilterState(FILTER_PAGE_KEY, {
+    'filter-start-date': 'startDate',
+    'filter-end-date': 'endDate',
+    'filter-is-holiday': 'isHoliday',
+    'filter-is-day-off': 'isDayOff',
+    'filter-pay-month-start': 'startPayDate',
+    'filter-pay-month-end': 'endPayDate',
+    'filter-sort': 'sort'
+  });
   loadOvertimes(1);
 });

@@ -1,9 +1,9 @@
 const express = require('express')
 const router = express.Router()
-const { createMealVoucherConfig, activeMealVoucherConfig, getAllMealVoucherConfig } = require('../controllers/admin')
+const { createMealVoucherConfig, activeMealVoucherConfig, getAllMealVoucherConfig, getAllUsers } = require('../controllers/admin')
 
-router.get('/', getAllMealVoucherConfig)
-router.post('/', createMealVoucherConfig)
+router.route('/').get(getAllMealVoucherConfig).post(createMealVoucherConfig)
 router.patch('/:id', activeMealVoucherConfig)
+router.route('/users').get(getAllUsers)
 
 module.exports = router

@@ -4,6 +4,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const pageIndicator = document.getElementById('page-indicator');
   const prevPageButton = document.getElementById('prev-page-button');
   const nextPageButton = document.getElementById('next-page-button');
+  const pageLimitSelect = document.getElementById('page-limit');
+
+  const FILTER_PAGE_KEY = 'mealvoucher';
   const sourceFilter = document.getElementById('source-filter');
   const filterPayMonthStart = document.getElementById('filter-pay-month-start');
   const filterPayMonthEnd = document.getElementById('filter-pay-month-end');
@@ -34,6 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   let currentPage = 1;
+  let pageLimit = 10;
   let totalPages = 1;
 
   function formatDate(isoString) {
@@ -84,25 +88,26 @@ document.addEventListener('DOMContentLoaded', () => {
     tableBody.innerHTML = '';
     if (!vouchers.length) {
       emptyState.hidden = false;
-      summaryCount.textContent = '0';
-      summarySubtotal.textContent = currencyFormatter.format(0);
       return;
     }
     emptyState.hidden = true;
     vouchers.forEach((voucher) => tableBody.appendChild(renderRow(voucher)));
-
-    const subtotal = vouchers.reduce((sum, voucher) => sum + (voucher.totalValue || 0), 0);
-    summaryCount.textContent = String(vouchers.length);
-    summarySubtotal.textContent = currencyFormatter.format(subtotal);
   }
+
+  function updateSummary(totals) {
+    summaryCount.textContent = String(totals?.totalCount || 0);
+    summarySubtotal.textContent = currencyFormatter.format(totals?.totalValue || 0)
+  }
+
 
   async function loadMealVouchers(page = 1) {
     try {
-      const data = await Api.getMealVouchers({ page, limit: 10, ...getActiveFilters() });
+      const data = await Api.getMealVouchers({ page, limit: pageLimit, ...getActiveFilters() });
       currentPage = data.currentPage || page;
       totalPages = data.numberOfPages || 1;
 
       renderTable(data.mealVoucher || []);
+      updateSummary(data.totals);
 
       pageIndicator.textContent = `Página ${currentPage} de ${totalPages} · ${data.totalRecords} registro(s)`;
       prevPageButton.disabled = currentPage <= 1;
@@ -113,9 +118,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  applyFiltersButton.addEventListener('click', () => loadMealVouchers(1));
+  applyFiltersButton.addEventListener('click', () => {
+    saveFilterState(FILTER_PAGE_KEY, {
+      source: sourceFilter.value,
+      startPayDate: filterPayMonthStart.value,
+      endPayDate: filterPayMonthEnd.value,
+      sort: filterSort.value
+    });
+    loadMealVouchers(1);
+  });
 
   clearFiltersButton.addEventListener('click', () => {
+    clearFilterState(FILTER_PAGE_KEY);
     sourceFilter.value = '';
     filterPayMonthStart.value = '';
     filterPayMonthEnd.value = '';
@@ -131,5 +145,16 @@ document.addEventListener('DOMContentLoaded', () => {
     if (currentPage < totalPages) loadMealVouchers(currentPage + 1);
   });
 
+  pageLimitSelect.addEventListener('change', () => {
+    pageLimit = Number(pageLimitSelect.value);
+    loadMealVouchers(1);
+  });
+
+  restoreFilterState(FILTER_PAGE_KEY, {
+    'source-filter': 'source',
+    'filter-pay-month-start': 'startPayDate',
+    'filter-pay-month-end': 'endPayDate',
+    'filter-sort': 'sort'
+  });
   loadMealVouchers(1);
 });

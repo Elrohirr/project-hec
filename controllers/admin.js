@@ -1,9 +1,11 @@
+const User = require('../models/User')
 const MealVoucherConfig = require('../models/MealVoucherConfig')
 const mongoose = require('mongoose')
 const { StatusCodes } = require('http-status-codes')
 const { BadRequestError } = require('../errors')
 const { getLabel } = require('../utils/rules')
 
+// ----------------- pega todas as configuração de tickets ------------------------------------
 const getAllMealVoucherConfig = async (req, res) => {
     const config = await MealVoucherConfig.find({}).sort('-active')
     res.status(StatusCodes.OK).json(config)
@@ -71,4 +73,10 @@ const activeMealVoucherConfig = async (req, res) => {
     }
 }
 
-module.exports = { createMealVoucherConfig, activeMealVoucherConfig, getAllMealVoucherConfig }
+// ----------------- pega todos os usuários cadastrados ------------------------------------
+const getAllUsers = async (req, res) => {
+    const users = await User.find({}).select(['-wage', '-password'])
+    res.status(StatusCodes.OK).json(users)
+}
+
+module.exports = { createMealVoucherConfig, activeMealVoucherConfig, getAllMealVoucherConfig, getAllUsers }

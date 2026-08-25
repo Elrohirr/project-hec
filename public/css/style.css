@@ -22,12 +22,45 @@
   --teal: #2f6f62;
   --danger: #b3432b;
 
+  /* Tokens de conteúdo (texto e fundo de página/cards) — os únicos
+     que mudam no modo escuro. --ink e --paper continuam fixos, pois
+     também servem de "cromo" fixo do header, login e botões primários. */
+  --text: var(--ink);
+  --surface: var(--paper);
+
   --font-display: 'Space Grotesk', 'Segoe UI', sans-serif;
   --font-body: 'Inter', 'Segoe UI', sans-serif;
   --font-mono: 'IBM Plex Mono', 'Courier New', monospace;
 
   --radius: 6px;
   --shadow-card: 0 2px 10px rgba(22, 31, 43, 0.08);
+}
+
+/* =========================================================
+   Modo escuro — paleta inspirada em navy + verde-água
+   Ativado com [data-theme="dark"] no <html>, controlado por js/theme.js
+   ========================================================= */
+[data-theme="dark"] {
+  --text: #eef2f0;
+  --ink-soft: #a7b2c2;
+  --surface: #1a2230;
+  --paper-raised: #232e3d;
+  --line: #34404f;
+  --amber-ink: #f2c14e;
+  --teal: #35d6a8;
+  --danger: #e2604a;
+  --shadow-card: 0 2px 14px rgba(0, 0, 0, 0.45);
+}
+
+/* Exceções: estes dois elementos usam --ink-soft/--paper-raised como
+   "cromo" fixo (contraste com um fundo colorido), não como texto/fundo
+   de página — por isso não devem herdar os tons claros do modo escuro. */
+[data-theme="dark"] .primary-button:hover:not(:disabled) {
+  background: #3c4658;
+}
+
+[data-theme="dark"] .danger-button {
+  color: #ffffff;
 }
 
 * {
@@ -41,8 +74,8 @@ html, body {
 
 body {
   font-family: var(--font-body);
-  background: var(--paper);
-  color: var(--ink);
+  background: var(--surface);
+  color: var(--text);
   min-height: 100vh;
 }
 
@@ -245,7 +278,7 @@ a {
   border-radius: var(--radius);
   background: var(--paper-raised);
   font-size: 0.95rem;
-  color: var(--ink);
+  color: var(--text);
 }
 
 .field input:focus {
@@ -525,7 +558,7 @@ a {
 .summary-card .value {
   font-family: var(--font-mono);
   font-size: 1.4rem;
-  color: var(--ink);
+  color: var(--text);
 }
 
 .summary-card.total .value {
@@ -567,7 +600,7 @@ a {
 
 .checkbox-field label {
   font-size: 0.88rem;
-  color: var(--ink);
+  color: var(--text);
   margin-bottom: 0;
 }
 
@@ -602,7 +635,7 @@ a {
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--ink-soft);
-  background: var(--paper);
+  background: var(--surface);
 }
 
 .overtime-table td.numeric {
@@ -668,7 +701,7 @@ a {
 }
 
 .pagination-buttons button {
-  background: var(--paper);
+  background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius);
   padding: 5px 12px;
@@ -787,7 +820,7 @@ a {
 
 .ghost-button-light:hover {
   border-color: var(--ink-soft);
-  color: var(--ink);
+  color: var(--text);
 }
 
 .row-actions {
@@ -827,6 +860,17 @@ a {
   white-space: nowrap;
 }
 
+/* Tabela de usuários: colunas curtas, não precisa de 1000px de largura mínima */
+.admin-users-table {
+  min-width: 560px;
+}
+
+/* Selo "Admin" da coluna Perfil */
+.source-tag--admin {
+  background: rgba(47, 111, 98, 0.12);
+  color: var(--teal);
+}
+
 .table-toolbar {
   display: flex;
   align-items: center;
@@ -845,9 +889,9 @@ a {
   padding: 7px 10px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  background: var(--paper);
+  background: var(--surface);
   font-size: 0.85rem;
-  color: var(--ink);
+  color: var(--text);
 }
 
 .source-tag {
@@ -883,9 +927,9 @@ a {
   padding: 6px 8px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  background: var(--paper);
+  background: var(--surface);
   font-size: 0.82rem;
-  color: var(--ink);
+  color: var(--text);
 }
 
 .ghost-button-light.small {
@@ -910,7 +954,7 @@ a {
 }
 
 .info-button:hover {
-  color: var(--ink);
+  color: var(--text);
 }
 
 .info-popup {
@@ -932,7 +976,7 @@ a {
   margin: 0 0 10px;
   font-size: 0.88rem;
   line-height: 1.55;
-  color: var(--ink);
+  color: var(--text);
 }
 
 .info-popup p:first-child {
@@ -957,6 +1001,11 @@ a {
 
 .admin-create-card {
   margin-bottom: 24px;
+}
+
+/* Espaçamento extra entre a tabela de configurações e a de usuários */
+.admin-users-card {
+  margin-top: 24px;
 }
 
 /* variante "inativo" do selo .source-tag (mesmo visual dos badges de origem) */
@@ -1037,6 +1086,53 @@ a {
   .account-layout {
     grid-template-columns: 1fr;
   }
+}
+
+/* =========================================================
+   Toggle de modo escuro — injetado no header por js/theme.js
+   ========================================================= */
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  width: 38px;
+  height: 24px;
+  padding: 2px;
+  border-radius: 999px;
+  border: 1px solid rgba(242, 244, 241, 0.35);
+  background: rgba(242, 244, 241, 0.08);
+  cursor: pointer;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.theme-toggle:hover {
+  border-color: var(--paper);
+}
+
+.theme-toggle:focus-visible {
+  outline: 2px solid var(--amber);
+  outline-offset: 2px;
+}
+
+.theme-toggle-knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--amber);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  line-height: 1;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+[data-theme="dark"] .theme-toggle-knob {
+  transform: translateX(14px);
+  background: var(--teal);
 }
 
 /* =========================================================
@@ -1165,5 +1261,290 @@ a {
 
   .login-form-panel {
     padding: 24px 20px;
+  }
+}
+
+/* =========================================================
+   Dashboard — cards "A receber"
+   ========================================================= */
+.receivable-section {
+  margin-top: 36px;
+  margin-bottom: 36px;
+}
+
+.receivable-section .page-heading {
+  margin-bottom: 16px;
+}
+
+.receivable-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.receivable-card-head h3 {
+  margin: 0;
+}
+
+.scope-select {
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  font-size: 0.82rem;
+  color: var(--text);
+}
+
+.receivable-lines {
+  display: grid;
+  gap: 10px;
+}
+
+.receivable-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.receivable-row .label {
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+}
+
+.receivable-row .label-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: flex-start;
+}
+
+.receivable-row .label-group .hint {
+  font-size: 0.72rem;
+  color: var(--ink-soft);
+  opacity: 0.85;
+}
+
+.receivable-row .group {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.receivable-row .value {
+  font-family: var(--font-mono);
+  font-size: 1.05rem;
+  color: var(--text);
+}
+
+.receivable-row .hint {
+  font-size: 0.72rem;
+  color: var(--ink-soft);
+}
+
+.receivable-row.total {
+  border-top: 1px solid var(--line);
+  padding-top: 10px;
+  margin-top: 4px;
+}
+
+.receivable-row.total .value {
+  color: var(--amber-ink);
+  font-size: 1.35rem;
+}
+
+.receivable-section .error-box {
+  margin: 12px 0 0;
+}
+
+/* 3 cards lado a lado (ordem: HE, turno noturno, vale-refeição) */
+.receivable-section .account-layout {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+@media (max-width: 860px) {
+  .receivable-section .account-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---- Cards "A receber" em telas pequenas ---- */
+@media (max-width: 480px) {
+  .receivable-card-head {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .receivable-row .group {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    row-gap: 2px;
+  }
+}
+/* =========================================================
+   Dashboard — banner motivacional
+   ========================================================= */
+.motivational-banner {
+  background: var(--amber);
+  color: var(--ink);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  margin-bottom: 24px;
+  font-size: 1rem;
+  font-weight: 500;
+  margin-top: 25px;
+}
+
+.motivational-banner p {
+  margin: 0;
+}
+
+/* =========================================================
+   Header — botão Novidades + badge
+   ========================================================= */
+.whatsnew-button {
+  position: relative;
+}
+
+.whatsnew-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--danger);
+  border: 2px solid var(--ink);
+}
+
+/* =========================================================
+   Modal reutilizável (overlay + caixa centralizada)
+   ========================================================= */
+body.modal-open {
+  overflow: hidden;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(22, 31, 43, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 1000;
+}
+
+.modal {
+  background: var(--paper-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+  width: 100%;
+  max-width: 560px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--line);
+}
+
+.modal-title {
+  font-family: var(--font-display);
+  margin: 0;
+}
+
+.modal-close {
+  border: 0;
+  background: transparent;
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--ink-soft);
+}
+
+.modal-close:hover {
+  color: var(--danger);
+}
+
+.modal-body {
+  padding: 20px;
+}
+
+/* =========================================================
+   What's New — lista de versões
+   ========================================================= */
+.whatsnew-version {
+  margin-bottom: 18px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.whatsnew-version:last-child {
+  border-bottom: 0;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.whatsnew-version-title {
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  margin: 0 0 2px;
+  color: var(--teal);
+}
+
+.whatsnew-version-date {
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+  display: block;
+  margin-bottom: 8px;
+}
+
+.whatsnew-highlights {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.whatsnew-highlights li {
+  margin-bottom: 4px;
+}
+
+@media (max-width: 480px) {
+  .modal-overlay {
+    align-items: flex-end;
+  }
+  .modal {
+    max-height: 90vh;
+    border-radius: var(--radius) var(--radius) 0 0;
+  }
+}
+
+/* ---- Seletor de registros por página ---- */
+.limit-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+
+.limit-field .scope-select {
+  padding: 4px 6px;
+  font-size: 0.82rem;
+}
+
+@media (max-width: 480px) {
+  .limit-field {
+    flex-wrap: wrap;
+    justify-content: flex-end;
   }
 }

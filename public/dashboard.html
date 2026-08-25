@@ -4,6 +4,18 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Início — Hour Flow</title>
+    <script>
+    // Aplica o tema salvo antes do primeiro paint, para evitar o "flash"
+    // de tema claro seguido de escuro. Mantido inline (sem depender de
+    // js/theme.js, que só carrega depois do CSS/HTML).
+    (function () {
+      try {
+        if (localStorage.getItem('hourflow_theme') === 'dark') {
+          document.documentElement.setAttribute('data-theme', 'dark');
+        }
+      } catch (e) {}
+    })();
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
@@ -23,6 +35,7 @@
       <div class="user-area">
         <span id="user-greeting"></span>
         <a href="account.html">Minha conta</a>
+        <button id="whatsnew-button" class="ghost-button whatsnew-button" type="button" aria-haspopup="dialog" aria-expanded="false">Novidades <span class="whatsnew-badge" hidden aria-hidden="true"></span></button>
         <button id="logout-button" class="ghost-button" type="button">Sair</button>
       </div>
     </header>
@@ -95,6 +108,62 @@
           • Basta remover a classe "disabled" e o <span class="module-badge"> quando o módulo for lançado.
         -->
       </div>
+
+      <!-- Cards "A receber": consumidos por js/dashboard.js -->
+      <section class="receivable-section" aria-labelledby="receivable-heading">
+        <div class="page-heading">
+          <h2 id="receivable-heading">A receber</h2>
+        </div>
+
+      <div class="motivational-banner" id="motivational-banner" hidden>
+        <p id="motivational-message"></p>
+      </div>
+
+        <div class="account-layout">
+          <!-- Horas extras a receber -->
+          <div class="account-section receivable-card">
+            <div class="receivable-card-head">
+              <h3>Horas extras</h3>
+              <select id="overtime-scope-select" class="scope-select" aria-label="Período das horas extras a receber">
+                <option value="next">Próximo pagamento</option>
+                <option value="total">Total a receber</option>
+                <option value="previous">Mês anterior</option>
+              </select>
+            </div>
+            <div class="receivable-lines" id="overtime-receivable-lines" aria-live="polite"></div>
+            <div class="error-box" id="overtime-receivable-error" role="alert" hidden></div>
+          </div>
+
+          <!-- Adicional noturno a receber -->
+          <div class="account-section receivable-card">
+            <div class="receivable-card-head">
+              <h3>Adicional noturno</h3>
+              <select id="nightshift-scope-select" class="scope-select" aria-label="Período do adicional noturno a receber">
+                <option value="next">Próximo pagamento</option>
+                <option value="total">Total a receber</option>
+                <option value="previous">Mês anterior</option>
+              </select>
+            </div>
+            <div class="receivable-lines" id="nightshift-receivable-lines" aria-live="polite"></div>
+            <div class="error-box" id="nightshift-receivable-error" role="alert" hidden></div>
+          </div>
+          <!-- Vale-refeição a receber -->
+          <div class="account-section receivable-card">
+            <div class="receivable-card-head">
+              <h3>Vale-refeição</h3>
+              <select id="mealvoucher-scope-select" class="scope-select" aria-label="Período dos vales-refeição a receber">
+                <option value="next">Próximo pagamento</option>
+                <option value="total">Total a receber</option>
+                <option value="previous">Mês anterior</option>
+              </select>
+            </div>
+            <div class="receivable-lines" id="mealvoucher-receivable-lines" aria-live="polite"></div>
+            <div class="error-box" id="mealvoucher-receivable-error" role="alert" hidden></div>
+          </div>
+
+        </div>
+      </section>
+
     </main>
   </div>
 
@@ -102,5 +171,13 @@
   <script src="js/api.js"></script>
   <script src="js/auth-guard.js"></script>
   <script src="js/header.js"></script>
+  <script src="js/filterState.js"></script>
+  <script src="js/format.js"></script>
+  <script src="js/modal.js"></script>
+  <script src="js/motivationalMessages.js"></script>
+  <script src="js/motivational.js"></script>
+  <script src="js/whatsnew.js"></script>
+  <script src="js/dashboard.js"></script>
+  <script src="js/theme.js"></script>
 </body>
 </html>

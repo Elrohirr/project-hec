@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const logoutButton = document.getElementById('logout-button');
   logoutButton?.addEventListener('click', () => {
+    clearAllFilterStates();
     Api.logout();
     window.location.href = 'index.html';
   });

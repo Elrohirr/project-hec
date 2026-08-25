@@ -18,6 +18,8 @@
     "http-status-codes": "^2.3.0",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.6.1",
-    "nodemon": "^3.1.14"
+    "multer": "^2.2.0",
+    "nodemon": "^3.1.14",
+    "pdf.js-extract": "^1.0.1"
   }
 }

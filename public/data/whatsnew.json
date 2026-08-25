@@ -1,0 +1,39 @@
+[
+  {
+    "version":"1.1.2",
+    "date":"25-08-2026",
+    "highlights":[
+      "Adicionado opção de alterar total de registros por página no rodapé da tabela em cada módulo",
+      "Filtros feitos nas páginas agora se mantém quando há troca de página",
+      "Modo escuro adicionado, com botão ativar/desativar no cabeçalho (sujeito a melhorias)"
+    ]
+  },
+  {
+    "version": "1.1.1",
+    "date": "23-08-2026",
+    "highlights": [
+      "Filtro 'Próximo pagamento' nos cards de 'A receber'",
+      "Filtro 'Mês anterior' nos cards de 'A receber'",
+      "Filtro 'Total a receber' nos cards de 'A receber'",
+      "Correção do carregamento dos vales a receber no dashboard (adicional noturno e vale lanches)"
+    ]
+  },
+  {
+    "version": "1.1.0",
+    "date": "20-08-2026",
+    "highlights": [
+      "Cards de 'A receber' para horas extras, adicional noturno e vale-refeição",
+      "Mensagens motivacionais baseadas no total de horas extras do mês e na estação do ano",
+      "Tela de novidades com histórico de versões e badge de novidade não vista"
+    ]
+  },
+  {
+    "version": "1.0.0",
+    "date": "01-06-2026",
+    "highlights": [
+      "Cadastro de horas extras com cálculo automático por faixa (50%/75%/100%)",
+      "Cálculo de adicional noturno com fator legal 8/7",
+      "Vale-refeição gerado automaticamente a partir dos lançamentos"
+    ]
+  }
+]

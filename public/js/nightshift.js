@@ -13,6 +13,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const pageIndicator = document.getElementById('page-indicator');
   const prevPageButton = document.getElementById('prev-page-button');
   const nextPageButton = document.getElementById('next-page-button');
+  const pageLimitSelect = document.getElementById('page-limit');
+
+  const FILTER_PAGE_KEY = 'nightshift';
 
   const filterStartDate = document.getElementById('filter-start-date');
   const filterEndDate = document.getElementById('filter-end-date');
@@ -48,6 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let editingId = null; // null = criando novo registro; string = editando esse _id
   let recordsCache = []; // registros carregados, usados para preencher o form ao editar
   let currentPage = 1;
+  let pageLimit = 10;
   let totalPages = 1;
 
   function formatDate(isoString) {
@@ -76,15 +80,16 @@ document.addEventListener('DOMContentLoaded', () => {
     return `${h}:${m}`;
   }
 
-  function updateSummary(records) {
-    const totalClockMinutes = records.reduce((sum, r) => sum + hhmmToMinutes(r.nightHoursClock), 0);
-    const totalReducedMinutes = records.reduce((sum, r) => sum + hhmmToMinutes(r.nightHoursReduced), 0);
-    const totalValue = records.reduce((sum, r) => sum + (r.nightShiftValue || 0), 0);
+  function updateSummary(totals) {
+    summaryTotalClock.textContent = minutesToHHMM(totals?.nightMinutesClock || 0);
+    summaryTotalReduced.textContent = minutesToHHMM(totals?.nightMinutesReduced || 0);
+    summaryTotalNightValue.textContent = currencyFormatter.format(totals?.nightShiftValue || 0);
+    summaryTotal.textContent = currencyFormatter.format(totals?.nightShiftValue || 0);
 
-    summaryTotalClock.textContent = minutesToHHMM(totalClockMinutes);
+    /*summaryTotalClock.textContent = minutesToHHMM(totalClockMinutes);
     summaryTotalReduced.textContent = minutesToHHMM(totalReducedMinutes);
     summaryTotalNightValue.textContent = currencyFormatter.format(totalValue);
-    summaryTotal.textContent = currencyFormatter.format(totalValue);
+    summaryTotal.textContent = currencyFormatter.format(totalValue);*/
   }
 
   function renderRow(record) {
@@ -186,7 +191,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function loadNightShifts(page = 1) {
     try {
-      const data = await Api.getNightShifts({ page, limit: 10, ...getActiveFilters() });
+      const data = await Api.getNightShifts({ page, limit: pageLimit, ...getActiveFilters() });
       const records = data.nightShift || [];
 
       currentPage = data.currentPage || page;
@@ -194,7 +199,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       recordsCache = records;
       renderTable(records);
-      updateSummary(records);
+      updateSummary(data.totals);
 
       pageIndicator.textContent = `Página ${currentPage} de ${totalPages} · ${data.totalRecords} registro(s)`;
       prevPageButton.disabled = currentPage <= 1;
@@ -205,9 +210,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  applyFiltersButton.addEventListener('click', () => loadNightShifts(1));
+  applyFiltersButton.addEventListener('click', () => {
+    saveFilterState(FILTER_PAGE_KEY, {
+      startDate: filterStartDate.value,
+      endDate: filterEndDate.value,
+      startPayDate: filterPayMonthStart.value,
+      endPayDate: filterPayMonthEnd.value,
+      sort: filterSort.value
+    });
+    loadNightShifts(1);
+  });
 
   clearFiltersButton.addEventListener('click', () => {
+    clearFilterState(FILTER_PAGE_KEY);
     filterStartDate.value = '';
     filterEndDate.value = '';
     filterPayMonthStart.value = '';
@@ -298,5 +313,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  pageLimitSelect.addEventListener('change', () => {
+    pageLimit = Number(pageLimitSelect.value);
+    loadNightShifts(1);
+  });
+
+  restoreFilterState(FILTER_PAGE_KEY, {
+    'filter-start-date': 'startDate',
+    'filter-end-date': 'endDate',
+    'filter-pay-month-start': 'startPayDate',
+    'filter-pay-month-end': 'endPayDate',
+    'filter-sort': 'sort'
+  });
   loadNightShifts();
 });
