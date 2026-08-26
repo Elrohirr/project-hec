@@ -105,6 +105,10 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderOvertime(distribution, values) {
     const dist = distribution || {};
     const val = values || {};
+    const he100Minutes = dist.he100 || 0;
+    const heHolidayMinutes = dist.heHoliday || 0;
+    const valueHe100 = val.valueHe100 || 0;
+    const valueHeHoliday = val.valueHeHoliday || 0
 
     renderLines(overtimeLines, [
       renderRow({
@@ -119,13 +123,13 @@ document.addEventListener('DOMContentLoaded', () => {
       }),
       renderRow({
         label: 'HE 100%',
-        value: minutesToHHMM(dist.he100),
-        hint: formatCurrencyBRL(val.valueHe100)
+        value: minutesToHHMM(he100Minutes - heHolidayMinutes),
+        hint: formatCurrencyBRL(valueHe100 - valueHeHoliday)
       }),
       renderRow({
         label: 'HE Feriado',
-        value: minutesToHHMM(dist.heHoliday),
-        hint: formatCurrencyBRL(val.valueHeHoliday)
+        value: minutesToHHMM(heHolidayMinutes),
+        hint: formatCurrencyBRL(valueHeHoliday)
       }),
       renderRow({
         label: 'Total a receber',

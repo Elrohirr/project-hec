@@ -555,6 +555,20 @@ a {
   margin: -2px 0 6px;
 }
 
+.summary-card .value-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.summary-card .value-money {
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  color: var(--amber-ink);
+  margin-left: 20px;
+}
+
 .summary-card .value {
   font-family: var(--font-mono);
   font-size: 1.4rem;

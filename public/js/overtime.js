@@ -20,9 +20,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const FILTER_PAGE_KEY = 'overtime';
 
   const summaryHe50 = document.getElementById('summary-he50');
+  const summaryHe50Value = document.getElementById('summary-he50-value')
   const summaryHe75 = document.getElementById('summary-he75');
+  const summaryHe75Value = document.getElementById('summary-he75-value')
   const summaryHe100 = document.getElementById('summary-he100');
+  const summaryHe100Value = document.getElementById('summary-he100-value')
   const summaryHeHoliday = document.getElementById('summary-he-holiday');
+  const summaryHeHolidayValue = document.getElementById('summary-he-holiday-value')
   const summaryTotal = document.getElementById('summary-total');
 
   const filterStartDate = document.getElementById('filter-start-date');
@@ -43,10 +47,11 @@ document.addEventListener('DOMContentLoaded', () => {
   // e mostre um dia a menos (o backend salva as datas como UTC meia-noite).
   const dateFormatter = new Intl.DateTimeFormat('pt-BR', { timeZone: 'UTC' });
 
-  const payDateFormatter = new Intl.DateTimeFormat('pt-BR', { timeZone: 'UTC',
-    month:'2-digit',
-    year:'numeric',
-   });
+  const payDateFormatter = new Intl.DateTimeFormat('pt-BR', {
+    timeZone: 'UTC',
+    month: '2-digit',
+    year: 'numeric',
+  });
 
   let currentPage = 1;
   let pageLimit = 10;
@@ -56,10 +61,10 @@ document.addEventListener('DOMContentLoaded', () => {
   function formatDate(isoString) {
     return dateFormatter.format(new Date(isoString));
   }
-  
+
   function formatPayDate(isoString) {
-   if (!isoString) return '—';
-  return payDateFormatter.format(new Date(isoString));
+    if (!isoString) return '—';
+    return payDateFormatter.format(new Date(isoString));
   }
 
   // Converte um total de minutos para o formato HH:MM usado na exibição
@@ -78,6 +83,8 @@ document.addEventListener('DOMContentLoaded', () => {
   function updateSummary({ distribution, values }) {
     const he100Minutes = distribution?.he100 || 0;
     const heHolidayMinutes = distribution?.heHoliday || 0;
+    const valueHe100 = values?.valueHe100 || 0;
+    const valueHeHoliday = values?.valueHeHoliday || 0;
 
     summaryHe50.textContent = minutesToHHMM(distribution?.he50);
     summaryHe75.textContent = minutesToHHMM(distribution?.he75);
@@ -85,6 +92,12 @@ document.addEventListener('DOMContentLoaded', () => {
     summaryHe100.textContent = minutesToHHMM(he100Minutes - heHolidayMinutes);
     summaryHeHoliday.textContent = minutesToHHMM(heHolidayMinutes);
     summaryTotal.textContent = currencyFormatter.format(values?.total ?? 0);
+
+    summaryHe50Value.textContent = currencyFormatter.format(values?.valueHe50 ?? 0)
+    summaryHe75Value.textContent = currencyFormatter.format(values?.valueHe75 ?? 0)
+    summaryHe100Value.textContent = currencyFormatter.format(valueHe100 - valueHeHoliday)
+    summaryHeHolidayValue.textContent = currencyFormatter.format(valueHeHoliday)
+
   }
 
   function renderRow(record) {

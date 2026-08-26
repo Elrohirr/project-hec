@@ -226,7 +226,7 @@ const getOvertimeReceivable = async (req, res) => {
                 }
             }
         ])
-    )[0] || { valueHe50: 0, valueHe75: 0, valueHe100: 0, total: 0 }
+    )[0] || { he50: 0, he75: 0, he100: 0, heHoliday: 0, total: 0 }
 
     const values = (
         await Overtime.aggregate([
@@ -237,11 +237,12 @@ const getOvertimeReceivable = async (req, res) => {
                     valueHe50: { $sum: "$values.valueHe50" },
                     valueHe75: { $sum: "$values.valueHe75" },
                     valueHe100: { $sum: "$values.valueHe100" },
+                    valueHeHoliday: { $sum: { $cond: [{ $eq: ["$isHoliday", true] }, "$values.valueHe100", 0] } },
                     total: { $sum: "$values.total" }
                 }
             }
         ])
-    )[0] || { valueHe50: 0, valueHe75: 0, valueHe100: 0, total: 0 }
+    )[0] || { valueHe50: 0, valueHe75: 0, valueHe100: 0, valueHeHoliday: 0, total: 0 }
 
     res.status(StatusCodes.OK).json([distribution, values])
 }

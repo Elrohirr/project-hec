@@ -17,7 +17,7 @@ const importRouter = require('./routes/import')
 
 // middlewares
 const authenticateUser = require('./middleware/authentication')
-const authorizeUser = require('./middleware/authorizeAdmin')
+const authorizeUser = require('./middleware/authorizeUser')
 
 // error handler
 const notFoundMiddleware = require('./middleware/not-found')

@@ -1,8 +1,11 @@
 const User = require('../models/User')
+const Overtime = require('../models/Overtime')
+const NightShift = require('../models/NightShift')
+const MealVoucher = require('../models/MealVoucher')
 const MealVoucherConfig = require('../models/MealVoucherConfig')
 const mongoose = require('mongoose')
 const { StatusCodes } = require('http-status-codes')
-const { BadRequestError } = require('../errors')
+const { BadRequestError, NotFoundError } = require('../errors')
 const { getLabel } = require('../utils/rules')
 
 // ----------------- pega todas as configuração de tickets ------------------------------------
@@ -79,4 +82,34 @@ const getAllUsers = async (req, res) => {
     res.status(StatusCodes.OK).json(users)
 }
 
-module.exports = { createMealVoucherConfig, activeMealVoucherConfig, getAllMealVoucherConfig, getAllUsers }
+// ----------------- deleta usuários e seus registros do sistema -------------------------------------------
+const deleteUser = async (req, res) => {
+    const session = await mongoose.startSession()
+    try {
+        const result = await session.withTransaction(async () => {
+            const { body: { password }, user: { userId }, params: { id: deleteUserId } } = req
+            const userPassword = await User.findById(userId).select('password').session(session)
+
+            const userToBeDeleted = await User.findById(deleteUserId).session(session)
+            if (!userToBeDeleted) throw new NotFoundError("Usuário não encontrado")
+
+            if (userId === deleteUserId) {
+                throw new BadRequestError('Não é possivel apagar a própria conta, pare de tentar se matar :(')
+            }
+
+            const isPasswordCorret = await userPassword.comparePassword(password)
+            if (!isPasswordCorret) throw new BadRequestError("Senha inválida.")
+
+            await Overtime.deleteMany({ createdBy: deleteUserId }, { session })
+            await NightShift.deleteMany({ createdBy: deleteUserId }, { session })
+            await MealVoucher.deleteMany({ createdBy: deleteUserId }, { session })
+            await User.findByIdAndDelete(deleteUserId, { session })
+        })
+        res.status(StatusCodes.OK).json({ msg: "Usuário e seus registros deletados com sucesso" })
+    }
+    finally {
+        await session.endSession()
+    }
+}
+
+module.exports = { createMealVoucherConfig, activeMealVoucherConfig, getAllMealVoucherConfig, getAllUsers, deleteUser }
