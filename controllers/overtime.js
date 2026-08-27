@@ -96,7 +96,7 @@ const createOvertime = async (req, res) => {
         const result = await session.withTransaction(async () => {
             const { body: { workedHours, date, isDayOff, isHoliday }, user: { userId } } = req
             if (!workedHours || !date) throw new BadRequestError('Por favor, informe quantas horas extras foram feitas e a data')
-            const wage = await User.findById(userId).select('wage')
+            const wage = await User.findById(userId).select('wage').session(session)
 
             //validar formato
             validateFormat(workedHours, false)
@@ -140,7 +140,7 @@ const updateOvertime = async (req, res) => {
         const result = await session.withTransaction(async () => {
             const { body: { workedHours, date, isHoliday, isDayOff }, user: { userId }, params: { id: overtimeId } } = req
             if (workedHours === '' || date === '') throw new BadRequestError('Campos de quantidade e data não podem ser vazios')
-            const wage = await User.findById(userId).select('wage')
+            const wage = await User.findById(userId).select('wage').session(session)
 
             const oldOvertime = await Overtime.findOne({ createdBy: userId, _id: overtimeId }).session(session)
             if (!oldOvertime) throw new NotFoundError('Hora extra não encontrada')
