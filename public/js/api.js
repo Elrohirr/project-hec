@@ -107,6 +107,7 @@ const Api = {
       // Auto-logoff: só dispoara se HAVIA um token sendo enviado
       // Sem essa checagem, um 401 de login/senha errada (sem token) também deslogaria/redirecionaria à toa
       if (response.status === 401 && token) {
+        this.clearSession();
         window.location.href = '/index.html'
         throw new ApiError('Sessão expirada', 401)
       }
