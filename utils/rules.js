@@ -101,6 +101,20 @@ function getReceivableDateRange(scope, now) {
     return { $gte: startDate }
 }
 
-module.exports = { calcDistribution, defineValue, defineNightValue, extractPayDate, calcMealVoucher, getLabel, getReceivableDateRange }
+function bankMinutes(workedMinutes, isHoliday) {
+    if (!isHoliday) return workedMinutes * 2
+    return 0
+}
+
+function getClosedMonthCutoff(now) {
+    // se hoje é agosto, cutoff = 1º de junho (maio pra trás = paid)
+    return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 2, 1));
+}
+
+module.exports = {
+    calcDistribution, defineValue, defineNightValue,
+    extractPayDate, calcMealVoucher, getLabel,
+    getReceivableDateRange, bankMinutes, getClosedMonthCutoff
+}
 
 

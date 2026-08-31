@@ -2,7 +2,7 @@ const MealVoucher = require('../models/MealVoucher')
 const NightShift = require('../models/NightShift')
 const MealVoucherConfig = require('../models/MealVoucherConfig')
 const PDFExtractPromise = require('pdf.js-extract')
-const { calcMealVoucher, extractPayDate } = require('./rules')
+const { calcMealVoucher, extractPayDate } = require('../utils/rules')
 const { NotFoundError } = require('../errors')
 
 // ------------------------------------ Monta o objeto de ticket a partir da regra já calculada ----------------------------------------------------------
@@ -133,6 +133,7 @@ async function deleteMealVoucherService(ref_Id, session) {
     return mealVoucher
 }
 
+// será extraído daqui quando a função estiver em uma estrutura mais avançada
 async function extractTableFromPdf(buffer) {
     const PDFExtract = await PDFExtractPromise
     const pdfExtract = new PDFExtract()

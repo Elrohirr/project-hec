@@ -1,4 +1,4 @@
-const { extractTableFromPdf } = require('../utils/services')
+const { extractTableFromPdf } = require('../services/mealVoucherService')
 
 const importPDFPreview = async (req, res) => {
     const buffer = req.file.buffer

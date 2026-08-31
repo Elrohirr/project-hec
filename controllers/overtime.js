@@ -1,9 +1,9 @@
 const mongoose = require('mongoose')
 const Overtime = require('../models/Overtime')
 const User = require('../models/User')
-const { calcDistribution, extractPayDate, defineValue, getReceivableDateRange } = require('../utils/rules')
+const { calcDistribution, extractPayDate, defineValue, getReceivableDateRange, bankMinutes } = require('../utils/rules')
 const { timeToMinutes, minutesToTime, validateFormat } = require('../utils/timeConversion')
-const { createMealVoucherService, updateMealVoucherService, deleteMealVoucherService } = require('../utils/services')
+const { createMealVoucherService, updateMealVoucherService, deleteMealVoucherService } = require('../services/mealVoucherService')
 const { StatusCodes } = require('http-status-codes')
 const { BadRequestError, NotFoundError } = require('../errors')
 
@@ -103,6 +103,7 @@ const createOvertime = async (req, res) => {
 
             //criar whitelist
             const workedMinutes = timeToMinutes(workedHours)
+            const bankedMinutes = bankMinutes(workedMinutes, isHoliday)
             const distributionMinutes = calcDistribution(workedMinutes, isDayOff, isHoliday)
 
             const createFields = {
@@ -120,7 +121,8 @@ const createOvertime = async (req, res) => {
                 wageAtCalculation: wage.wage,
                 payDate: extractPayDate(date, isHoliday),
                 isDayOff: isDayOff ?? false,
-                isHoliday: isHoliday ?? false
+                isHoliday: isHoliday ?? false,
+                bankedMinutes
             }
 
             const [overtime] = await Overtime.create([createFields], { session })
