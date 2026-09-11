@@ -106,15 +106,23 @@ function bankMinutes(workedMinutes, isHoliday) {
     return 0
 }
 
-function getClosedMonthCutoff(now) {
+function getClosedMonthCutoff(date) {
+    const now = new Date(date)
     // se hoje é agosto, cutoff = 1º de junho (maio pra trás = paid)
     return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 2, 1));
+}
+
+function getBankClosingCutOff(date) {
+    // retorna a data de corte do banco, que é sempre o penúltimo dia de dois meses pra trás
+    const now = new Date(date)
+    return currentMonthClosing = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 2, -1))
 }
 
 module.exports = {
     calcDistribution, defineValue, defineNightValue,
     extractPayDate, calcMealVoucher, getLabel,
-    getReceivableDateRange, bankMinutes, getClosedMonthCutoff
+    getReceivableDateRange, bankMinutes, getClosedMonthCutoff,
+    getBankClosingCutOff
 }
 
 

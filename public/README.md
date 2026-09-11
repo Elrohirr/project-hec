@@ -15,6 +15,7 @@ public/
 ├── overtime.html         → registro de horas extras
 ├── nightshift.html       → registro de turnos noturnos
 ├── mealvoucher.html      → acompanhamento de vales-refeição
+├── bank.html            → simula o banco de horas (saldo e histórico)
 ├── account.html          → ajustes da conta (perfil, senha, exclusão)
 ├── admin.html            → administração (só admin)
 ├── css/
@@ -30,6 +31,7 @@ public/
     ├── overtime.js       → lógica de horas extras
     ├── nightshift.js     → lógica de turnos noturnos
     ├── mealvoucher.js    → lógica de vales-refeição
+├── bank.js             → lógica do banco de horas
     ├── account.js        → lógica da página "Minha conta"
     └── admin.js          → lógica de administração
 ```
@@ -86,6 +88,15 @@ Base URL: `/api/v1`.
 - `POST /` — cria config `{ code, unitValue }`.
 - `PATCH /:id` — ativa config existente.
 - `GET /users` — listagem de usuários.
+
+
+
+### Banco de horas - /api/v1/bank
+
+- GET / — totais de minutos + lista de registros do usuário logado.
+- POST /preview — body { date, hoursNeeded } (HH:MM); retorna a lista de horas extras a usar.
+- POST /confirm — mesmo body; cria o registro (confirmaçõn).
+- PATCH /cancel/:id — cancela um registro ativo.
 
 ## Notas / workarounds
 

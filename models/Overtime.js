@@ -57,14 +57,21 @@ const OvertimeSchema = new mongoose.Schema({
     },
     bankedMinutes: {
         type: Number,
-        default: 0,
-        required: true
+        default: 0
     },
     compensatedMinutes: {
         type: Number,
-        default: 0,
-        required: true
+        default: 0
     },
+    compensatedMinutesByTier: {
+        he50minutes: { type: Number, default: 0 },
+        he75minutes: { type: Number, default: 0 },
+        he100minutes: { type: Number, default: 0 }
+    },
+    compensatedValue: {
+        type: Number,
+        default: 0
+    }
 }, {
     toJSON: { virtuals: true },
     toObject: { virtuals: true }

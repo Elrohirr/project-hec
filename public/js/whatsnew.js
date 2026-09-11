@@ -12,12 +12,28 @@ document.addEventListener('DOMContentLoaded', function () {
   var badge = button.querySelector('.whatsnew-badge');
   var versions = [];
 
+  // Compara duas versões semver (ex: "1.2.0" vs "1.1.3").
+  // Retorna > 0 se a for mais nova, < 0 se b for mais nova, 0 se iguais.
+  function compareVersions(a, b) {
+    var partsA = String(a).split('.').map(Number);
+    var partsB = String(b).split('.').map(Number);
+    for (var i = 0; i < Math.max(partsA.length, partsB.length); i++) {
+      var numA = partsA[i] || 0;
+      var numB = partsB[i] || 0;
+      if (numA !== numB) return numA - numB;
+    }
+    return 0;
+  }
+
+  function sortedByVersionDesc() {
+    return versions.slice().sort(function (a, b) {
+      return compareVersions(b.version, a.version);
+    });
+  }
+
   function latestVersion() {
     if (!versions.length) return null;
-    var sorted = versions.slice().sort(function (a, b) {
-      return String(b.date).localeCompare(String(a.date));
-    });
-    return sorted[0];
+    return sortedByVersionDesc()[0];
   }
 
   function hasUnseen() {
@@ -31,9 +47,7 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   function renderBody() {
-    var sorted = versions.slice().sort(function (a, b) {
-      return String(b.date).localeCompare(String(a.date));
-    });
+    var sorted = sortedByVersionDesc();
     return sorted.map(function (v) {
       var items = (v.highlights || []).map(function (h) {
         return '<li>' + h + '</li>';

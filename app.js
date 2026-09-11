@@ -14,6 +14,7 @@ const mealVoucherRouter = require('./routes/mealVoucher')
 const userRouter = require('./routes/user')
 const adminRouter = require('./routes/admin')
 const importRouter = require('./routes/import')
+const bankRouter = require('./routes/bank')
 
 // middlewares
 const authenticateUser = require('./middleware/authentication')
@@ -34,6 +35,7 @@ app.use('/api/v1/mealvoucher', authenticateUser, mealVoucherRouter)
 app.use('/api/v1/user', authenticateUser, userRouter)
 app.use('/api/v1/admin', authenticateUser, authorizeUser, adminRouter)
 app.use('/api/v1/import', authenticateUser, importRouter)
+app.use('/api/v1/bank', authenticateUser, bankRouter)
 
 app.use(notFoundMiddleware)
 app.use(errorHandlerMiddleware)

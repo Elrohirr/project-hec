@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Banco de Horas — Hour Flow</title>
+  <script>
+    // Aplica o tema salvo antes do primeiro paint, para evitar o "flash"
+    // de tema claro seguido de escuro. Mantido inline (sem depender de
+    // js/theme.js, que só carrega depois do CSS/HTML).
+    (function () {
+      try {
+        if (localStorage.getItem('hourflow_theme') === 'dark') {
+          document.documentElement.setAttribute('data-theme', 'dark');
+        }
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="app-header">
+      <div class="header-left">
+        <p class="brand-name">Hour Flow - Controle de Horas e Pagamentos</p>
+        <nav class="app-nav">
+          <a href="dashboard.html">Início</a>
+          <a href="overtime.html">Horas extras</a>
+          <a href="nightshift.html">Turno noturno</a>
+          <a href="mealvoucher.html">Vale-refeição</a>
+          <a href="bank.html" class="active">Banco de Horas</a>
+        </nav>
+      </div>
+      <div class="user-area">
+        <span id="user-greeting"></span>
+        <a href="account.html">Minha conta</a>
+        <button id="whatsnew-button" class="ghost-button whatsnew-button" type="button" aria-haspopup="dialog" aria-expanded="false">Novidades <span class="whatsnew-badge" hidden aria-hidden="true"></span></button>
+        <button id="logout-button" class="ghost-button" type="button">Sair</button>
+      </div>
+    </header>
+
+    <main class="app-content">
+      <div class="page-heading">
+        <h2>Banco de Horas</h2>
+      </div>
+
+      <!-- Saldo acumulado no banco: GET /bank -->
+      <section class="summary-cards">
+        <div class="summary-card total">
+          <span class="label">Saldo no banco</span>
+          <span class="hint">horas acumuladas disponíveis para compensação</span>
+          <div class="value-row">
+            <span class="value" id="bank-balance">—</span>
+          </div>
+        </div>
+      </section>
+
+      <div id="bank-error-box" class="error-box" role="alert" hidden></div>
+
+      <!-- Simulação: POST /bank/preview -->
+      <section class="account-section">
+        <h3>Simular compensação</h3>
+        <p class="section-hint">Escolha a data e quantas horas quer compensar. O sistema usará as horas extras elegíveis mais antigas.</p>
+
+        <form id="bank-form" novalidate>
+          <div class="field">
+            <label for="bank-date">Data</label>
+            <input type="date" id="bank-date" name="date" required>
+          </div>
+          <div class="field">
+            <label for="bank-hours">Horas a compensar</label>
+            <input type="time" id="bank-hours" name="hoursNeeded" min="00:00" max="23:59" step="60" value="08:00">
+            <span class="hint">Formato HH:MM — padrão 08:00.</span>
+          </div>
+          <button type="button" id="simulate-button" class="primary-button">Simular</button>
+        </form>
+      </section>
+
+      <!-- Resultado da simulação (oculto até simular) -->
+      <section class="account-section" id="bank-preview-section" hidden>
+        <h3>Resultado da simulação</h3>
+        <p class="section-hint">Horas extras que serão usadas para compensar <span id="bank-preview-requested">—</span>.</p>
+
+        <div class="table-scroll">
+          <table class="overtime-table">
+            <thead>
+              <tr>
+                <th>Data</th>
+                <th>Min. usados</th>
+                <th>Min. por tier (50/75/100)</th>
+                <th>Valor perdido</th>
+                <th>Valor por tier (50/75/100)</th>
+              </tr>
+            </thead>
+            <tbody id="bank-preview-body"></tbody>
+            <tfoot id="bank-preview-totals"></tfoot>
+          </table>
+        </div>
+        <div id="bank-preview-empty" class="empty-state" hidden>Não há horas extras elegíveis disponíveis para compensar.</div>
+
+        <div class="bank-result-actions">
+          <button type="button" id="confirm-bank-button" class="primary-button bank-disabled-cta" disabled title="Disponível em breve — módulo em fase de testes.">Confirmar banco</button>
+          <p class="hint">Disponível em breve — módulo em fase de testes.</p>
+        </div>
+      </section>
+
+      <!-- Histórico: GET /bank -->
+      <section class="account-section">
+        <h3>Histórico de compensações</h3>
+        <p class="section-hint">Compensações registradas, ativas e canceladas. Cancelar estará disponível em breve — módulo em fase de testes.</p>
+
+        <div class="table-scroll">
+          <table class="overtime-table">
+            <thead>
+              <tr>
+                <th>Data</th>
+                <th>Horas usadas</th>
+                <th>Valor perdido</th>
+                <th>Estado</th>
+                <th>Origem</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="bank-history-body"></tbody>
+          </table>
+        </div>
+        <div id="bank-history-empty" class="empty-state" hidden>Não há compensações registradas ainda.</div>
+      </section>
+    </main>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/auth-guard.js"></script>
+  <script src="js/header.js"></script>
+  <script src="js/filterState.js"></script>
+  <script src="js/format.js"></script>
+  <script src="js/bank.js"></script>
+  <script src="js/theme.js"></script>
+</body>
+</html>

@@ -19,16 +19,18 @@ const register = async (req, res) => {
 // ----- funcionalidade login
 const login = async (req, res) => {
     const { email, password } = req.body
-    if (!email || !password) {
-        throw new BadRequestError("Por favor insira um email ou senha")
-    }
+    if (!email || !password) throw new BadRequestError("Por favor insira um email ou senha")
+
     const user = await User.findOne({ email })
-    if (!user) {
-        throw new UnauthenticatedError("Usuário não encontrado")
-    }
+    if (!user) throw new UnauthenticatedError("Usuário não encontrado")
+
     const isPasswordCorrect = await user.comparePassword(password)
-    if (!isPasswordCorrect) {
-        throw new UnauthenticatedError('Senha inválida')
+    if (!isPasswordCorrect) throw new UnauthenticatedError('Senha inválida')
+
+    try {
+        await User.findByIdAndUpdate(user._id, { lastLogin: new Date() })
+    } catch (error) {
+        console.error('Falha ao atualizar lastLogin:', err.message)
     }
     const token = user.createJWT()
     res.status(StatusCodes.OK).json({ user: { name: user.name + " " + user.surname }, token })

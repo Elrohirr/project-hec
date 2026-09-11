@@ -12,12 +12,24 @@ const BankCompesationSchema = new mongoose.Schema({
     },
     totalMinutes: {
         type: Number,
-        required: true
+        default: 480
     },
     entries: {
         type: [{
             overtimeId: { type: mongoose.Types.ObjectId, ref: 'Overtime', required: true },
-            minutesUsed: { type: Number, required: true }
+            overtimeDate: { type: Date, required: true },
+            minutesUsed: { type: Number, required: true },
+            minutesUsedByTier: {
+                he50: { type: Number, default: 0 },
+                he75: { type: Number, default: 0 },
+                he100: { type: Number, default: 0 },
+            },
+            valueLost: { type: Number, required: true },
+            valueLostByTier: {
+                he50: { type: Number, default: 0 },
+                he75: { type: Number, default: 0 },
+                he100: { type: Number, default: 0 },
+            }
         }],
         required: true
     },
@@ -26,8 +38,15 @@ const BankCompesationSchema = new mongoose.Schema({
         enum: ['manual', 'pdf_import'],
         required: true
     },
+    status: {
+        type: String,
+        enum: ['active', 'cancelled'],
+        default: 'active'
+    }
 }, { timestamps: true })
 
-BankCompesationSchema.index({ createdBy: 1, date: 1 })
+BankCompesationSchema.index(
+    { createdBy: 1, date: 1 },
+    { unique: true, partialFilterExpression: { status: 'active' } })
 
 module.exports = mongoose.model('BankCompensation', BankCompesationSchema)

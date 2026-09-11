@@ -227,7 +227,22 @@ const Api = {
     });
   },
 
-  // ---- Admin (protegido no backend por middleware/authorizeAdmin) ----------
+    // ---- Banco de horas - /api/v1/bank -------------------------------------
+
+  /** GET /bank - saldo total de minutos + lista de registros. */
+  async getBankCompensations() {
+    return this.request('/bank', { method: 'GET' });
+  },
+
+  /** POST /bank/preview - simula o uso de horas extras sem gravar. */
+  async previewBankCompensation({ date, hoursNeeded }) {
+    return this.request('/bank/preview', {
+      method: 'POST',
+      body: JSON.stringify({ date, hoursNeeded })
+    });
+  },
+
+// ---- Admin (protegido no backend por middleware/authorizeAdmin) ----------
 
   /** Lista todas as configurações de vale-refeição cadastradas (GET /admin). */
   async getMealVoucherConfigs() {
