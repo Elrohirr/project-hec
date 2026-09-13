@@ -99,6 +99,80 @@ document.addEventListener('DOMContentLoaded', () => {
     return button;
   }
 
+  /** Constrói a tabela de entries (HTML) usada no modal "Abrir detalhes". */
+  function entriesTableHtml(entries) {
+    const list = entries || [];
+    let totalMinutes = 0;
+    let totalValue = 0;
+
+    const rows = list.map((entry) => {
+      const used = Number(entry.minutesUsed) || 0;
+      const lost = Number(entry.valueLost) || 0;
+      totalMinutes += used;
+      totalValue += lost;
+
+      return `
+        <tr>
+          <td>${formatDate(entry.overtimeDate)}</td>
+          <td class="numeric">${minutesToHHMM(used)}</td>
+          <td class="numeric">${tierClock(entry.minutesUsedByTier)}</td>
+          <td class="numeric">${currencyFormatter.format(lost)}</td>
+          <td class="numeric">${tierValue(entry.valueLostByTier)}</td>
+        </tr>
+      `;
+    }).join('');
+
+    return `
+      <table class="overtime-table">
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>Min. usados</th>
+            <th>Min. por tier (50/75/100)</th>
+            <th>Valor perdido</th>
+            <th>Valor por tier (50/75/100)</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+        <tfoot>
+          <tr>
+            <th>Total</th>
+            <td class="numeric">${minutesToHHMM(totalMinutes)}</td>
+            <td></td>
+            <td class="numeric">${currencyFormatter.format(totalValue)}</td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+    `;
+  }
+
+  /** Abre um modal com os detalhes (entries) de uma compensação do histórico. */
+  function openEntryDetails(item) {
+    const list = Array.isArray(item.entries) ? item.entries : [];
+    if (!list.length) return;
+
+    const modal = createModal({
+      title: `Detalhes da compensação — ${formatDate(item.date)}`,
+      body: entriesTableHtml(list)
+    });
+
+    // Modal um pouco mais largo para acomodar melhor a tabela de entries.
+    const dialog = modal.el.querySelector('.modal');
+    if (dialog) dialog.classList.add('bank-entry-modal');
+
+    modal.open();
+  }
+
+  function buildDetailsButton(item) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'icon-button details';
+    button.textContent = 'Abrir detalhes';
+    button.addEventListener('click', () => openEntryDetails(item));
+    return button;
+  }
+
   function renderHistory(list) {
     historyBody.innerHTML = '';
     const rows = Array.isArray(list) ? list : [];
@@ -125,7 +199,11 @@ document.addEventListener('DOMContentLoaded', () => {
         <td><span class="source-tag">${item.source === 'pdf_import' ? 'PDF import' : 'Manual'}</span></td>
         <td><div class="row-actions"></div></td>
       `;
-      tr.querySelector('.row-actions').appendChild(buildCancelButton());
+      const actions = tr.querySelector('.row-actions');
+      if (Array.isArray(item.entries) && item.entries.length) {
+        actions.appendChild(buildDetailsButton(item));
+      }
+      actions.appendChild(buildCancelButton());
       historyBody.appendChild(tr);
     });
   }

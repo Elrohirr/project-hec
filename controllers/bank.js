@@ -3,7 +3,7 @@ const { StatusCodes } = require('http-status-codes')
 const Overtime = require('../models/Overtime')
 const BankCompensation = require('../models/BankCompensation')
 const { findEligibleOvetimes, confirmCompensation, cancelCompensation } = require('../services/bankService')
-const { getBankClosingCutOff } = require('../utils/rules')
+const { getClosedMonthCutoff } = require('../utils/rules')
 const { timeToMinutes, validateFormat } = require('../utils/timeConversion')
 const { BadRequestError } = require('../errors')
 
@@ -36,38 +36,14 @@ const confirmBankCompensation = async (req, res) => {
 // --------------------------- GET todos os registros de banco de horas -----------------------------------------------------
 const getAllBankCompensation = async (req, res) => {
     const { user: { userId } } = req
-    const actualDate = getBankClosingCutOff(Date.now())
+    const actualDate = getClosedMonthCutoff(Date.now())
 
-    const bankedMinutesPerMonth = (await Overtime.aggregate([
-        {
-            $match: {
-                createdBy: new mongoose.Types.ObjectId(userId),
-                date: { $gt: actualDate },
-            }
-        },
-        {
-            $group: {
-                _id: null,
-                bankedMinutes: { $sum: "$bankedMinutes" },
-            }
-        }
+    const saldoAgg = (await Overtime.aggregate([
+        { $match: { createdBy: new mongoose.Types.ObjectId(userId), date: { $gte: actualDate } } },
+        { $group: { _id: null, saldo: { $sum: { $subtract: ["$bankedMinutes", "$compensatedMinutes"] } } } }
     ]))[0]
 
-    const compensatedMinutesBC = (await BankCompensation.aggregate([
-        {
-            $match: {
-                createdBy: new mongoose.Types.ObjectId(userId),
-                status: 'active'
-            }
-        }, {
-            $group: {
-                _id: null,
-                totalMinutes: { $sum: "$totalMinutes" }
-            }
-        }
-    ]))[0]
-
-    const bankedMinutesTotal = bankedMinutesPerMonth.bankedMinutes - compensatedMinutesBC.totalMinutes
+    const bankedMinutesTotal = saldoAgg?.saldo ?? 0
 
     const bankCompensation = await BankCompensation.find({ createdBy: userId })
     res.status(StatusCodes.OK).json([{ totalBankedMinutes: bankedMinutesTotal }, bankCompensation])

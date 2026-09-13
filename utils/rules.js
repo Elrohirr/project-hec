@@ -112,17 +112,10 @@ function getClosedMonthCutoff(date) {
     return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 2, 1));
 }
 
-function getBankClosingCutOff(date) {
-    // retorna a data de corte do banco, que é sempre o penúltimo dia de dois meses pra trás
-    const now = new Date(date)
-    return currentMonthClosing = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 2, -1))
-}
-
 module.exports = {
     calcDistribution, defineValue, defineNightValue,
     extractPayDate, calcMealVoucher, getLabel,
-    getReceivableDateRange, bankMinutes, getClosedMonthCutoff,
-    getBankClosingCutOff
+    getReceivableDateRange, bankMinutes, getClosedMonthCutoff
 }
 
 

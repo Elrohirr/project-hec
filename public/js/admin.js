@@ -150,6 +150,7 @@ document.addEventListener('DOMContentLoaded', () => {
     tr.innerHTML = `
       <td>${[user.name, user.surname].filter(Boolean).join(' ') || '—'}</td>
       <td>${user.email || '—'}</td>
+      <td>${formatDate(user.lastLogin)}</td>
       <td><span class="${profileClass}">${profileText}</span></td>
     `;
     return tr;

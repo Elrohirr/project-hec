@@ -36,7 +36,6 @@
       <div class="user-area">
         <span id="user-greeting"></span>
         <a href="account.html">Minha conta</a>
-        <button id="whatsnew-button" class="ghost-button whatsnew-button" type="button" aria-haspopup="dialog" aria-expanded="false">Novidades <span class="whatsnew-badge" hidden aria-hidden="true"></span></button>
         <button id="logout-button" class="ghost-button" type="button">Sair</button>
       </div>
     </header>
@@ -60,6 +59,7 @@
       <div id="bank-error-box" class="error-box" role="alert" hidden></div>
 
       <!-- Simulação: POST /bank/preview -->
+      <div class="bank-sections">
       <section class="account-section">
         <h3>Simular compensação</h3>
         <p class="section-hint">Escolha a data e quantas horas quer compensar. O sistema usará as horas extras elegíveis mais antigas.</p>
@@ -128,6 +128,7 @@
         </div>
         <div id="bank-history-empty" class="empty-state" hidden>Não há compensações registradas ainda.</div>
       </section>
+      </div>
     </main>
   </div>
 
@@ -137,6 +138,7 @@
   <script src="js/header.js"></script>
   <script src="js/filterState.js"></script>
   <script src="js/format.js"></script>
+  <script src="js/modal.js"></script>
   <script src="js/bank.js"></script>
   <script src="js/theme.js"></script>
 </body>

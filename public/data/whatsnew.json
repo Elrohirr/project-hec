@@ -1,4 +1,14 @@
-[  
+[
+  {
+    "version":"1.2.1",
+    "date":"12-09-2026",
+    "highlights":[
+      "Ajustado posição do card módulo \"Banco de Horas\"",
+      "Ajustado posição das tabelas no módulo \"Banco de Horas\"",
+      "Corrigido bug de undefined pra usuários ainda sem compensações",
+      "Corrigido bug de soma total de horas no banco de horas somando errado"
+    ]
+},
   {
     "version":"1.2.0",
     "date":"11-09-2026",

@@ -866,6 +866,14 @@ a {
   background: rgba(47, 111, 98, 0.08);
 }
 
+.icon-button.details {
+  color: var(--teal);
+}
+
+.icon-button.details:hover {
+  background: rgba(47, 111, 98, 0.08);
+}
+
 /* Alinhamento da coluna "Ações" da tabela admin:
    o "—" das configs ativas e o botão "Ativar" usam o mesmo container .row-actions */
 .admin-configs-table td:last-child {
@@ -883,7 +891,7 @@ a {
 
 /* Tabela de usuários: colunas curtas, não precisa de 1000px de largura mínima */
 .admin-users-table {
-  min-width: 560px;
+  min-width: 660px;
 }
 
 /* Selo "Admin" da coluna Perfil */
@@ -1083,6 +1091,13 @@ a {
   gap: 24px;
   align-items: start;
   margin-bottom: 24px;
+}
+
+/* Banco de horas: separa visualmente os cards de simulação, resultado e histórico */
+.bank-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
 }
 
 .account-section {
@@ -1506,6 +1521,11 @@ body.modal-open {
   max-width: 560px;
   max-height: 80vh;
   overflow-y: auto;
+}
+
+/* Modal de entries do banco de horas: precisa mais largura que o padrão */
+.bank-entry-modal {
+  max-width: 760px;
 }
 
 .modal-head {

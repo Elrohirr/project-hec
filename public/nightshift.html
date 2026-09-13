@@ -1,13 +1,8 @@
 <!DOCTYPE html>
-
 <html lang="pt-BR">
-
 <head>
-
   <meta charset="UTF-8">
-
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
   <title>Turno noturno — Controle de Horas Extras</title>
     <script>
     // Aplica o tema salvo antes do primeiro paint, para evitar o "flash"
@@ -21,282 +16,146 @@
       } catch (e) {}
     })();
   </script>
-
   <link rel="preconnect" href="https://fonts.googleapis.com">
-
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-
   <link rel="stylesheet" href="css/style.css">
-
 </head>
 
 <body>
-
   <div class="app-shell">
-
     <header class="app-header">
-
       <div class="header-left">
-
         <p class="brand-name">Hour Flow - Controle de Horas e Pagamentos</p>
-
         <nav class="app-nav">
-
           <a href="dashboard.html">Início</a>
-
           <a href="overtime.html">Horas extras</a>
-
           <a href="nightshift.html" class="active">Turno noturno</a>
-
           <a href="mealvoucher.html">Vale-refeição</a>
           <a href="bank.html">Banco de Horas</a>
-
         </nav>
-
       </div>
-
       <div class="user-area">
-
         <span id="user-greeting"></span>
-
         <a href="account.html">Minha conta</a>
-
         <button id="logout-button" class="ghost-button" type="button">Sair</button>
-
       </div>
-
     </header>
 
-
-
     <main class="app-content">
-
       <div class="page-heading">
-
         <h2>Turno noturno</h2>
-
       </div>
-
-
 
       <!-- Resumo -->
-
       <section class="summary-cards" id="summary-cards">
-
         <div class="summary-card">
-
           <span class="label">Horas de relógio</span>
-
           <span class="hint">Horário que vem do ponto</span>
-
           <span class="value" id="summary-total-clock">—</span>
-
         </div>
-
         <div class="summary-card">
-
           <span class="label">
-
             Horas reduzidas
-
             <button type="button" class="info-button" id="info-reduced" aria-label="O que são horas reduzidas?">ⓘ</button>
-
           </span>
-
           <span class="hint">Formato que vem no contracheque</span>
-
           <span class="value" id="summary-total-reduced">—</span>
-
         </div>
-
         <div class="summary-card">
-
           <span class="label">Adicional noturno</span>
-
           <span class="hint">Adic-Noturno</span>
-
           <span class="value" id="summary-total-night-value">—</span>
-
         </div>
-
         <div class="summary-card total">
-
           <span class="label">Total a receber</span>
-
           <span class="value" id="summary-total">—</span>
-
         </div>
-
       </section>
 
-
-
       <!-- Popup explicativo: hora noturna reduzida (art. 73, §1º CLT) -->
-
       <div class="info-popup" id="info-popup" hidden>
-
         <p><strong>O que são horas reduzidas?</strong></p>
-
         <p>Conforme o art. 73, §1º da CLT, a hora noturna (22h às 5h) tem duração de <strong>52min30s</strong> de relógio. Ou seja, cada hora noturna trabalhada equivale a <strong>1h08min</strong> de hora reduzida.</p>
-
         <p>Ex.: 7h de relógio → 8h reduzidas.</p>
-
         <button type="button" class="ghost-button-light small" id="info-popup-close">Fechar</button>
-
       </div>
 
-
-
       <div class="overtime-layout">
-
         <!-- Formulário de registro: POST /nightShift -->
-
         <section class="form-card">
-
           <h3 id="form-title">Registrar turno noturno</h3>
 
-
-
           <div id="form-error-box" class="error-box" role="alert" hidden></div>
-
           <div id="form-success-box" class="success-box" role="status" hidden></div>
 
-
-
           <form id="nightshift-form" novalidate>
-
             <div class="field">
-
               <label for="total-night-hours">Horas noturnas (relógio) — padrão 07:00</label>
-
               <input type="time" id="total-night-hours" name="nightHoursClock" min="00:00" max="07:00" step="60" value="07:00">
-
             </div>
-
             <div class="field">
-
               <label for="date">Data</label>
-
               <input type="date" id="date" name="date" required>
-
             </div>
-
             <button type="submit" id="submit-button" class="primary-button">Registrar</button>
-
             <button type="button" id="cancel-edit-button" class="ghost-button-light" hidden>Cancelar edição</button>
-
           </form>
-
         </section>
 
-
-
         <!-- Listagem: GET /nightShift -->
-
         <section class="table-card">
-
           <div class="table-toolbar filters-toolbar">
-
             <div class="filter-field">
-
               <label for="filter-start-date">De</label>
-
               <input type="date" id="filter-start-date">
-
             </div>
-
             <div class="filter-field">
-
               <label for="filter-end-date">Até</label>
-
               <input type="date" id="filter-end-date">
-
             </div>
-
             <div class="filter-field">
-
               <label for="filter-pay-month-start">Pgto. de</label>
-
               <input type="month" id="filter-pay-month-start">
-
             </div>
-
             <div class="filter-field">
-
               <label for="filter-pay-month-end">Pgto. até</label>
-
               <input type="month" id="filter-pay-month-end">
-
             </div>
-
             <div class="filter-field">
-
               <label for="filter-sort">Ordenar por</label>
-
               <select id="filter-sort">
-
                 <option value="-date">Mais recentes primeiro</option>
-
                 <option value="date">Mais antigos primeiro</option>
-
                 <option value="-nightShiftValue">Maior adicional</option>
-
                 <option value="nightShiftValue">Menor adicional</option>
-
               </select>
-
             </div>
-
             <button type="button" id="apply-filters-button" class="ghost-button-light small">Filtrar</button>
-
             <button type="button" id="clear-filters-button" class="ghost-button-light small">Limpar</button>
-
           </div>
 
-
-
           <div class="table-scroll">
-
             <table class="overtime-table">
-
               <thead>
-
                 <tr>
-
                   <th>Data</th>
-
                   <th>Horário de relógio</th>
-
                   <th>Horário reduzido</th>
-
                   <th>Adicional noturno</th>
-
                   <th>Salário ref.</th>
-
                   <th>Data pgto.</th>
-
                   <th>Ações</th>
-
                 </tr>
-
               </thead>
-
               <tbody id="nightshift-table-body">
-
                 <!-- linhas geradas via JS -->
-
               </tbody>
-
             </table>
-
           </div>
 
           <div id="empty-state" class="empty-state" hidden>Nenhum registro encontrado.</div>
 
-
-
           <div class="table-footer">
-
             <div class="limit-field">
               <label for="page-limit">Registros por página</label>
               <select id="page-limit" class="scope-select">
@@ -308,26 +167,15 @@
               </select>
             </div>
             <span id="page-indicator">—</span>
-
             <div class="pagination-buttons">
-
               <button type="button" id="prev-page-button">Anterior</button>
-
               <button type="button" id="next-page-button">Próxima</button>
-
             </div>
-
           </div>
-
         </section>
-
       </div>
-
     </main>
-
   </div>
-
-
 
   <script src="js/config.js"></script>
   <script src="js/api.js"></script>

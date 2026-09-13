@@ -1,7 +1,7 @@
 const mongoose = require('mongoose')
 const Overtime = require('../models/Overtime')
 const BankCompensation = require('../models/BankCompensation')
-const { getClosedMonthCutoff, getBankClosingCutOff } = require('../utils/rules')
+const { getClosedMonthCutoff } = require('../utils/rules')
 const { capitalize } = require('../utils/tools')
 const { BadRequestError, NotFoundError } = require('../errors')
 
