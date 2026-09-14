@@ -1,7 +1,8 @@
 /**
  * Lógica da tela "Banco de Horas".
  * Consume a API /api/v1/bank:
- *   GET  /bank          -> [{ totalBankedMinutes }, compensações]
+ *   GET  /bank          -> { bankedMinutesTotal: { balance }, totalValueCompensated: { compensatedValue },
+ *                           totalValueCompensatedByTier: { valueLost50, valueLost75, valueLost100 }, bankCompensation[] }
  *   POST /bank/preview  -> entries[] (hoursNeeded em branco usa o padrão 08:00)
  * A confirmação/cancelamento ficam DESABILITADOS na UI por agora
  * (módulo em fase de testes). Os botões existem, mas não disparam
@@ -9,6 +10,10 @@
  */
 document.addEventListener('DOMContentLoaded', () => {
   const balanceEl = document.getElementById('bank-balance');
+  const compTotalEl = document.getElementById('bank-comp-total');
+  const comp50El = document.getElementById('bank-comp-50');
+  const comp75El = document.getElementById('bank-comp-75');
+  const comp100El = document.getElementById('bank-comp-100');
   const errorBox = document.getElementById('bank-error-box');
 
   const dateInput = document.getElementById('bank-date');
@@ -68,8 +73,8 @@ document.addEventListener('DOMContentLoaded', () => {
         tr.innerHTML = `
           <td>${formatDate(entry.overtimeDate)}</td>
           <td class="numeric">${minutesToHHMM(used)}</td>
-          <td class="numeric">${tierClock(entry.minutesUsedByTier)}</td>
           <td class="numeric">${currencyFormatter.format(lost)}</td>
+          <td class="numeric">${tierClock(entry.minutesUsedByTier)}</td>
           <td class="numeric">${tierValue(entry.valueLostByTier)}</td>
         `;
         previewBody.appendChild(tr);
@@ -79,9 +84,9 @@ document.addEventListener('DOMContentLoaded', () => {
         <tr>
           <th>Total</th>
           <td class="numeric">${minutesToHHMM(totalMinutes)}</td>
-          <td></td>
           <td class="numeric">${currencyFormatter.format(totalValue)}</td>
-          <td></td>
+          <td>-----</td>
+          <td>-----</td>
         </tr>
       `;
     }
@@ -115,8 +120,8 @@ document.addEventListener('DOMContentLoaded', () => {
         <tr>
           <td>${formatDate(entry.overtimeDate)}</td>
           <td class="numeric">${minutesToHHMM(used)}</td>
-          <td class="numeric">${tierClock(entry.minutesUsedByTier)}</td>
           <td class="numeric">${currencyFormatter.format(lost)}</td>
+          <td class="numeric">${tierClock(entry.minutesUsedByTier)}</td>
           <td class="numeric">${tierValue(entry.valueLostByTier)}</td>
         </tr>
       `;
@@ -127,10 +132,10 @@ document.addEventListener('DOMContentLoaded', () => {
         <thead>
           <tr>
             <th>Data</th>
-            <th>Min. usados</th>
-            <th>Min. por tier (50/75/100)</th>
+            <th>Horas usadas</th>
+            <th>Horas por adicional (50/75/100)</th>
             <th>Valor perdido</th>
-            <th>Valor por tier (50/75/100)</th>
+            <th>Valor por adicional (50/75/100)</th>
           </tr>
         </thead>
         <tbody>${rows}</tbody>
@@ -138,9 +143,9 @@ document.addEventListener('DOMContentLoaded', () => {
           <tr>
             <th>Total</th>
             <td class="numeric">${minutesToHHMM(totalMinutes)}</td>
-            <td></td>
             <td class="numeric">${currencyFormatter.format(totalValue)}</td>
-            <td></td>
+            <td>-----</td>
+            <td>-----</td>
           </tr>
         </tfoot>
       </table>
@@ -210,10 +215,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function loadBank() {
     const data = await Api.getBankCompensations();
-    const totalsDoc = Array.isArray(data) ? data[0] : null;
-    const list = Array.isArray(data) ? data[1] : [];
+    // Nova estrutura de resposta (objeto):
+    //   bankedMinutesTotal: { balance }
+    //   totalValueCompensated: { compensatedValue }
+    //   totalValueCompensatedByTier: { valueLost50, valueLost75, valueLost100 }
+    //   bankCompensation: [...]
+    const totalsDoc = data?.bankedMinutesTotal || {};
+    const totalsCompensated = data?.totalValueCompensated || {};
+    const tierTotals = data?.totalValueCompensatedByTier || {};
+    const list = Array.isArray(data?.bankCompensation) ? data.bankCompensation : [];
 
-    balanceEl.textContent = minutesToHHMM(totalsDoc?.totalBankedMinutes || 0);
+    balanceEl.textContent = minutesToHHMM(totalsDoc.balance || 0);
+    compTotalEl.textContent = currencyFormatter.format(totalsCompensated.compensatedValue || 0);
+    comp50El.textContent = currencyFormatter.format(tierTotals.valueLost50 || 0);
+    comp75El.textContent = currencyFormatter.format(tierTotals.valueLost75 || 0);
+    comp100El.textContent = currencyFormatter.format(tierTotals.valueLost100 || 0);
     renderHistory(list);
   }
 
@@ -245,6 +261,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   loadBank().catch((err) => {
     balanceEl.textContent = '—';
+    compTotalEl.textContent = '—';
+    comp50El.textContent = '—';
+    comp75El.textContent = '—';
+    comp100El.textContent = '—';
     showError(err.message || 'Não foi possível carregar o saldo e o histórico do banco de horas.');
   });
 });

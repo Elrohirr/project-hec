@@ -38,15 +38,72 @@ const getAllBankCompensation = async (req, res) => {
     const { user: { userId } } = req
     const actualDate = getClosedMonthCutoff(Date.now())
 
-    const saldoAgg = (await Overtime.aggregate([
+    const bankedMinutesTotal = (await Overtime.aggregate([
         { $match: { createdBy: new mongoose.Types.ObjectId(userId), date: { $gte: actualDate } } },
-        { $group: { _id: null, saldo: { $sum: { $subtract: ["$bankedMinutes", "$compensatedMinutes"] } } } }
+        { $group: { _id: null, balance: { $sum: { $subtract: ["$bankedMinutes", "$compensatedMinutes"] } } } }
+    ]))[0] || { balance: 0 }
+
+    const totalValueCompensated = (await Overtime.aggregate([
+        { $match: { createdBy: new mongoose.Types.ObjectId(userId) } },
+        { $group: { _id: null, compensatedValue: { $sum: "$compensatedValue" } } }
+    ]))[0] || { compensatedValue: 0 }
+
+    const totalValueCompensatedByTier = (await Overtime.aggregate([
+        { $match: { createdBy: new mongoose.Types.ObjectId(userId), compensatedValue: { $gt: 0 } } },
+        {
+            $group: {
+                _id: null,
+                he50minutes: { $sum: "$distributionMinutes.he50minutes" },
+                he75minutes: { $sum: "$distributionMinutes.he75minutes" },
+                he100minutes: { $sum: "$distributionMinutes.he100minutes" },
+                value50: { $sum: "$values.valueHe50" },
+                value75: { $sum: "$values.valueHe75" },
+                value100: { $sum: "$values.valueHe100" },
+                compensatedMinutesHe50: { $sum: "$compensatedMinutesByTier.he50minutes" },
+                compensatedMinutesHe75: { $sum: "$compensatedMinutesByTier.he75minutes" },
+                compensatedMinutesHe100: { $sum: "$compensatedMinutesByTier.he100minutes" }
+            }
+        },
+        {
+            // stage 1: calculo dos ratios
+            $addFields: {
+                valueByMinute50: {
+                    $cond: { if: { $eq: ["$he50minutes", 0] }, then: 0, else: { $divide: ["$value50", "$he50minutes"] } }
+                },
+                valueByMinute75: {
+                    $cond: { if: { $eq: ["$he75minutes", 0] }, then: 0, else: { $divide: ["$value75", "$he75minutes"] } }
+                },
+                valueByMinute100: {
+                    $cond: { if: { $eq: ["$he100minutes", 0] }, then: 0, else: { $divide: ["$value100", "$he100minutes"] } }
+                },
+            }
+        },
+        {
+            // stage 2: calculo de valores por tier
+            $addFields: {
+                valueLost50: { $multiply: ["$valueByMinute50", "$compensatedMinutesHe50"] },
+                valueLost75: { $multiply: ["$valueByMinute75", "$compensatedMinutesHe75"] },
+                valueLost100: { $multiply: ["$valueByMinute100", "$compensatedMinutesHe100"] }
+            }
+        },
+        {
+            // stage 3: shape final, enviado ao response
+            $project: {
+                _id: 0,
+                valueLost50: 1,
+                valueLost75: 1,
+                valueLost100: 1
+            }
+        }
     ]))[0]
 
-    const bankedMinutesTotal = saldoAgg?.saldo ?? 0
-
     const bankCompensation = await BankCompensation.find({ createdBy: userId })
-    res.status(StatusCodes.OK).json([{ totalBankedMinutes: bankedMinutesTotal }, bankCompensation])
+    res.status(StatusCodes.OK).json({
+        bankedMinutesTotal,
+        totalValueCompensatedByTier,
+        totalValueCompensated,
+        bankCompensation
+    })
 }
 
 // --------------------------- Cancela um registro de banco de horas, restorando as horas extras relacionadas -----------------------------------------------------

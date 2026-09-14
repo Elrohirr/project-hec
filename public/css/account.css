@@ -1,0 +1,41 @@
+/* account.css — estilos exclusivos da tela Minha conta (account.html) */
+[data-theme="dark"] .danger-button {
+  color: #ffffff;
+}
+
+.danger-zone {
+  border-color: rgba(179, 67, 43, 0.4);
+  border-left: 4px solid var(--danger);
+}
+
+.danger-zone h3 {
+  color: var(--danger);
+}
+
+.danger-button {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: var(--radius);
+  background: var(--danger);
+  color: var(--paper-raised);
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.danger-button:hover:not(:disabled) {
+  background: #8f3522;
+}
+
+.danger-button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+@media (max-width: 860px) {
+  .account-layout {
+    grid-template-columns: 1fr;
+  }
+}

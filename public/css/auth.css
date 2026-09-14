@@ -1,0 +1,189 @@
+/* auth.css — estilos exclusivos das telas de login (index.html) e cadastro (register.html) */
+/* =========================================================
+   Tela de login
+   ========================================================= */
+.login-screen {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+  min-height: 100vh;
+}
+
+.login-brand {
+  background: var(--ink);
+  color: var(--paper);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 48px;
+  position: relative;
+  overflow: hidden;
+}
+
+.login-brand::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      rgba(242, 244, 241, 0.035) 0px,
+      rgba(242, 244, 241, 0.035) 1px,
+      transparent 1px,
+      transparent 28px
+    );
+  pointer-events: none;
+}
+
+.brand-tagline {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: rgba(242, 244, 241, 0.6);
+  margin-top: 4px;
+}
+
+/* --- Selo de ponto: elemento-assinatura da marca --- */
+.punch-stamp {
+  position: relative;
+  width: 220px;
+  height: 220px;
+  margin: auto;
+  border-radius: 50%;
+  border: 1.5px solid rgba(242, 244, 241, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.punch-stamp::before {
+  content: '';
+  position: absolute;
+  inset: 14px;
+  border-radius: 50%;
+  border: 1px dashed rgba(242, 244, 241, 0.2);
+}
+
+.punch-stamp .tick {
+  position: absolute;
+  width: 2px;
+  height: 10px;
+  background: rgba(242, 244, 241, 0.35);
+  top: 4px;
+  left: 50%;
+  transform-origin: 1px 106px;
+}
+
+.punch-stamp .hand {
+  position: absolute;
+  width: 3px;
+  height: 62px;
+  background: var(--amber);
+  bottom: 50%;
+  left: 50%;
+  transform-origin: bottom center;
+  border-radius: 2px;
+  animation: sweep 8s linear infinite;
+}
+
+.punch-stamp .hand-hour {
+  width: 3px;
+  height: 42px;
+  background: var(--paper);
+  animation: sweep 32s linear infinite;
+}
+
+.punch-stamp .hub {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: var(--amber);
+  border-radius: 50%;
+  z-index: 2;
+}
+
+.punch-stamp .stamp-label {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.15em;
+  color: rgba(242, 244, 241, 0.55);
+  position: absolute;
+  bottom: -34px;
+  text-align: center;
+  width: 100%;
+}
+
+@keyframes sweep {
+  from { transform: translateX(-50%) rotate(0deg); }
+  to { transform: translateX(-50%) rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .punch-stamp .hand,
+  .punch-stamp .hand-hour {
+    animation: none;
+  }
+}
+
+.brand-footnote {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: rgba(242, 244, 241, 0.45);
+}
+
+.login-form-panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  background: var(--paper);
+}
+
+.login-card {
+  width: 100%;
+  max-width: 380px;
+}
+
+.login-card h1 {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  margin: 0 0 4px;
+}
+
+.login-card .subtitle {
+  color: var(--ink-soft);
+  margin: 0 0 32px;
+  font-size: 0.95rem;
+}
+
+.switch-link {
+  margin-top: 20px;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  text-align: center;
+}
+
+@media (max-width: 860px) {
+  .login-screen {
+    grid-template-columns: 1fr;
+  }
+  .login-brand {
+    padding: 32px;
+    min-height: 220px;
+  }
+  .punch-stamp {
+    width: 140px;
+    height: 140px;
+    margin: 16px auto;
+  }
+}
+
+/* ---- Banner de login/cadastro em telas muito pequenas ---- */
+@media (max-width: 480px) {
+  .login-brand {
+    padding: 20px;
+    min-height: 180px;
+  }
+
+  .login-form-panel {
+    padding: 24px 20px;
+  }
+}

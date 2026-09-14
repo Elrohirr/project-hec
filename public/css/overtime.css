@@ -1,0 +1,28 @@
+/* overtime.css — estilos exclusivos da tela de horas extras (overtime.html) */
+.checkbox-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.checkbox-field input {
+  width: 16px;
+  height: 16px;
+}
+
+.checkbox-field label {
+  font-size: 0.88rem;
+  color: var(--text);
+  margin-bottom: 0;
+}
+
+.badge.holiday {
+  background: rgba(226, 164, 0, 0.15);
+  color: var(--amber-ink);
+}
+
+.badge.day-off {
+  background: rgba(47, 111, 98, 0.12);
+  color: var(--teal);
+}

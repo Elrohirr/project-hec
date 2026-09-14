@@ -121,7 +121,6 @@ async function cancelCompensation(bankCompId) {
             // validações para se o banco de horas está valido para cancelamento
             if (!bankCompensation) throw new NotFoundError('Banco de horas não encontrado')
             if (bankCompensation.status === 'cancelled') throw new BadRequestError('Banco de hora selecionado já se encontra cancelado')
-            if (!canCancelCompesation(bankCompensation)) throw new BadRequestError('Esse banco de horas não pode ser mais cancelado')
             if (bankCompensation.source === 'pdf_import') throw new BadRequestError('Compensações vindas de PDF import não podem ser canceladas. Verfiique com o administrador')
 
             // iteração sobre cada documento de overtime dentro de entries para restaurar ao valor original
@@ -146,10 +145,6 @@ async function cancelCompensation(bankCompId) {
     } finally {
         await session.endSession()
     }
-}
-
-async function canCancelCompesation(bankCompesation) {
-    return true // função da definir
 }
 
 module.exports = { findEligibleOvetimes, confirmCompensation, cancelCompensation }

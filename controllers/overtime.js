@@ -145,12 +145,13 @@ const updateOvertime = async (req, res) => {
 
             const oldOvertime = await Overtime.findOne({ createdBy: userId, _id: overtimeId }).session(session)
             if (!oldOvertime) throw new NotFoundError('Hora extra não encontrada')
+            if (oldOvertime.compensatedMinutes > 0) throw new BadRequestError('Não é possível editar horas extras que foram compensadas parcialmente ou totalmente. Primeiro, verifique a qual compensação ela está atrelada e cancele a mesma.')
 
             // update parcial
-            const finalWorkedHours = (req.body.workedHours ?? oldOvertime.workedHours).trim()
-            const finalDate = req.body.date ?? oldOvertime.date
-            const finalIsDayOff = req.body.isDayOff ?? oldOvertime.isDayOff
-            const finalIsHoliday = req.body.isHoliday ?? oldOvertime.isHoliday
+            const finalWorkedHours = (workedHours ?? oldOvertime.workedHours).trim()
+            const finalDate = date ?? oldOvertime.date
+            const finalIsDayOff = isDayOff ?? oldOvertime.isDayOff
+            const finalIsHoliday = isHoliday ?? oldOvertime.isHoliday
             const wage = oldOvertime.wageAtCalculation
 
             //validar formato, whitelist e recaulcular regras de negócio
@@ -168,7 +169,7 @@ const updateOvertime = async (req, res) => {
                     he75hours: minutesToTime(distributionMinutes.he75minutes),
                     he100hours: minutesToTime(distributionMinutes.he100minutes)
                 },
-                values: defineValue(distributionMinutes, wage.wage),
+                values: defineValue(distributionMinutes, wage),
                 wageAtCalculation: wage,
                 payDate: extractPayDate(finalDate, finalIsHoliday),
                 isDayOff: finalIsDayOff,

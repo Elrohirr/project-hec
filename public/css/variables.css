@@ -1,0 +1,41 @@
+/* variables.css — design tokens compartilhados por todas as telas */
+:root {
+  --ink: #161f2b;
+  --ink-soft: #3c4658;
+  --paper: #f2f4f1;
+  --paper-raised: #ffffff;
+  --line: #d8dcd3;
+  --amber: #e2a400;
+  --amber-ink: #7a5400;
+  --teal: #2f6f62;
+  --danger: #b3432b;
+
+  /* Tokens de conteúdo (texto e fundo de página/cards) — os únicos
+     que mudam no modo escuro. --ink e --paper continuam fixos, pois
+     também servem de "cromo" fixo do header, login e botões primários. */
+  --text: var(--ink);
+  --surface: var(--paper);
+
+  --font-display: 'Space Grotesk', 'Segoe UI', sans-serif;
+  --font-body: 'Inter', 'Segoe UI', sans-serif;
+  --font-mono: 'IBM Plex Mono', 'Courier New', monospace;
+
+  --radius: 6px;
+  --shadow-card: 0 2px 10px rgba(22, 31, 43, 0.08);
+}
+
+/* =========================================================
+   Modo escuro — paleta inspirada em navy + verde-água
+   Ativado com [data-theme="dark"] no <html>, controlado por js/theme.js
+   ========================================================= */
+[data-theme="dark"] {
+  --text: #eef2f0;
+  --ink-soft: #a7b2c2;
+  --surface: #1a2230;
+  --paper-raised: #232e3d;
+  --line: #34404f;
+  --amber-ink: #f2c14e;
+  --teal: #35d6a8;
+  --danger: #e2604a;
+  --shadow-card: 0 2px 14px rgba(0, 0, 0, 0.45);
+}

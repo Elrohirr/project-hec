@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
@@ -18,7 +18,10 @@
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/bank.css">
 </head>
 <body>
   <div class="app-shell">
@@ -49,10 +52,30 @@
       <section class="summary-cards">
         <div class="summary-card total">
           <span class="label">Saldo no banco</span>
-          <span class="hint">horas acumuladas disponíveis para compensação</span>
+          <span class="hint">Horas acumuladas disponíveis para compensação</span>
           <div class="value-row">
             <span class="value" id="bank-balance">—</span>
           </div>
+        </div>
+        <div class="summary-card">
+          <span class="label">Compensado 50%</span>
+          <span class="hint">Valor compensado</span>
+          <span class="value" id="bank-comp-50">—</span>
+        </div>
+        <div class="summary-card">
+          <span class="label">Compensado 75%</span>
+          <span class="hint">Valor compensado</span>
+          <span class="value" id="bank-comp-75">—</span>
+        </div>
+        <div class="summary-card">
+          <span class="label">Compensado 100%</span>
+          <span class="hint">Valor compensado</span>
+          <span class="value" id="bank-comp-100">—</span>
+        </div>
+        <div class="summary-card total">
+          <span class="label">Total compensado</span>
+          <span class="hint">Valor total já compensado</span>
+          <span class="value" id="bank-comp-total">—</span>
         </div>
       </section>
 
@@ -88,10 +111,10 @@
             <thead>
               <tr>
                 <th>Data</th>
-                <th>Min. usados</th>
-                <th>Min. por tier (50/75/100)</th>
+                <th>Horas usadas</th>
                 <th>Valor perdido</th>
-                <th>Valor por tier (50/75/100)</th>
+                <th>Horas por adicional (50/75/100)</th>
+                <th>Valor por adicional (50/75/100)</th>
               </tr>
             </thead>
             <tbody id="bank-preview-body"></tbody>

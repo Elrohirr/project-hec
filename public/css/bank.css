@@ -1,0 +1,59 @@
+/* bank.css — estilos exclusivos da tela de banco de horas (bank.html) */
+/* =========================================================
+   Banco de horas
+   ========================================================= */
+.bank-result-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  margin-top: 16px;
+}
+
+.bank-result-actions .hint {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+}
+
+.bank-result-actions .primary-button {
+  width: auto;
+  padding: 10px 22px;
+}
+
+.bank-disabled-cta:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.badge.bank-active {
+  background: rgba(47, 111, 98, 0.12);
+  color: var(--teal);
+}
+
+.badge.bank-cancelled {
+  background: rgba(22, 31, 43, 0.06);
+  color: var(--ink-soft);
+  border: 1px solid var(--line);
+}
+
+/* Banco de horas: separa visualmente os cards de simulação, resultado e histórico */
+.bank-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.icon-button.details {
+  color: var(--teal);
+  max-height: 50px;
+}
+
+.icon-button.details:hover {
+  background: rgba(47, 111, 98, 0.08);
+}
+
+/* Modal de entries do banco de horas: precisa mais largura que o padrão */
+.bank-entry-modal {
+  max-width: 1200px;
+}
