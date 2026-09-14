@@ -133,8 +133,8 @@ document.addEventListener('DOMContentLoaded', () => {
           <tr>
             <th>Data</th>
             <th>Horas usadas</th>
-            <th>Horas por adicional (50/75/100)</th>
             <th>Valor perdido</th>
+            <th>Horas por adicional (50/75/100)</th>
             <th>Valor por adicional (50/75/100)</th>
           </tr>
         </thead>
