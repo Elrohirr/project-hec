@@ -1,7 +1,7 @@
 const mongoose = require('mongoose')
 const Overtime = require('../models/Overtime')
 const User = require('../models/User')
-const { calcDistribution, extractPayDate, defineValue, getReceivableDateRange, bankMinutes } = require('../utils/rules')
+const { calcDistribution, extractPayDate, defineValue, bankMinutes } = require('../utils/rules')
 const { timeToMinutes, minutesToTime, validateFormat } = require('../utils/timeConversion')
 const { createMealVoucherService, updateMealVoucherService, deleteMealVoucherService } = require('../services/mealVoucherService')
 const { StatusCodes } = require('http-status-codes')
@@ -62,11 +62,20 @@ const getAllOvertime = async (req, res) => {
                 valueHeHoliday: { $sum: { $cond: [{ $eq: ["$isHoliday", true] }, "$values.valueHe100", 0] } },
                 total: { $sum: "$values.total" }
             }
+        },
+        {
+            $project: {
+                valueHe50: { $round: ["$valueHe50", 2] },
+                valueHe75: { $round: ["$valueHe75", 2] },
+                valueHe100: { $round: ["$valueHe100", 2] },
+                valueHeHoliday: { $round: ["$valueHeHoliday", 2] },
+                total: { $round: ["$total", 2] },
+            }
         }
     ])
     )[0] || { valueHe50: 0, valueHe75: 0, valueHe100: 0, valueHeHoliday: 0, total: 0 }
 
-    const overtime = await result.lean()
+    const overtime = await result
     const totalRecords = await Overtime.countDocuments(queryObject)
     res.status(StatusCodes.OK).json({
         totalRecords,
@@ -209,46 +218,4 @@ const deleteOvertime = async (req, res) => {
     }
 }
 
-const getOvertimeReceivable = async (req, res) => {
-    const { user: { userId }, query: { scope } } = req
-
-    const aggregateObject = {
-        createdBy: new mongoose.Types.ObjectId(userId),
-        payDate: getReceivableDateRange(scope, new Date())
-    }
-
-    const distribution = (
-        await Overtime.aggregate([
-            { $match: aggregateObject },
-            {
-                $group: {
-                    _id: null,
-                    he50: { $sum: "$distributionMinutes.he50minutes" },
-                    he75: { $sum: "$distributionMinutes.he75minutes" },
-                    he100: { $sum: "$distributionMinutes.he100minutes" },
-                    heHoliday: { $sum: { $cond: [{ $eq: ["$isHoliday", true] }, "$workedMinutes", 0] } }
-                }
-            }
-        ])
-    )[0] || { he50: 0, he75: 0, he100: 0, heHoliday: 0, total: 0 }
-
-    const values = (
-        await Overtime.aggregate([
-            { $match: aggregateObject },
-            {
-                $group: {
-                    _id: null,
-                    valueHe50: { $sum: "$values.valueHe50" },
-                    valueHe75: { $sum: "$values.valueHe75" },
-                    valueHe100: { $sum: "$values.valueHe100" },
-                    valueHeHoliday: { $sum: { $cond: [{ $eq: ["$isHoliday", true] }, "$values.valueHe100", 0] } },
-                    total: { $sum: "$values.total" }
-                }
-            }
-        ])
-    )[0] || { valueHe50: 0, valueHe75: 0, valueHe100: 0, valueHeHoliday: 0, total: 0 }
-
-    res.status(StatusCodes.OK).json([distribution, values])
-}
-
-module.exports = { getAllOvertime, getOvertime, createOvertime, updateOvertime, deleteOvertime, getOvertimeReceivable }
+module.exports = { getAllOvertime, getOvertime, createOvertime, updateOvertime, deleteOvertime }

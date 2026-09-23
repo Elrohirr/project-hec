@@ -23,6 +23,22 @@
 }
 
 .badge.day-off {
+  background: rgba(176, 105, 241, 0.12);
+  color: rgb(163, 106, 219);
+}
+
+.badge.status-compensated,
+.badge.status-partial {
+  background: rgba(214, 40, 40, 0.12);
+  color: var(--danger);
+}
+
+.badge.status-paid {
   background: rgba(47, 111, 98, 0.12);
   color: var(--teal);
+}
+
+.badge.status-banked {
+  background: rgba(22, 129, 216, 0.12);
+  color: rgb(77, 170, 247);
 }

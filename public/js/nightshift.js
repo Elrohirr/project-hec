@@ -102,18 +102,56 @@ document.addEventListener('DOMContentLoaded', () => {
       <td class="numeric">${currencyFormatter.format(record.nightShiftValue ?? 0)}</td>
       <td class="numeric">${currencyFormatter.format(record.wageAtCalculation ?? 0)}</td>
       <td>${formatPayDate(record.payDate)}</td>
-      <td>
-        <div class="row-actions">
-          <button type="button" class="icon-button edit" data-id="${record._id}">Editar</button>
-          <button type="button" class="icon-button" data-id="${record._id}">Excluir</button>
+      <td class="actions-cell">
+        <div class="actions-menu">
+          <button type="button" class="icon-button actions-toggle" data-id="${record._id}">⋮</button>
+          <div class="actions-dropdown" hidden>
+            <button type="button" class="dropdown-item edit" data-id="${record._id}">Editar</button>
+            <button type="button" class="dropdown-item delete" data-id="${record._id}">Excluir</button>
+          </div>
         </div>
       </td>
     `;
 
-    tr.querySelector('.icon-button.edit').addEventListener('click', () => handleEditClick(record._id));
-    tr.querySelector('.icon-button:not(.edit)').addEventListener('click', () => handleDelete(record._id));
+    const actionsMenu = tr.querySelector('.actions-menu');
+    const dropdown = tr.querySelector('.actions-dropdown');
+    tr.querySelector('.actions-toggle').addEventListener('click', (event) => {
+      event.stopPropagation();
+      toggleActionsMenu(actionsMenu, dropdown);
+    });
+    tr.querySelector('.dropdown-item.edit').addEventListener('click', (event) => {
+      event.stopPropagation();
+      dropdown.hidden = true;
+      handleEditClick(record._id);
+    });
+    tr.querySelector('.dropdown-item.delete').addEventListener('click', (event) => {
+      event.stopPropagation();
+      dropdown.hidden = true;
+      handleDelete(record._id);
+    });
     return tr;
   }
+
+  // ---- Menu de ações (⋮): abre/fecha o dropdown de cada linha ----------
+  function closeAllDropdowns(keepMenu = null) {
+    document.querySelectorAll('.actions-dropdown').forEach((d) => {
+      if (d.closest('.actions-menu') !== keepMenu) d.hidden = true;
+    });
+  }
+
+  function toggleActionsMenu(menu, dropdown) {
+    if (!dropdown.hidden) {
+      dropdown.hidden = true;
+      return;
+    }
+    closeAllDropdowns(menu);
+    dropdown.hidden = false;
+  }
+
+  // Clicar fora de qualquer menu fecha todos os dropdowns abertos.
+  document.addEventListener('click', (event) => {
+    if (!event.target.closest('.actions-menu')) closeAllDropdowns();
+  });
 
   function renderTable(records) {
     tableBody.innerHTML = '';

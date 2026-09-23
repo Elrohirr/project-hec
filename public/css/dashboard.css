@@ -100,6 +100,49 @@
   margin-bottom: 16px;
 }
 
+/* Cabeçalho da seção "A receber" com o seletor de período compartilhado */
+.receivable-heading-with-scope {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.receivables-scope-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.receivables-scope-control label {
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+}
+
+/* Card "Horas extras – Líquido": botão de ajuda junto ao título */
+.receivable-card-head--hint {
+  align-items: center;
+}
+
+.receivable-card-info {
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--ink-soft);
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  font-size: 0.8rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.receivable-card-info:hover {
+  color: var(--text);
+  border-color: var(--ink-soft);
+  background: rgba(22, 31, 43, 0.06);
+}
+
 .receivable-card-head {
   display: flex;
   align-items: center;
@@ -183,9 +226,9 @@
   margin: 12px 0 0;
 }
 
-/* 3 cards lado a lado (ordem: HE, turno noturno, vale-refeição) */
+/* 4 cards em 2x2 (ordem: HE bruto, HE líquido, turno noturno, vale-refeição) */
 .receivable-section .account-layout {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 @media (max-width: 860px) {

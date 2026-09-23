@@ -1,7 +1,5 @@
 const mongoose = require('mongoose')
 const MealVoucher = require('../models/MealVoucher')
-const MealVoucherConfig = require('../models/MealVoucherConfig')
-const { getReceivableDateRange } = require('../utils/rules')
 const { StatusCodes } = require('http-status-codes')
 const { BadRequestError, NotFoundError } = require('../errors')
 
@@ -64,34 +62,4 @@ const getMealVoucher = async (req, res) => {
     res.status(StatusCodes.OK).json({ mealVoucher })
 }
 
-const getMealVoucherReceivable = async (req, res) => {
-    const { user: { userId }, query: { scope } } = req
-
-    const aggregateObject = {
-        createdBy: new mongoose.Types.ObjectId(userId),
-        payDate: getReceivableDateRange(scope, new Date())
-    }
-
-    const totals = (await MealVoucher.aggregate([
-        { $match: aggregateObject },
-        {
-            $group: {
-                _id: null,
-                mealVoucherOvertime: {
-                    $sum: {
-                        $cond: [{ $eq: ["$source", "overtime"] }, "$totalValue", 0]
-                    }
-                },
-                mealVoucherNightShift: {
-                    $sum: {
-                        $cond: [{ $eq: ["$source", "nightShift"] }, "$totalValue", 0]
-                    }
-                },
-                total: { $sum: '$totalValue' }
-            }
-        }
-    ]))[0] || { mealVoucherOvertime: 0, mealVoucherNightShift: 0, total: 0 }
-    res.status(StatusCodes.OK).json(totals)
-}
-
-module.exports = { getAllMealVouchers, getMealVoucher, getMealVoucherReceivable }
+module.exports = { getAllMealVouchers, getMealVoucher }

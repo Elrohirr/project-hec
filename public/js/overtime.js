@@ -107,28 +107,81 @@ document.addEventListener('DOMContentLoaded', () => {
     if (record.isHoliday) badges.push('<span class="badge holiday">Feriado</span>');
     if (record.isDayOff) badges.push('<span class="badge day-off">Folga</span>');
 
+    const STATUS_BADGES = {
+      compensated: '<span class="badge status-compensated">Compensada</span>',
+      partially_compensated: '<span class="badge status-partial">Parcial</span>',
+      paid: '<span class="badge status-paid">Pago</span>',
+      banked: '<span class="badge status-banked">No banco</span>',
+      // non-banked: sem badge próprio, já coberto por isHoliday acima
+    }
+
+    if (STATUS_BADGES[record.status]) badges.push(STATUS_BADGES[record.status]);
+
+    let netValueToolTip = '';
+    if (record.values.total !== record.netValue) {
+      netValueToolTip = ` title="Bruto: ${currencyFormatter.format(record.values.total)}"`
+    }
+
     tr.innerHTML = `
       <td>${formatDate(record.date)}</td>
       <td class="numeric">${record.workedHours ?? '00:00'}</td>
       <td class="numeric">${record.distributionHours?.he50hours ?? '00:00'}</td>
       <td class="numeric">${record.distributionHours?.he75hours ?? '00:00'}</td>
       <td class="numeric">${record.distributionHours?.he100hours ?? '00:00'}</td>
-      <td class="numeric">${currencyFormatter.format(record.values?.total ?? 0)}</td>
+      <td class="numeric${netValueToolTip ? ' has-tooltip' : ''}"${netValueToolTip}>${currencyFormatter.format(record.netValue ?? 0)}</td>
       <td class="numeric">${currencyFormatter.format(record.wageAtCalculation ?? 0)}</td>
       <td>${formatPayDate(record.payDate)}</td>
       <td>${badges.join(' ') || '—'}</td>
-      <td>
-        <div class="row-actions">
-          <button type="button" class="icon-button edit" data-id="${record._id}">Editar</button>
-          <button type="button" class="icon-button" data-id="${record._id}">Excluir</button>
+      <td class="actions-cell">
+        <div class="actions-menu">
+          <button type="button" class="icon-button actions-toggle" data-id="${record._id}">⋮</button>
+          <div class="actions-dropdown" hidden>
+            <button type="button" class="dropdown-item edit" data-id="${record._id}">Editar</button>
+            <button type="button" class="dropdown-item delete" data-id="${record._id}">Excluir</button>
+          </div>
         </div>
       </td>
     `;
 
-    tr.querySelector('.icon-button.edit').addEventListener('click', () => handleEditClick(record._id));
-    tr.querySelector('.icon-button:not(.edit)').addEventListener('click', () => handleDelete(record._id));
+    const actionsMenu = tr.querySelector('.actions-menu');
+    const dropdown = tr.querySelector('.actions-dropdown');
+    tr.querySelector('.actions-toggle').addEventListener('click', (event) => {
+      event.stopPropagation();
+      toggleActionsMenu(actionsMenu, dropdown);
+    });
+    tr.querySelector('.dropdown-item.edit').addEventListener('click', (event) => {
+      event.stopPropagation();
+      dropdown.hidden = true;
+      handleEditClick(record._id);
+    });
+    tr.querySelector('.dropdown-item.delete').addEventListener('click', (event) => {
+      event.stopPropagation();
+      dropdown.hidden = true;
+      handleDelete(record._id);
+    });
     return tr;
   }
+
+  // ---- Menu de ações (⋮): abre/fecha o dropdown de cada linha ----------
+  function closeAllDropdowns(keepMenu = null) {
+    document.querySelectorAll('.actions-dropdown').forEach((d) => {
+      if (d.closest('.actions-menu') !== keepMenu) d.hidden = true;
+    });
+  }
+
+  function toggleActionsMenu(menu, dropdown) {
+    if (!dropdown.hidden) {
+      dropdown.hidden = true;
+      return;
+    }
+    closeAllDropdowns(menu);
+    dropdown.hidden = false;
+  }
+
+  // Clicar fora de qualquer menu fecha todos os dropdowns abertos.
+  document.addEventListener('click', (event) => {
+    if (!event.target.closest('.actions-menu')) closeAllDropdowns();
+  });
 
   function renderTable(records) {
     tableBody.innerHTML = '';

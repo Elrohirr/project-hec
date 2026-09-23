@@ -186,13 +186,6 @@ const Api = {
     });
   },
 
-  /** Adicional noturno a receber — GET /nightShift/receivable (scope=next|total). */
-  async getNightShiftReceivable(scope = 'next') {
-    return this.request(`/nightShift/receivable?scope=${encodeURIComponent(scope)}`, {
-      method: 'GET'
-    });
-  },
-
   async updateOvertime(id, { workedHours, date, isDayOff, isHoliday }) {
     return this.request(`/overtime/${id}`, {
       method: 'PATCH',
@@ -206,13 +199,6 @@ const Api = {
     });
   },
 
-  /** Horas extras a receber — GET /overtime/receivable (scope=next|total). */
-  async getOvertimeReceivable(scope = 'next') {
-    return this.request(`/overtime/receivable?scope=${encodeURIComponent(scope)}`, {
-      method: 'GET'
-    });
-  },
-
   async getMealVouchers(params = {}) {
     const query = new URLSearchParams(params).toString();
     return this.request(`/mealvoucher${query ? `?${query}` : ''}`, {
@@ -220,14 +206,15 @@ const Api = {
     });
   },
 
-  /** Vale-refeição a receber — GET /mealvoucher/receivable (scope=next|total|previous). */
-  async getMealVoucherReceivable(scope = 'next') {
-    return this.request(`/mealvoucher/receivable?scope=${encodeURIComponent(scope)}`, {
+  /** Todos os receivables do dashboard — GET /receivables?scope=current|total|previous.
+   *  Retorna os quatro agregados de uma vez (HE bruto, HE líquido, noturno e vales). */
+  async getReceivables(scope = 'current') {
+    return this.request(`/receivables?scope=${encodeURIComponent(scope)}`, {
       method: 'GET'
     });
   },
 
-    // ---- Banco de horas - /api/v1/bank -------------------------------------
+  // ---- Banco de horas - /api/v1/bank -------------------------------------
 
   /** GET /bank - saldo total de minutos + lista de registros. */
   async getBankCompensations() {
@@ -242,7 +229,22 @@ const Api = {
     });
   },
 
-// ---- Admin (protegido no backend por middleware/authorizeAdmin) ----------
+  /** POST /bank/confirm - confirma a compensação simulada e grava o registro. */
+  async confirmBankCompensation({ date, hoursNeeded }) {
+    return this.request('/bank/confirm', {
+      method: 'POST',
+      body: JSON.stringify({ date, hoursNeeded })
+    });
+  },
+
+  /** PATCH /bank/cancel/:id - cancela um registro ativo e restaura as horas extras. */
+  async cancelBankCompensation(id) {
+    return this.request(`/bank/cancel/${id}`, {
+      method: 'PATCH'
+    });
+  },
+
+  // ---- Admin (protegido no backend por middleware/authorizeAdmin) ----------
 
   /** Lista todas as configurações de vale-refeição cadastradas (GET /admin). */
   async getMealVoucherConfigs() {

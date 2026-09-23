@@ -1,39 +1,47 @@
 /**
  * Lógica dos cards "A receber" do dashboard.
  *
-  * Consome três endpoints agregados do backend:
- *  - GET /overtime/receivable?scope=next|total|previous
- *  - GET /nightShift/receivable?scope=next|total|previous
- *  - GET /mealvoucher/receivable?scope=next|total|previous
+ * Consome um único endpoint agregado do backend:
+ *  - GET /receivables?scope=current|total|previous
  *
- * As faixas de data de pagamento (payDate) são resolvidas integralmente
- * pelo backend; aqui o frontend apenas alterna o `scope` e exibe o resultado.
- * Os dados são sempre buscados frescos (sem cache em localStorage).
+ * A resposta traz os quatro agregados filtrados pelo MESMO scope:
+ *  - overtimeReceivables: distribuição/valores (bruto) das horas extras
+ *  - overtimeNetReceivables: descontos por tier e líquido das horas extras
+ *  - nightShiftReceivables: adicional noturno
+ *  - mealVoucherReceivables: vales por origem
+ *
+ * O frontend apenas alterna o scope do seletor único e popula os quatro
+ * cards a partir da mesma resposta. Comportamento esperado do backend:
+ * qualquer scope fora de previous/current (incl. total) cae no fallback
+ * "tudo a partir do mês atual, sem limite superior" — exibido sem erro.
  */
 document.addEventListener('DOMContentLoaded', () => {
-  const overtimeSelect = document.getElementById('overtime-scope-select');
+  const scopeSelect = document.getElementById('receivables-scope-select');
+  const receivablesError = document.getElementById('receivables-error');
+
   const overtimeLines = document.getElementById('overtime-receivable-lines');
-  const overtimeError = document.getElementById('overtime-receivable-error');
-
-  const nightShiftSelect = document.getElementById('nightshift-scope-select');
+  const overtimeLiquidLines = document.getElementById('overtime-liquid-receivable-lines');
   const nightShiftLines = document.getElementById('nightshift-receivable-lines');
-  const nightShiftError = document.getElementById('nightshift-receivable-error');
-
-  const mealVoucherSelect = document.getElementById('mealvoucher-scope-select');
   const mealVoucherLines = document.getElementById('mealvoucher-receivable-lines');
-  const mealVoucherError = document.getElementById('mealvoucher-receivable-error');
 
-  // Persistência dos escopos selecionados (sessionStorage).
+  const liquidInfoButton = document.getElementById('liquid-info-button');
+
+  // ---- Explicação do card "Horas extras – Líquido" --------------------------
+  // O "?" abre o modal de ajuda (o mesmo componente usado no botão "Novidades").
+  liquidInfoButton?.addEventListener('click', () => {
+    const modal = createModal({
+      title: 'Horas extras – Líquido',
+      body: 'Valor após desconto de compensações do banco de horas.'
+    });
+    modal.open();
+  });
+
+  // Persistência do escopo selecionado (sessionStorage).
   const FILTER_PAGE_KEY = 'dashboard';
-  // Contadores de requisição: se o seletor for alternado rápido, somente a
-  // resposta mais recente é renderizada (evita resposta fora de ordem).
-  let overtimeRequestId = 0;
-  let nightShiftRequestId = 0;
-  let hasOvertimeData = false;
-  let hasNightShiftData = false;
-
-  let mealVoucherRequestId = 0;
-  let hasMealVoucherData = false;
+  // Contador de requisição: se o seletor for alternado rápido, somente a
+  // resposta mais recente é renderizada (evita respostas fora de ordem).
+  let requestId = 0;
+  let hasData = false;
 
   // ---- Helpers de DOM -----------------------------------------------------
 
@@ -86,40 +94,48 @@ document.addEventListener('DOMContentLoaded', () => {
     rows.forEach((row) => container.appendChild(row));
   }
 
-  function setLoading(select, container, hasData) {
-    select.disabled = true;
-    // Na primeira carga exibe um aviso; nas recargas mantém o último valor
+  function setLoading(isLoading) {
+    scopeSelect.disabled = isLoading;
+    // Na primeira carga mostra um aviso; nas recargas mantém o último valor
     // visível até a resposta chegar (evita "piscar" a cada troca de escopo).
-    if (!hasData && !container.hasChildNodes()) {
-      container.appendChild(renderRow({ label: 'Carregando…', value: '' }));
+    if (isLoading && !hasData) {
+      const placeholder = [renderRow({ label: 'Carregando…' })];
+      const containers = [overtimeLines, overtimeLiquidLines, nightShiftLines, mealVoucherLines];
+      containers.forEach((container) => renderLines(container, placeholder));
     }
   }
 
-  function showError(box, message) {
-    box.textContent = message;
-    box.hidden = !message;
+  function showError(message) {
+    if (message) {
+      receivablesError.textContent = message;
+      receivablesError.hidden = false;
+    } else {
+      receivablesError.textContent = '';
+      receivablesError.hidden = true;
+    }
   }
+  // ---- Card: Horas extras (bruto) -----------------------------------------
 
-  // ---- Card: Horas extras a receber ---------------------------------------
+  function renderOvertimeBruto(data) {
+    const safe = data || {};
+    const distribution = safe.distribution || {};
+    const values = safe.values || {};
 
-  function renderOvertime(distribution, values) {
-    const dist = distribution || {};
-    const val = values || {};
-    const he100Minutes = dist.he100 || 0;
-    const heHolidayMinutes = dist.heHoliday || 0;
-    const valueHe100 = val.valueHe100 || 0;
-    const valueHeHoliday = val.valueHeHoliday || 0
+    const he100Minutes = Number(distribution.he100) || 0;
+    const heHolidayMinutes = Number(distribution.heHoliday) || 0;
+    const valueHe100 = Number(values.valueHe100) || 0;
+    const valueHeHoliday = Number(values.valueHeHoliday) || 0;
 
     renderLines(overtimeLines, [
       renderRow({
         label: 'HE 50%',
-        value: minutesToHHMM(dist.he50),
-        hint: formatCurrencyBRL(val.valueHe50)
+        value: minutesToHHMM(distribution.he50),
+        hint: formatCurrencyBRL(values.valueHe50)
       }),
       renderRow({
         label: 'HE 75%',
-        value: minutesToHHMM(dist.he75),
-        hint: formatCurrencyBRL(val.valueHe75)
+        value: minutesToHHMM(distribution.he75),
+        hint: formatCurrencyBRL(values.valueHe75)
       }),
       renderRow({
         label: 'HE 100%',
@@ -132,53 +148,44 @@ document.addEventListener('DOMContentLoaded', () => {
         hint: formatCurrencyBRL(valueHeHoliday)
       }),
       renderRow({
-        label: 'Total a receber',
-        value: formatCurrencyBRL(val.total),
+        label: 'Total bruto',
+        value: formatCurrencyBRL(values.total),
         total: true
       })
     ]);
   }
 
-  async function loadOvertime(scope) {
-    const requestId = ++overtimeRequestId;
-    const scoped = scope || overtimeSelect.value;
-    setLoading(overtimeSelect, overtimeLines, hasOvertimeData);
-    showError(overtimeError);
+  // ---- Card: Horas extras (líquido) ---------------------------------------
 
-    try {
-      const data = await Api.getOvertimeReceivable(scoped);
-      if (requestId !== overtimeRequestId) return; // resposta desatualizada
-      const [distribution, values] = Array.isArray(data) ? data : [];
-      hasOvertimeData = true;
-      renderOvertime(distribution, values);
-    } catch (err) {
-      if (requestId !== overtimeRequestId) return;
-      if (!hasOvertimeData) overtimeLines.innerHTML = '';
-      showError(overtimeError, err.message || 'Não foi possível carregar as horas extras a receber.');
-    } finally {
-      if (requestId === overtimeRequestId) {
-        overtimeSelect.disabled = false;
-      }
-    }
+  function renderOvertimeLiquido(data) {
+    const safe = data || {};
+
+    renderLines(overtimeLiquidLines, [
+      renderRow({
+        label: 'Desconto 50%',
+        value: formatCurrencyBRL(safe.valueLost50)
+      }),
+      renderRow({
+        label: 'Desconto 75%',
+        value: formatCurrencyBRL(safe.valueLost75)
+      }),
+      renderRow({
+        label: 'Desconto 100%',
+        value: formatCurrencyBRL(safe.valueLost100)
+      }),
+      renderRow({
+        label: 'Total líquido',
+        value: formatCurrencyBRL(safe.overtimeNetReceivable),
+        total: true
+      })
+    ]);
   }
 
-  overtimeSelect.addEventListener('change', () => {
-    saveFilterState(FILTER_PAGE_KEY, {
-      overtimeScope: overtimeSelect.value,
-      nightShiftScope: nightShiftSelect.value,
-      mealVoucherScope: mealVoucherSelect.value
-    });
-    loadOvertime(overtimeSelect.value);
-  });
-
-  // ---- Card: Adicional noturno / vale-refeição a receber ------------------
+  // ---- Card: Adicional noturno ----------------------------------------------
 
   function renderNightShift(totals) {
     const safe = totals || {};
 
-    // `nightMinutesReduced` é o valor principal porque já embute o fator legal
-    // 8/7 da hora noturna (art. 73, §1º CLT) — é o formato que sai no
-    // contracheque. As horas de "relógio" são exibidas como complemento.
     renderLines(nightShiftLines, [
       renderRow({
         label: 'Horas de relógio',
@@ -200,43 +207,10 @@ document.addEventListener('DOMContentLoaded', () => {
     ]);
   }
 
-  async function loadNightShift(scope) {
-    const requestId = ++nightShiftRequestId;
-    const scoped = scope || nightShiftSelect.value;
-    setLoading(nightShiftSelect, nightShiftLines, hasNightShiftData);
-    showError(nightShiftError);
-
-    try {
-      const data = await Api.getNightShiftReceivable(scoped);
-      if (requestId !== nightShiftRequestId) return;
-      hasNightShiftData = true;
-      renderNightShift(data);
-    } catch (err) {
-      if (requestId !== nightShiftRequestId) return;
-      if (!hasNightShiftData) nightShiftLines.innerHTML = '';
-      showError(nightShiftError, err.message || 'Não foi possível carregar o adicional noturno a receber.');
-    } finally {
-      if (requestId === nightShiftRequestId) {
-        nightShiftSelect.disabled = false;
-      }
-    }
-  }
-
-  nightShiftSelect.addEventListener('change', () => {
-    saveFilterState(FILTER_PAGE_KEY, {
-      overtimeScope: overtimeSelect.value,
-      nightShiftScope: nightShiftSelect.value,
-      mealVoucherScope: mealVoucherSelect.value
-    });
-    loadNightShift(nightShiftSelect.value);
-  });
-
-  // ---- Card: Vale-refeição a receber ------------------------------------
+  // ---- Card: Vale-refeição ---------------------------------------------------
 
   function renderMealVoucher(totals) {
     const safe = totals || {};
-    // O aggregate do backend retorna os totais por origem e nao inclui um
-    // campo `total`; a soma e calculada aqui no frontend.
     const overtimeVales = Number(safe.mealVoucherOvertime) || 0;
     const nightShiftVales = Number(safe.mealVoucherNightShift) || 0;
 
@@ -256,48 +230,46 @@ document.addEventListener('DOMContentLoaded', () => {
       })
     ]);
   }
+  // ---- Requisição única ------------------------------------------------------
 
-  async function loadMealVoucher(scope) {
-    const requestId = ++mealVoucherRequestId;
-    const scoped = scope || mealVoucherSelect.value;
-    setLoading(mealVoucherSelect, mealVoucherLines, hasMealVoucherData);
-    showError(mealVoucherError);
+  async function fetchReceivables(scope) {
+    const currentRequest = ++requestId;
+    const scoped = scope || scopeSelect.value;
+    setLoading(true);
 
     try {
-      const data = await Api.getMealVoucherReceivable(scoped);
-      if (requestId !== mealVoucherRequestId) return;
-      hasMealVoucherData = true;
-      renderMealVoucher(data);
+      const data = await Api.getReceivables(scoped);
+      if (currentRequest !== requestId) return; // resposta desatualizada
+      hasData = true;
+      renderOvertimeBruto(data?.overtimeReceivables);
+      renderOvertimeLiquido(data?.overtimeNetReceivables);
+      renderNightShift(data?.nightShiftReceivables);
+      renderMealVoucher(data?.mealVoucherReceivables);
     } catch (err) {
-      if (requestId !== mealVoucherRequestId) return;
-      if (!hasMealVoucherData) mealVoucherLines.innerHTML = '';
-      showError(mealVoucherError, err.message || 'Não foi possível carregar os vales a receber.');
+      if (currentRequest !== requestId) return;
+      if (!hasData) {
+        [overtimeLines, overtimeLiquidLines, nightShiftLines, mealVoucherLines]
+          .forEach((container) => renderLines(container, []));
+      }
+      showError(err.message || 'Não foi possível carregar os valores a receber.');
     } finally {
-      if (requestId === mealVoucherRequestId) {
-        mealVoucherSelect.disabled = false;
+      if (currentRequest === requestId) {
+        scopeSelect.disabled = false;
       }
     }
   }
 
-  mealVoucherSelect.addEventListener('change', () => {
-    saveFilterState(FILTER_PAGE_KEY, {
-      overtimeScope: overtimeSelect.value,
-      nightShiftScope: nightShiftSelect.value,
-      mealVoucherScope: mealVoucherSelect.value
-    });
-    loadMealVoucher(mealVoucherSelect.value);
+  scopeSelect.addEventListener('change', () => {
+    saveFilterState(FILTER_PAGE_KEY, { receivablesScope: scopeSelect.value });
+    fetchReceivables(scopeSelect.value);
   });
 
-  // ---- Carga inicial ------------------------------------------------------ 
-  // Restaura escopos salvos antes da primeira carga.
+  // ---- Carga inicial --------------------------------------------------------
+  // Restaura o escopo salvo antes da primeira carga (migrado da chave antiga).
   const dashboardState = getFilterState(FILTER_PAGE_KEY);
-  if (dashboardState) {
-    if (dashboardState.overtimeScope) overtimeSelect.value = dashboardState.overtimeScope;
-    if (dashboardState.nightShiftScope) nightShiftSelect.value = dashboardState.nightShiftScope;
-    if (dashboardState.mealVoucherScope) mealVoucherSelect.value = dashboardState.mealVoucherScope;
+  if (dashboardState && dashboardState.receivablesScope) {
+    scopeSelect.value = dashboardState.receivablesScope;
   }
 
-  loadOvertime(overtimeSelect.value);
-  loadNightShift(nightShiftSelect.value);
-  loadMealVoucher(mealVoucherSelect.value);
+  fetchReceivables(scopeSelect.value);
 });

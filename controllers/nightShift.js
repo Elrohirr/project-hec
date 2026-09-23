@@ -1,7 +1,7 @@
 const mongoose = require('mongoose')
 const User = require('../models/User')
 const NightShift = require('../models/NightShift')
-const { defineNightValue, extractPayDate, getReceivableDateRange } = require('../utils/rules')
+const { defineNightValue, extractPayDate } = require('../utils/rules')
 const { createMealVoucherService, updateMealVoucherService, deleteMealVoucherService } = require('../services/mealVoucherService')
 const { timeToMinutes, minutesToTime, convertToReducedNightMinutes, validateFormat } = require('../utils/timeConversion')
 const { StatusCodes } = require('http-status-codes')
@@ -168,27 +168,4 @@ const deleteNightShift = async (req, res) => {
     }
 }
 
-const getNightShiftReceivable = async (req, res) => {
-    const { user: { userId }, query: { scope } } = req
-
-    const aggregationObject = {
-        createdBy: new mongoose.Types.ObjectId(userId),
-        payDate: getReceivableDateRange(scope, new Date())
-    }
-
-    const totals = (
-        await NightShift.aggregate([
-            { $match: aggregationObject },
-            {
-                $group: {
-                    _id: null,
-                    nightMinutesClock: { $sum: "$nightMinutesClock" },
-                    nightMinutesReduced: { $sum: "$nightMinutesReduced" },
-                    nightShiftValue: { $sum: "$nightShiftValue" }
-                }
-            }
-        ]))[0] || { nightMinutesClock: 0, nightMinutesReduced: 0, nightShiftValue: 0 }
-    res.status(StatusCodes.OK).json(totals)
-}
-
-module.exports = { getAllNightShift, getNightShift, createNightShift, updateNightShift, deleteNightShift, getNightShiftReceivable }
+module.exports = { getAllNightShift, getNightShift, createNightShift, updateNightShift, deleteNightShift }

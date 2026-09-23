@@ -1,4 +1,5 @@
 const { timeToMinutes } = require('./timeConversion')
+const { roundCurrency } = require('./tools')
 const { BadRequestError } = require('../errors')
 
 function calcDistribution(minutes, isDayOff, isHoliday) {
@@ -33,9 +34,9 @@ function defineValue(distribution, wage) {
     const he75 = distribution.he75minutes / 60
     const he100 = distribution.he100minutes / 60
 
-    const valueHe50 = he50 * 1.5 * wage
-    const valueHe75 = he75 * 1.75 * wage
-    const valueHe100 = he100 * 2 * wage
+    const valueHe50 = roundCurrency(he50 * 1.5 * wage, 2)
+    const valueHe75 = roundCurrency(he75 * 1.75 * wage, 2)
+    const valueHe100 = roundCurrency(he100 * 2 * wage, 2)
     return {
         valueHe50,
         valueHe75,
@@ -45,7 +46,7 @@ function defineValue(distribution, wage) {
 }
 
 function defineNightValue(reducedMinutes, wage) {
-    return Math.round((reducedMinutes / 60) * wage * 0.3828 * 100) / 100
+    return roundCurrency((reducedMinutes / 60) * wage * 0.3828, 2)
 }
 
 function extractPayDate(date, isHoliday) {
@@ -84,17 +85,25 @@ function getLabel(code) {
 }
 
 function getReceivableDateRange(scope, now) {
-    // pagamento do mês atual
     const startDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1))
 
+    // pagamento do mês passado
     if (scope === 'previous') {
         const prevDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1))
         return { $gte: prevDate, $lt: startDate }
     }
 
-    if (scope === 'next') {
+    // pagamento do mês atual
+    if (scope === 'current') {
         const endDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1))
         return { $gte: startDate, $lt: endDate }
+    }
+
+    // pagamento do mês seguinte
+    if (scope === 'next') {
+        const nextDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1))
+        const endDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 2, 1))
+        return { $gte: nextDate, $lt: endDate }
     }
 
     // tudo que ainda for receber a partir do mês atual

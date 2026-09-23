@@ -4,9 +4,10 @@
  *   GET  /bank          -> { bankedMinutesTotal: { balance }, totalValueCompensated: { compensatedValue },
  *                           totalValueCompensatedByTier: { valueLost50, valueLost75, valueLost100 }, bankCompensation[] }
  *   POST /bank/preview  -> entries[] (hoursNeeded em branco usa o padrão 08:00)
- * A confirmação/cancelamento ficam DESABILITADOS na UI por agora
- * (módulo em fase de testes). Os botões existem, mas não disparam
- * chamadas à API.
+ *   POST /bank/confirm  -> {} (body { date, hoursNeeded })
+ *   PATCH /bank/cancel/:id -> { msg }
+ * Simular e Confirmar são ações independentes (botões sempre habilitados);
+ * o backend re-deriva a elegibilidade em confirm. Cancelar restaura horas.
  */
 document.addEventListener('DOMContentLoaded', () => {
   const balanceEl = document.getElementById('bank-balance');
@@ -25,19 +26,33 @@ document.addEventListener('DOMContentLoaded', () => {
   const previewTotals = document.getElementById('bank-preview-totals');
   const previewEmpty = document.getElementById('bank-preview-empty');
   const previewRequested = document.getElementById('bank-preview-requested');
+  const resultBadge = document.getElementById('bank-result-badge');
+  const resultTableWrap = document.getElementById('bank-result-table-wrap');
 
   const historyBody = document.getElementById('bank-history-body');
   const historyEmpty = document.getElementById('bank-history-empty');
 
+  const confirmButton = document.getElementById('confirm-bank-button');
+  const successBox = document.getElementById('bank-success-box');
+
   const dateFormatter = new Intl.DateTimeFormat('pt-BR', { timeZone: 'UTC' });
   const currencyFormatter = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
 
-  const BETA_TOOLTIP = 'Disponível em breve — módulo em fase de testes.';
   const DEFAULT_COMPENSATION_HOURS = '08:00'; // mesmo padrão do backend (simulateBankCompensation)
 
+  // Dados da última simulação válida — usados pelo "Confirmar banco".
+  let lastSimulation = null;
+
   function showError(message) {
+    successBox.hidden = true;
     errorBox.textContent = message;
     errorBox.hidden = false;
+  }
+
+  function setSuccess(message) {
+    errorBox.hidden = true;
+    successBox.textContent = message;
+    successBox.hidden = false;
   }
 
   function formatDate(isoString) {
@@ -58,50 +73,73 @@ document.addEventListener('DOMContentLoaded', () => {
     let totalValue = 0;
 
     previewBody.innerHTML = '';
+    previewTotals.innerHTML = '';
+
     if (!list.length) {
       previewEmpty.hidden = false;
-      previewTotals.innerHTML = '';
-    } else {
-      previewEmpty.hidden = true;
-      list.forEach((entry) => {
-        const used = Number(entry.minutesUsed) || 0;
-        const lost = Number(entry.valueLost) || 0;
-        totalMinutes += used;
-        totalValue += lost;
-
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${formatDate(entry.overtimeDate)}</td>
-          <td class="numeric">${minutesToHHMM(used)}</td>
-          <td class="numeric">${currencyFormatter.format(lost)}</td>
-          <td class="numeric">${tierClock(entry.minutesUsedByTier)}</td>
-          <td class="numeric">${tierValue(entry.valueLostByTier)}</td>
-        `;
-        previewBody.appendChild(tr);
-      });
-
-      previewTotals.innerHTML = `
-        <tr>
-          <th>Total</th>
-          <td class="numeric">${minutesToHHMM(totalMinutes)}</td>
-          <td class="numeric">${currencyFormatter.format(totalValue)}</td>
-          <td>-----</td>
-          <td>-----</td>
-        </tr>
-      `;
+      resultTableWrap.hidden = true;
+      return;
     }
 
-    previewSection.hidden = false;
+    previewEmpty.hidden = true;
+    resultTableWrap.hidden = false;
+
+    list.forEach((entry) => {
+      const used = Number(entry.minutesUsed) || 0;
+      const lost = Number(entry.valueLost) || 0;
+      totalMinutes += used;
+      totalValue += lost;
+
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${formatDate(entry.overtimeDate)}</td>
+        <td class="numeric">${minutesToHHMM(used)}</td>
+        <td class="numeric">${currencyFormatter.format(lost)}</td>
+        <td class="numeric">${tierClock(entry.minutesUsedByTier)}</td>
+        <td class="numeric">${tierValue(entry.valueLostByTier)}</td>
+      `;
+      previewBody.appendChild(tr);
+    });
+
+    previewTotals.innerHTML = `
+      <tr>
+        <th>Total</th>
+        <td class="numeric">${minutesToHHMM(totalMinutes)}</td>
+        <td class="numeric">${currencyFormatter.format(totalValue)}</td>
+        <td>-----</td>
+        <td>-----</td>
+      </tr>
+    `;
   }
 
-  function buildCancelButton() {
+  function buildCancelButton(item) {
     const button = document.createElement('button');
     button.type = 'button';
-    button.className = 'ghost-button-light small bank-disabled-cta';
-    button.disabled = true;
-    button.title = BETA_TOOLTIP;
+    button.className = 'icon-button';
     button.textContent = 'Cancelar';
+    button.addEventListener('click', () => cancelCompensation(item, button));
     return button;
+  }
+
+  /** Cancela uma compensação ativa após confirmação do usuário e recarrega. */
+  async function cancelCompensation(item, button) {
+    const confirmed = window.confirm(
+      'Tem certeza que deseja cancelar esta compensação? As horas extras usadas serão restauradas.'
+    );
+    if (!confirmed) return;
+
+    button.disabled = true;
+    button.textContent = 'Cancelando…';
+
+    try {
+      await Api.cancelBankCompensation(item._id);
+      setSuccess('Compensação cancelada com sucesso.');
+      await loadBank();
+    } catch (err) {
+      showError(err.message || 'Não foi possível cancelar a compensação.');
+      button.disabled = false;
+      button.textContent = 'Cancelar';
+    }
   }
 
   /** Constrói a tabela de entries (HTML) usada no modal "Abrir detalhes". */
@@ -208,7 +246,14 @@ document.addEventListener('DOMContentLoaded', () => {
       if (Array.isArray(item.entries) && item.entries.length) {
         actions.appendChild(buildDetailsButton(item));
       }
-      actions.appendChild(buildCancelButton());
+      if (isCancelled) {
+        const noAction = document.createElement('span');
+        noAction.className = 'no-action';
+        noAction.textContent = '—';
+        actions.appendChild(noAction);
+      } else {
+        actions.appendChild(buildCancelButton(item));
+      }
       historyBody.appendChild(tr);
     });
   }
@@ -233,10 +278,46 @@ document.addEventListener('DOMContentLoaded', () => {
     renderHistory(list);
   }
 
-  simulateButton.addEventListener('click', async () => {
-    const date = dateInput.value;
-    // Se o campo de horas vier vazio, usa o fallback '08:00' (mesmo padrão do backend).
-    const hoursNeeded = hoursInput.value || DEFAULT_COMPENSATION_HOURS;
+  // ---- Estado do painel de resultado ----------------------------------------
+  // 'vazio' | 'simulacao' | 'confirmado'
+  function setResultState(state, entries) {
+    if (state === 'simulacao') {
+      resultBadge.textContent = 'Prévia';
+      resultBadge.classList.add('bank-preview');
+      resultBadge.classList.remove('bank-confirmed');
+      resultBadge.hidden = false;
+      renderPreview(entries || []);
+    } else if (state === 'confirmado') {
+      resultBadge.textContent = 'Confirmado';
+      resultBadge.classList.add('bank-confirmed');
+      resultBadge.classList.remove('bank-preview');
+      resultBadge.hidden = false;
+      renderPreview(entries || []);
+    } else {
+      resultBadge.textContent = '';
+      resultBadge.hidden = true;
+      previewEmpty.hidden = false;
+      resultTableWrap.hidden = true;
+      previewBody.innerHTML = '';
+      previewTotals.innerHTML = '';
+      previewRequested.textContent = '—';
+    }
+  }
+
+  function currentFormValues() {
+    return {
+      date: dateInput.value,
+      hoursNeeded: hoursInput.value || DEFAULT_COMPENSATION_HOURS
+    };
+  }
+
+  function sameAsLastSimulation(date, hoursNeeded) {
+    return lastSimulation && lastSimulation.date === date && lastSimulation.hoursNeeded === hoursNeeded;
+  }
+
+  // ---- Simular compensação (POST /bank/preview) ------------------------------
+  async function simularCompensacao() {
+    const { date, hoursNeeded } = currentFormValues();
 
     errorBox.hidden = true;
     if (!date) {
@@ -248,16 +329,54 @@ document.addEventListener('DOMContentLoaded', () => {
     simulateButton.textContent = 'Simulando…';
     try {
       const entries = await Api.previewBankCompensation({ date, hoursNeeded });
+      lastSimulation = { date, hoursNeeded };
       previewRequested.textContent = hoursNeeded;
-      renderPreview(entries);
+      setResultState('simulacao', entries);
     } catch (err) {
-      previewSection.hidden = true;
       showError(err.message || 'Não foi possível simular a compensação.');
     } finally {
       simulateButton.disabled = false;
       simulateButton.textContent = 'Simular';
     }
-  });
+  }
+
+  // ---- Confirmar compensación (POST /bank/confirm) ---------------------------
+  async function confirmarCompensacao() {
+    const { date, hoursNeeded } = currentFormValues();
+
+    errorBox.hidden = true;
+    if (!date) {
+      showError('Informe a data da compensação.');
+      return;
+    }
+
+    // Guard: passa direto só se já simulou com ESTOS valores na sessão.
+    if (!sameAsLastSimulation(date, hoursNeeded)) {
+      const ok = window.confirm(`Tem certeza? Isso vai usar ${hoursNeeded} horas do banco.`);
+      if (!ok) return;
+    }
+
+    confirmButton.disabled = true;
+    confirmButton.textContent = 'Confirmando…';
+    try {
+      const result = await Api.confirmBankCompensation({ date, hoursNeeded });
+      setSuccess('Compensação confirmada com sucesso.');
+      previewRequested.textContent = hoursNeeded;
+      lastSimulation = { date, hoursNeeded };
+      setResultState('confirmado', result?.entries || []);
+      await loadBank();
+    } catch (err) {
+      showError(err.message || 'Não foi possível confirmar a compensação.');
+    } finally {
+      confirmButton.disabled = false;
+      confirmButton.textContent = 'Confirmar banco';
+    }
+  }
+
+  simulateButton.addEventListener('click', simularCompensacao);
+  confirmButton.addEventListener('click', confirmarCompensacao);
+
+  setResultState('vazio');
 
   loadBank().catch((err) => {
     balanceEl.textContent = '—';

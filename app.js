@@ -15,6 +15,7 @@ const userRouter = require('./routes/user')
 const adminRouter = require('./routes/admin')
 const importRouter = require('./routes/import')
 const bankRouter = require('./routes/bank')
+const receivablesRouter = require('./routes/receivables')
 
 // middlewares
 const authenticateUser = require('./middleware/authentication')
@@ -36,6 +37,7 @@ app.use('/api/v1/user', authenticateUser, userRouter)
 app.use('/api/v1/admin', authenticateUser, authorizeUser, adminRouter)
 app.use('/api/v1/import', authenticateUser, importRouter)
 app.use('/api/v1/bank', authenticateUser, bankRouter)
+app.use('/api/v1/receivables', authenticateUser, receivablesRouter)
 
 app.use(notFoundMiddleware)
 app.use(errorHandlerMiddleware)

@@ -2,7 +2,7 @@ const mongoose = require('mongoose')
 const Overtime = require('../models/Overtime')
 const BankCompensation = require('../models/BankCompensation')
 const { getClosedMonthCutoff } = require('../utils/rules')
-const { capitalize } = require('../utils/tools')
+const { capitalize, roundCurrency } = require('../utils/tools')
 const { BadRequestError, NotFoundError } = require('../errors')
 
 // --------------------------- Encontra as horas extras elegíveis para compensar -----------------------------------------------------
@@ -44,7 +44,7 @@ async function findEligibleOvetimes(userId, minutesNeeded, date, session) {
 
             // definindo o valor usado por tier
             const valueByMinute = overtime.values['value' + capitalize(tier)] / overtime.distributionMinutes[tier + 'minutes']
-            valueLostByTier[tier] = Math.round(usedByTier[tier] * valueByMinute * 100) / 100
+            valueLostByTier[tier] = roundCurrency(usedByTier[tier] * valueByMinute, 2)
 
             remainingTier = remainingTier - usedTier
         }

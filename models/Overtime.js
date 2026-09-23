@@ -88,6 +88,13 @@ OvertimeSchema.virtual('status').get(function () {
     return date < paidCutoff ? 'paid' : 'banked'
 })
 
+OvertimeSchema.virtual('netValue').get(function () {
+    const totalValue = this.values.total
+    const compensatedValue = this.compensatedValue
+
+    return totalValue - compensatedValue
+})
+
 OvertimeSchema.index({ createdBy: 1, date: 1 }, { unique: true })
 OvertimeSchema.index({ createdBy: 1, isHoliday: 1, date: 1 })
 

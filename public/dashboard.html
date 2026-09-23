@@ -88,6 +88,12 @@
           <p>Gerenciar configurações de vale-refeição e valores padrão.</p>
         </a>
 
+        <a href="helper.html" target="_blank" class="module-card">
+              <span class="module-icon" aria-hidden="true">❓</span>
+              <h3>Documentação e ajuda</h3>
+              <p>Está com dúvidas? Acesse aqui a documentação do projeto e saiba como utilizá-lo.</p>
+            </a>
+
         <a class="module-card disabled" aria-disabled="true">
           <span class="module-badge module-badge--soon">Em breve</span>
           <span class="module-icon" aria-hidden="true"> 📌 </span>
@@ -128,54 +134,56 @@
 
       <!-- Cards "A receber": consumidos por js/dashboard.js -->
       <section class="receivable-section" aria-labelledby="receivable-heading">
-        <div class="page-heading">
+        <div class="page-heading receivable-heading-with-scope">
           <h2 id="receivable-heading">A receber</h2>
+          <div class="receivables-scope-control">
+            <label for="receivables-scope-select">Período</label>
+            <select id="receivables-scope-select" class="scope-select" aria-label="Período dos valores a receber">
+              <option value="current">Mês atual</option>
+              <option value="next">Mês seguinte</option>
+              <option value="previous">Mês anterior</option>
+              <option value="total">Total a receber</option>
+            </select>
+          </div>
         </div>
 
-      <div class="motivational-banner" id="motivational-banner" hidden>
+        <div id="receivables-error" class="error-box" role="alert" hidden></div>
+
+      <!--<div class="motivational-banner" id="motivational-banner" hidden>
         <p id="motivational-message"></p>
-      </div>
+      </div>-->
 
         <div class="account-layout">
-          <!-- Horas extras a receber -->
+          <!-- Horas extras (bruto) a receber -->
           <div class="account-section receivable-card">
             <div class="receivable-card-head">
-              <h3>Horas extras</h3>
-              <select id="overtime-scope-select" class="scope-select" aria-label="Período das horas extras a receber">
-                <option value="next">Próximo pagamento</option>
-                <option value="total">Total a receber</option>
-                <option value="previous">Mês anterior</option>
-              </select>
+              <h3>Horas extras – Bruto</h3>
             </div>
             <div class="receivable-lines" id="overtime-receivable-lines" aria-live="polite"></div>
-            <div class="error-box" id="overtime-receivable-error" role="alert" hidden></div>
+          </div>
+
+          <!-- Horas extras (líquido) a receber -->
+          <div class="account-section receivable-card">
+            <div class="receivable-card-head receivable-card-head--hint">
+              <h3>Horas extras – Líquido</h3>
+              <button type="button" class="receivable-card-info" id="liquid-info-button" aria-label="Valor após desconto de compensações do banco de horas">?</button>
+            </div>
+            <div class="receivable-lines" id="overtime-liquid-receivable-lines" aria-live="polite"></div>
           </div>
 
           <!-- Adicional noturno a receber -->
           <div class="account-section receivable-card">
             <div class="receivable-card-head">
               <h3>Adicional noturno</h3>
-              <select id="nightshift-scope-select" class="scope-select" aria-label="Período do adicional noturno a receber">
-                <option value="next">Próximo pagamento</option>
-                <option value="total">Total a receber</option>
-                <option value="previous">Mês anterior</option>
-              </select>
             </div>
             <div class="receivable-lines" id="nightshift-receivable-lines" aria-live="polite"></div>
-            <div class="error-box" id="nightshift-receivable-error" role="alert" hidden></div>
           </div>
           <!-- Vale-refeição a receber -->
           <div class="account-section receivable-card">
             <div class="receivable-card-head">
               <h3>Vale-refeição</h3>
-              <select id="mealvoucher-scope-select" class="scope-select" aria-label="Período dos vales-refeição a receber">
-                <option value="next">Próximo pagamento</option>
-                <option value="total">Total a receber</option>
-                <option value="previous">Mês anterior</option>
-              </select>
             </div>
             <div class="receivable-lines" id="mealvoucher-receivable-lines" aria-live="polite"></div>
-            <div class="error-box" id="mealvoucher-receivable-error" role="alert" hidden></div>
           </div>
 
         </div>

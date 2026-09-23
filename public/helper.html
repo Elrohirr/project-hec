@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>HourFlow — Central de Ajuda</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/variables.css">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/components.css">
+<link rel="stylesheet" href="css/helper.css">
+</head>
+<body>
+<header class="top">
+  <div class="wrap hero">
+    <h1>Como usar o HourFlow</h1>
+    <p>Guia de consulta sobre as funcionalidades e as regras da ferramenta: horas extras, adicional noturno, vale lanche e banco de horas.</p>
+    <div class="search">
+      <input id="busca" type="search" placeholder="Buscar: vale lanche, banco de horas, editar…" aria-label="Buscar na ajuda" autocomplete="off">
+    </div>
+  </div>
+</header>
+
+<div class="wrap layout">
+  <nav class="toc" aria-label="Índice">
+    <p>Nesta página</p>
+    <a href="#visao-geral">Visão geral</a>
+    <a href="#primeiros-passos">Primeiros passos</a>
+    <a href="#painel">Painel</a>
+    <a href="#horas-extras">Horas extras</a>
+    <a href="#adicional-noturno">Adicional noturno</a>
+    <a href="#vale-lanche">Vale lanche</a>
+    <a href="#banco-de-horas">Banco de horas</a>
+    <a href="#pdf">Importação de PDF</a>
+    <!--<a href="#admin">Administração</a>-->
+    <a href="#regras">Regras em resumo</a>
+    <a href="#faq">Dúvidas frequentes</a>
+    <a href="#glossario">Glossário</a>
+  </nav>
+
+  <main>
+    <div id="vazio" role="status">Nada encontrado para essa busca. Tente outra palavra, como “editar”, “noturno” ou “saldo”.</div>
+
+    <section id="visao-geral" class="searchable">
+      <h2>Visão geral</h2>
+      <p>O HourFlow reúne em um só lugar o controle das suas <strong>horas extras</strong>, do <strong>adicional noturno</strong>, dos <strong>vales lanche</strong> e do <strong>banco de horas</strong>. Os cálculos seguem a CLT e o Acordo Coletivo de Trabalho (ACT 2024/2025).</p>
+      <p>Use este guia para entender o que cada tela faz e por que algumas coisas se comportam de determinada forma, como um registro que não pode ser editado.</p>
+      <div class="note info"><strong>Ferramenta em evolução</strong>Novas funções chegam com frequência. O aviso <em>“Novidades”</em> mostra o que mudou a cada versão.</div>
+    </section>
+
+    <section id="primeiros-passos" class="searchable">
+      <h2>Primeiros passos</h2>
+      <h3>Entrar e sair</h3>
+      <p>Acesse com seu login e senha. Por segurança, a sessão tem prazo de validade: quando expira, você é desconectado automaticamente e volta para a tela de login. Basta entrar de novo.</p>
+      <h3>Modo escuro</h3>
+      <p>Há um botão para alternar entre tema claro e escuro. A sua escolha fica salva neste navegador.</p>
+      <h3>Filtros mantidos</h3>
+      <p>Os filtros que você aplica (período, por exemplo) permanecem ao navegar entre as páginas durante a sessão. Se a lista parecer incompleta, confira se há um filtro ativo.</p>
+      <h3>Novidades</h3>
+      <p>Quando existe uma versão nova, aparece um indicador. Abra a janela “Novidades” para ver as melhorias, das mais recentes para as mais antigas.</p>
+    </section>
+
+    <section id="painel" class="searchable">
+      <h2>Painel</h2>
+      <p>É a tela inicial. Mostra cartões com o que você tem <strong>a receber</strong>, organizados pela <strong>data de pagamento</strong>, e não pela data em que a hora extra foi feita.</p>
+      <ul>
+        <li>O período dos cartões segue o calendário de pagamento: uma hora extra feita agora pode cair na folha de um mês seguinte.</li>
+        <li>Altere o filtro de data para consultar outros períodos.</li>
+      </ul>
+      <div class="note"><strong>Dica</strong>Se o valor do painel parecer diferente do que você esperava, veja primeiro em qual mês de pagamento o registro foi enquadrado.</div>
+    </section>
+
+    <section id="horas-extras" class="searchable">
+      <h2>Horas extras</h2>
+      <p>Aqui você registra, consulta, edita e cancela suas horas extras. O sistema classifica cada registro em uma das três faixas de acréscimo, conforme a tabela do ACT:</p>
+      <div class="tiers">
+        <div class="tier a"><b>50%</b><span>Faixa 1</span></div>
+        <div class="tier b"><b>75%</b><span>Faixa 2</span></div>
+        <div class="tier c"><b>100%</b><span>Faixa 3</span></div>
+      </div>
+      <h3>Como o valor é calculado</h3>
+      <p>O valor de cada registro usa o <strong>salário vigente na data do registro</strong>. Se o salário for reajustado depois, os registros antigos não mudam. Isso mantém o histórico correto e auditável.</p>
+      <h3>Editar e cancelar</h3>
+      <ul>
+        <li>Um registro pode ser editado ou cancelado normalmente enquanto ainda não foi usado no banco de horas.</li>
+        <li>Se parte das horas já foi <strong>compensada</strong>, o registro fica <strong>bloqueado para edição</strong>. Para alterá-lo, é preciso antes desfazer a compensação.</li>
+        <li>Registros vindos de <strong>importação de PDF</strong> têm bloqueios adicionais (veja <a href="#pdf">Importação de PDF</a>).</li>
+      </ul>
+      <h3>Horas para pagamento e horas para o banco</h3>
+      <p>Cada registro pode ter uma parte destinada ao <strong>banco de horas</strong>. Essa parte não é paga em folha: fica como saldo para compensar folgas depois.</p>
+    </section>
+
+    <section id="adicional-noturno" class="searchable">
+      <h2>Adicional noturno</h2>
+      <p>Registre as horas trabalhadas no período noturno. As horas são informadas no formato <code>HH:MM</code>.</p>
+      <h3>Hora noturna reduzida</h3>
+      <p>Pela CLT (art. 73, §1º), a hora noturna é reduzida: cada <strong>52 min 30 s</strong> de trabalho noturno contam como <strong>1 hora</strong>. Na prática, o tempo relógio é multiplicado por <strong>8/7</strong>. O HourFlow guarda os dois valores: as <em>horas relógio</em> e as <em>horas reduzidas</em>.</p>
+      <div class="calc" aria-label="Calculadora ilustrativa de hora noturna reduzida">
+        <label for="relogio">Horas relógio trabalhadas à noite (HH:MM)</label>
+        <div class="row">
+          <input id="relogio" type="text" inputmode="numeric" value="07:00" maxlength="5" placeholder="07:00">
+          <span aria-hidden="true">→</span>
+          <output id="reduzida" for="relogio">08:00</output>
+        </div>
+        <small>Estimativa para entender a regra. O valor oficial é o calculado pelo sistema no registro.</small>
+      </div>
+    </section>
+
+    <section id="vale-lanche" class="searchable">
+      <h2>Vale lanche</h2>
+      <p>Os vales lanche são gerados <strong>automaticamente</strong> a partir dos seus registros de hora extra e de adicional noturno. Você não precisa lançá-los à mão.</p>
+      <h3>Um vale por dia</h3>
+      <p>Se no mesmo dia existirem os dois tipos de registro, vale <strong>o da hora extra</strong>. O vale gerado pelo adicional noturno é substituído.</p>
+      <div class="note"><strong>E se eu cancelar a hora extra?</strong>Ao cancelar ou editar a hora extra de modo que ela deixe de gerar o vale, o vale do adicional noturno daquele dia é restaurado automaticamente.</div>
+      <p>Essa regra é fixa: não depende de qual dos dois vales teria maior valor.</p>
+    </section>
+
+    <section id="banco-de-horas" class="searchable">
+      <h2>Banco de horas</h2>
+      <p>O banco de horas guarda o saldo das horas extras destinadas a compensação, separado por faixa (50%, 75% e 100%).</p>
+      <div class="note warn"><strong>Modo simulação</strong>Por enquanto, o banco de horas funciona apenas em <strong>modo simulação</strong>: você consulta o saldo e simula compensações, mas os botões de confirmar e cancelar ficam desativados. A liberação completa será anunciada em “Novidades”.</div>
+      <h3>Em que ordem as horas são consumidas</h3>
+      <div class="order" aria-label="Ordem de compensação">
+        <span class="chip">Registro mais antigo primeiro</span><span class="arrow">→</span>
+        <span class="chip">Dentro do registro: 50%</span><span class="arrow">→</span>
+        <span class="chip">75%</span><span class="arrow">→</span>
+        <span class="chip">100%</span>
+      </div>
+      <p>Essa ordem é automática e você não precisa escolher. Ao confirmar uma compensação, o sistema recalcula tudo no servidor para garantir que o saldo ainda está correto.</p>
+      <h3>Desfazer uma compensação</h3>
+      <p>Cancelar uma compensação devolve exatamente o que foi consumido, com os mesmos valores da época. Compensações que vieram de importação de PDF <strong>não podem ser canceladas</strong>.</p>
+      <h3>Saldo</h3>
+      <p>O saldo é a diferença entre as horas destinadas ao banco e as já compensadas. O saldo geral considera apenas as horas disponíveis para compensação.</p>
+    </section>
+
+    <section id="pdf" class="searchable">
+      <h2>Importação de PDF - (Ainda não implementado)</h2>
+      <p>Alguns registros podem ser criados a partir de um PDF importado. Para preservar a fidelidade ao documento original, eles têm proteções extras:</p>
+      <ul>
+        <li>Não podem ser editados pela tela comum.</li>
+        <li>Compensações importadas não podem ser canceladas.</li>
+      </ul>
+      <p>Se um dado importado estiver errado, fale com o administrador para corrigir na origem.</p>
+    </section>
+
+    
+    <!--<section id="admin" class="searchable">
+      <h2>Administração</h2>
+      <p>Usuários com perfil de <strong>administrador</strong> têm funções extras, como gerenciar usuários. Se você não vê essas opções, é porque sua conta é de usuário comum, e isso é esperado.</p>
+      <ul>
+        <li>A exclusão de um usuário apaga também os registros ligados a ele. Essa ação é definitiva.</li>
+        <li>O sistema guarda a data do último acesso de cada usuário.</li>
+      </ul>
+    </section>-->
+
+    <section id="regras" class="searchable">
+      <h2>Regras em resumo</h2>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Assunto</th><th>Regra</th></tr></thead>
+          <tbody>
+            <tr><td>Faixas de hora extra</td><td>50%, 75% ou 100%, definidas automaticamente pela tabela do ACT 2024/2025.</td></tr>
+            <tr><td>Valor do registro</td><td>Usa o salário da data do registro. Reajustes futuros não alteram o passado.</td></tr>
+            <tr><td>Data que vale no painel</td><td>Data de pagamento, não a data em que a hora foi feita.</td></tr>
+            <tr><td>Hora noturna</td><td>Reduzida pela CLT: 52 min 30 s = 1 hora (fator 8/7).</td></tr>
+            <tr><td>Vale lanche no mesmo dia</td><td>O da hora extra prevalece sobre o do adicional noturno.</td></tr>
+            <tr><td>Ordem de compensação</td><td>Registro mais antigo primeiro; dentro dele, 50% → 75% → 100%.</td></tr>
+            <tr><td>Registro compensado</td><td>Não pode ser editado enquanto houver horas compensadas.</td></tr>
+            <tr><td>Registro importado de PDF</td><td>Não pode ser editado; compensações importadas não podem ser canceladas.</td></tr>
+            <tr><td>Banco de horas</td><td>Em modo simulação: sem confirmar nem cancelar por enquanto.</td></tr>
+            <tr><td>Sessão</td><td>Expira por segurança; entre novamente para continuar.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="faq" class="searchable">
+      <h2>Dúvidas frequentes</h2>
+      <details><summary>Por que não consigo editar uma hora extra?</summary><div class="a"><p>Há dois motivos possíveis: parte das horas já foi compensada no banco de horas, ou o registro veio de uma importação de PDF. Nos dois casos a edição é bloqueada para proteger a consistência dos valores.</p></div></details>
+      <details><summary>Meu vale lanche do adicional noturno não apareceu. O que houve?</summary><div class="a"><p>Provavelmente existe uma hora extra no mesmo dia. Nesse caso vale só o vale da hora extra. Se essa hora extra for cancelada, o vale do noturno volta sozinho.</p></div></details>
+      <details><summary>Por que os botões de confirmar e cancelar do banco de horas estão desativados?</summary><div class="a"><p>O banco de horas está em modo simulação. Você já consegue ver o saldo e simular, mas a confirmação será liberada em uma próxima versão.</p></div></details>
+      <details><summary>O valor de uma hora extra antiga não bate com meu salário atual.</summary><div class="a"><p>É o esperado. Cada registro usa o salário da época em que foi feito, por isso reajustes não mudam valores passados.</p></div></details>
+      <details><summary>Fui desconectado sozinho. Perdi o que estava fazendo?</summary><div class="a"><p>A sessão expira por segurança. O que já foi salvo continua lá; só o que estava sendo digitado e não foi enviado se perde. Entre novamente e repita.</p></div></details>
+      <details><summary>Uma hora extra que fiz este mês não aparece no painel do mês.</summary><div class="a"><p>O painel agrupa pela data de pagamento. O registro pode estar em um período de pagamento posterior. Ajuste o filtro de data para localizá-lo.</p></div></details>
+      <details><summary>Minha lista está incompleta ou vazia.</summary><div class="a"><p>Verifique se há um filtro ativo. Os filtros são mantidos ao trocar de página durante a sessão.</p></div></details>
+      <details><summary>Não vejo as opções de administração.</summary><div class="a"><p>Elas aparecem só para contas de administrador. Se você acha que deveria ter acesso, fale com o responsável pela ferramenta.</p></div></details>
+    </section>
+
+    <section id="glossario" class="searchable">
+      <h2>Glossário</h2>
+      <dl>
+        <dt>ACT</dt><dd>Acordo Coletivo de Trabalho; define as faixas de hora extra e as regras do banco de horas.</dd>
+        <dt>Banco de horas</dt><dd>Saldo de horas extras guardado para compensação futura, em vez de pago em folha.</dd>
+        <dt>Compensação</dt><dd>Uso do saldo do banco de horas para abater horas devidas.</dd>
+        <dt>Data de pagamento</dt><dd>Mês em que o valor entra na folha; é o critério usado no painel.</dd>
+        <dt>Faixa</dt><dd>Percentual de acréscimo da hora extra (50%, 75% ou 100%).</dd>
+        <dt>Hora reduzida</dt><dd>Hora noturna de 52 min 30 s, conforme a CLT.</dd>
+        <dt>Modo simulação</dt><dd>Consulta e simulação sem gravar alterações no saldo.</dd>
+      </dl>
+    </section>
+  </main>
+</div>
+
+<script>
+(function () {
+  var input = document.getElementById('busca');
+  var sections = document.querySelectorAll('.searchable');
+  var vazio = document.getElementById('vazio');
+  function norm(s) { return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); }
+  input.addEventListener('input', function () {
+    var q = norm(input.value.trim());
+    var shown = 0;
+    sections.forEach(function (sec) {
+      var match = !q || norm(sec.textContent).indexOf(q) !== -1;
+      sec.classList.toggle('hidden', !match);
+      if (match) shown++;
+      if (q) sec.querySelectorAll('details').forEach(function (d) {
+        d.open = norm(d.textContent).indexOf(q) !== -1;
+      });
+    });
+    vazio.style.display = shown ? 'none' : 'block';
+  });
+
+  var rel = document.getElementById('relogio');
+  var out = document.getElementById('reduzida');
+  function calc() {
+    var m = /^(\d{1,3}):([0-5]\d)$/.exec(rel.value.trim());
+    if (!m) { out.textContent = '--:--'; return; }
+    var total = Math.round((parseInt(m[1], 10) * 60 + parseInt(m[2], 10)) * 8 / 7);
+    var h = Math.floor(total / 60), mm = total % 60;
+    out.textContent = (h < 10 ? '0' : '') + h + ':' + (mm < 10 ? '0' : '') + mm;
+  }
+  rel.addEventListener('input', calc);
+  calc();
+})();
+</script>
+</body>
+</html>

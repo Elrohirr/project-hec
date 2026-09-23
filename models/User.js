@@ -36,8 +36,7 @@ const UserSchema = new mongoose.Schema({
         default: false
     },
     lastLogin: {
-        type: Date,
-        required: true
+        type: Date
     }
 })
 

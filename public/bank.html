@@ -80,59 +80,60 @@
       </section>
 
       <div id="bank-error-box" class="error-box" role="alert" hidden></div>
+      <div id="bank-success-box" class="success-box" role="status" hidden></div>
 
-      <!-- Simulação: POST /bank/preview -->
+      <!-- Simular / Confirmar: layout 2 columnas -->
       <div class="bank-sections">
-      <section class="account-section">
-        <h3>Simular compensação</h3>
-        <p class="section-hint">Escolha a data e quantas horas quer compensar. O sistema usará as horas extras elegíveis mais antigas.</p>
+      <div class="bank-split">
+        <section class="account-section bank-form-panel">
+          <h3>Simular compensação</h3>
+          <p class="section-hint">Escolha a data e quantas horas quer compensar.</p>
 
-        <form id="bank-form" novalidate>
-          <div class="field">
-            <label for="bank-date">Data</label>
-            <input type="date" id="bank-date" name="date" required>
+          <form id="bank-form" novalidate>
+            <div class="field">
+              <label for="bank-date">Data</label>
+              <input type="date" id="bank-date" name="date" required>
+            </div>
+            <div class="field">
+              <label for="bank-hours">Horas a compensar</label>
+              <input type="time" id="bank-hours" name="hoursNeeded" min="00:00" max="23:59" step="60" value="08:00">
+              <span class="hint">Formato HH:MM — padrão 08:00.</span>
+            </div>
+            <div class="bank-form-actions">
+              <button type="button" id="simulate-button" class="primary-button">Simular</button>
+              <button type="button" id="confirm-bank-button" class="primary-button" disabled>Confirmar banco</button>
+            </div>
+          </form>
+        </section>
+
+        <!-- Panel de resultado: sempre visível, alterna entre vazio/simulación/confirmado -->
+        <section class="account-section bank-result-panel" id="bank-preview-section">
+          <h3>Resultado <span id="bank-result-badge" class="badge" hidden></span></h3>
+          <p class="section-hint">Horas extras que serão usadas para compensar <span id="bank-preview-requested">—</span>.</p>
+
+          <div class="table-scroll" id="bank-result-table-wrap" hidden>
+            <table class="overtime-table">
+              <thead>
+                <tr>
+                  <th>Data</th>
+                  <th>Horas usadas</th>
+                  <th>Valor perdido</th>
+                  <th>Horas por adicional (50/75/100)</th>
+                  <th>Valor por adicional (50/75/100)</th>
+                </tr>
+              </thead>
+              <tbody id="bank-preview-body"></tbody>
+              <tfoot id="bank-preview-totals"></tfoot>
+            </table>
           </div>
-          <div class="field">
-            <label for="bank-hours">Horas a compensar</label>
-            <input type="time" id="bank-hours" name="hoursNeeded" min="00:00" max="23:59" step="60" value="08:00">
-            <span class="hint">Formato HH:MM — padrão 08:00.</span>
-          </div>
-          <button type="button" id="simulate-button" class="primary-button">Simular</button>
-        </form>
-      </section>
-
-      <!-- Resultado da simulação (oculto até simular) -->
-      <section class="account-section" id="bank-preview-section" hidden>
-        <h3>Resultado da simulação</h3>
-        <p class="section-hint">Horas extras que serão usadas para compensar <span id="bank-preview-requested">—</span>.</p>
-
-        <div class="table-scroll">
-          <table class="overtime-table">
-            <thead>
-              <tr>
-                <th>Data</th>
-                <th>Horas usadas</th>
-                <th>Valor perdido</th>
-                <th>Horas por adicional (50/75/100)</th>
-                <th>Valor por adicional (50/75/100)</th>
-              </tr>
-            </thead>
-            <tbody id="bank-preview-body"></tbody>
-            <tfoot id="bank-preview-totals"></tfoot>
-          </table>
-        </div>
-        <div id="bank-preview-empty" class="empty-state" hidden>Não há horas extras elegíveis disponíveis para compensar.</div>
-
-        <div class="bank-result-actions">
-          <button type="button" id="confirm-bank-button" class="primary-button bank-disabled-cta" disabled title="Disponível em breve — módulo em fase de testes.">Confirmar banco</button>
-          <p class="hint">Disponível em breve — módulo em fase de testes.</p>
-        </div>
-      </section>
+          <div id="bank-preview-empty" class="empty-state">Escolha data e horas e clique em Simular para ver o resultado aqui</div>
+        </section>
+      </div>
 
       <!-- Histórico: GET /bank -->
       <section class="account-section">
         <h3>Histórico de compensações</h3>
-        <p class="section-hint">Compensações registradas, ativas e canceladas. Cancelar estará disponível em breve — módulo em fase de testes.</p>
+        <p class="section-hint">Compensações registradas, ativas e canceladas. Cancelar restaura as horas extras usadas nela.</p>
 
         <div class="table-scroll">
           <table class="overtime-table">
