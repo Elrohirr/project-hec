@@ -488,6 +488,7 @@
   padding: 5px 12px;
   cursor: pointer;
   font-size: 0.82rem;
+  color: var(--text);
 }
 
 .pagination-buttons button:disabled {
@@ -531,14 +532,6 @@
   color: var(--ink-soft);
 }
 
-.icon-button.edit {
-  color: var(--teal);
-}
-
-.icon-button.edit:hover {
-  background: rgba(47, 111, 98, 0.08);
-}
-
 .table-toolbar {
   display: flex;
   align-items: center;
@@ -547,20 +540,7 @@
   border-bottom: 1px solid var(--line);
 }
 
-.table-toolbar label {
-  font-size: 0.82rem;
-  color: var(--ink-soft);
-  font-weight: 600;
-}
 
-.table-toolbar select {
-  padding: 7px 10px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--surface);
-  font-size: 0.85rem;
-  color: var(--text);
-}
 
 .source-tag {
   display: inline-block;
@@ -681,6 +661,16 @@
 [data-theme="dark"] .theme-toggle-knob {
   transform: translateX(14px);
   background: var(--teal);
+}
+
+[data-theme="dark"] .app-nav a.active,
+[data-theme="dark"] .app-header .user-area a.active {
+  border-bottom-color: var(--teal);
+}
+
+[data-theme="dark"] .summary-card .value-money,
+[data-theme="dark"] .summary-card.total .value {
+  color: var(--teal);
 }
 
 /* =========================================================

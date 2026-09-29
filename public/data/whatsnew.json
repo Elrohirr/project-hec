@@ -1,5 +1,15 @@
 [
   {
+    "version":"2.0.0",
+    "date":"29-09-2026",
+    "highlights":[
+      "Liberado função de confirmação do módulo \"Banco de Horas\". Agora, além de ser possível simular, é possível confirmar o banco de horas. Em caso de dúvidas, consulte a documentação;",
+      "Adicionado as horas extras líquidas no card \"Hora extra - Líquido\" em dashboard;",
+      "Adicionado o valor numérico de horas pagas tanto nos cards \"Bruto\" e \"Líquido\", mesmo padrão do contracheque;",
+      "Pequena alteração no modo escuro: valores antes em amarelo passam a ser verde."
+    ]
+  },
+  {
     "version":"1.3.0",
     "date":"22-09-2026",
     "highlights":[

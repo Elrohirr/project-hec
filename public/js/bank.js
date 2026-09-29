@@ -35,9 +35,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const confirmButton = document.getElementById('confirm-bank-button');
   const successBox = document.getElementById('bank-success-box');
 
-  const dateFormatter = new Intl.DateTimeFormat('pt-BR', { timeZone: 'UTC' });
-  const currencyFormatter = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
-
   const DEFAULT_COMPENSATION_HOURS = '08:00'; // mesmo padrão do backend (simulateBankCompensation)
 
   // Dados da última simulação válida — usados pelo "Confirmar banco".

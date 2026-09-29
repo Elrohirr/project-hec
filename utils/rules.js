@@ -18,14 +18,14 @@ function calcDistribution(minutes, isDayOff, isHoliday) {
             he100minutes: 0
         }
     }
-    if (minutes > 120 && minutes <= 300) {
+    if (minutes > 120) {
         return {
             he50minutes: 120,
             he75minutes: minutes - 120,
             he100minutes: 0
         }
     }
-    throw new BadRequestError("Só é possível executar mais de 5 horas extras se for feriado ou dia de folga.")
+    //throw new BadRequestError("Só é possível executar mais de 5 horas extras se for feriado ou dia de folga.")
 }
 
 function defineValue(distribution, wage) {

@@ -17,20 +17,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const summaryCount = document.getElementById('summary-count');
   const summarySubtotal = document.getElementById('summary-subtotal');
 
-  const currencyFormatter = new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL'
-  });
-  // timeZone: 'UTC' evita que o navegador mostre um dia a menos
-  // (o backend salva as datas como UTC meia-noite).
-  const dateFormatter = new Intl.DateTimeFormat('pt-BR', { timeZone: 'UTC' });
-
-  const payDateFormatter = new Intl.DateTimeFormat('pt-BR', {
-    timeZone: 'UTC',
-    month: '2-digit',
-    year: 'numeric'
-  });
-
   const sourceLabels = {
     overtime: 'Hora extra',
     nightShift: 'Turno noturno'
@@ -49,16 +35,6 @@ document.addEventListener('DOMContentLoaded', () => {
     return payDateFormatter.format(new Date(isoString));
   }
 
-  function monthStartDate(monthValue) {
-    return `${monthValue}-01`;
-  }
-
-  function monthEndDate(monthValue) {
-    const [year, month] = monthValue.split('-').map(Number);
-    const lastDay = new Date(Date.UTC(year, month, 0)).getUTCDate();
-    return `${monthValue}-${String(lastDay).padStart(2, '0')}`;
-  }
-
   function getActiveFilters() {
     const filters = {};
     if (sourceFilter.value) filters.source = sourceFilter.value;
@@ -66,6 +42,16 @@ document.addEventListener('DOMContentLoaded', () => {
     if (filterPayMonthEnd.value) filters.endPayDate = monthEndDate(filterPayMonthEnd.value);
     if (filterSort.value) filters.sort = filterSort.value;
     return filters;
+  }
+
+  function saveCurrentFilterState() {
+    return saveFilterState(FILTER_PAGE_KEY, {
+      source: sourceFilter.value,
+      startPayDate: filterPayMonthStart.value,
+      endPayDate: filterPayMonthEnd.value,
+      sort: filterSort.value,
+      limit: pageLimitSelect.value
+    });
   }
 
   function renderRow(voucher) {
@@ -119,12 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   applyFiltersButton.addEventListener('click', () => {
-    saveFilterState(FILTER_PAGE_KEY, {
-      source: sourceFilter.value,
-      startPayDate: filterPayMonthStart.value,
-      endPayDate: filterPayMonthEnd.value,
-      sort: filterSort.value
-    });
+    saveCurrentFilterState()
     loadMealVouchers(1);
   });
 
@@ -147,6 +128,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   pageLimitSelect.addEventListener('change', () => {
     pageLimit = Number(pageLimitSelect.value);
+    saveCurrentFilterState()
     loadMealVouchers(1);
   });
 
@@ -154,7 +136,9 @@ document.addEventListener('DOMContentLoaded', () => {
     'source-filter': 'source',
     'filter-pay-month-start': 'startPayDate',
     'filter-pay-month-end': 'endPayDate',
-    'filter-sort': 'sort'
+    'filter-sort': 'sort',
+    'page-limit': 'limit'
   });
+  pageLimit = Number(pageLimitSelect.value) || pageLimit;
   loadMealVouchers(1);
 });

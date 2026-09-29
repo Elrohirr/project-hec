@@ -174,6 +174,7 @@
   align-items: baseline;
   justify-content: space-between;
   gap: 12px;
+  flex-wrap: wrap;
 }
 
 .receivable-row .label {
@@ -211,6 +212,27 @@
   color: var(--ink-soft);
 }
 
+/* Cards Bruto/Líquido: container query para que valores longos
+   "HH:MM (X,XXh)" encolham conforme a largura do card e nunca quebrem linha.
+   Os totais (`.total`) ficam fora do clamp, preservando a hierarquia visual. */
+.receivable-card {
+  container-type: inline-size;
+}
+
+#overtime-receivable-lines > .receivable-row:not(.total) .value,
+#overtime-liquid-receivable-lines > .receivable-row:not(.total) .value {
+  white-space: nowrap;
+  font-size: clamp(14px, 6.5cqi, 20px);
+}
+
+/* Linha discreta de compensação no card Líquido ("−HH:MM compensado no banco") */
+.receivable-subnote {
+  width: 100%;
+  font-size: 0.7rem;
+  color: var(--ink-soft);
+  opacity: 0.85;
+}
+
 .receivable-row.total {
   border-top: 1px solid var(--line);
   padding-top: 10px;
@@ -220,6 +242,10 @@
 .receivable-row.total .value {
   color: var(--amber-ink);
   font-size: 1.35rem;
+}
+
+[data-theme="dark"] .receivable-row.total .value {
+  color: var(--teal);
 }
 
 .receivable-section .error-box {

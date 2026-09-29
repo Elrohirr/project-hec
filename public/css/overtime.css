@@ -42,3 +42,27 @@
   background: rgba(22, 129, 216, 0.12);
   color: rgb(77, 170, 247);
 }
+
+/* =========================================================
+   Resumo — cards HE: horas e R$ em linhas próprias
+   ========================================================= */
+/* Container query: o clamp abaixo (cqi) se baseia na largura do próprio card */
+.summary-card {
+  container-type: inline-size;
+}
+
+/* Valor de horas: cor padrão do tema (var(--text) — branco no modo escuro).
+   clamp de container + nowrap garantem que "120:03 (120,05h)"
+   nunca quebre linha, encolhendo conforme a largura do card. */
+.summary-card .value.hours-value {
+  display: block;
+  white-space: nowrap;
+  font-size: clamp(15px, 8cqi, 22px);
+}
+
+/* Valor em R$ abaixo das horas, menor e em âmbar (âmbar-ink no claro; teal no escuro) */
+.summary-card .value-money {
+  display: block;
+  margin-top: 4px;
+  color: var(--amber-ink);
+}

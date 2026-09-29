@@ -39,20 +39,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const applyFiltersButton = document.getElementById('apply-filters-button');
   const clearFiltersButton = document.getElementById('clear-filters-button');
 
-  const currencyFormatter = new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL'
-  });
-  // timeZone: 'UTC' evita que o navegador "puxe" a data pro fuso local
-  // e mostre um dia a menos (o backend salva as datas como UTC meia-noite).
-  const dateFormatter = new Intl.DateTimeFormat('pt-BR', { timeZone: 'UTC' });
-
-  const payDateFormatter = new Intl.DateTimeFormat('pt-BR', {
-    timeZone: 'UTC',
-    month: '2-digit',
-    year: 'numeric',
-  });
-
   let currentPage = 1;
   let pageLimit = 10;
   let totalPages = 1;
@@ -67,14 +53,6 @@ document.addEventListener('DOMContentLoaded', () => {
     return payDateFormatter.format(new Date(isoString));
   }
 
-  // Converte um total de minutos para o formato HH:MM usado na exibição
-  function minutesToHHMM(totalMinutes) {
-    const total = Math.max(0, Math.round(totalMinutes || 0));
-    const h = String(Math.floor(total / 60)).padStart(2, '0');
-    const m = String(total % 60).padStart(2, '0');
-    return `${h}:${m}`;
-  }
-
   // Formato esperado pelo <input type="date">: YYYY-MM-DD
   function toDateInputValue(isoString) {
     return new Date(isoString).toISOString().slice(0, 10);
@@ -86,11 +64,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const valueHe100 = values?.valueHe100 || 0;
     const valueHeHoliday = values?.valueHeHoliday || 0;
 
-    summaryHe50.textContent = minutesToHHMM(distribution?.he50);
-    summaryHe75.textContent = minutesToHHMM(distribution?.he75);
+    summaryHe50.textContent = hoursWithDecimal(distribution?.he50);
+    summaryHe75.textContent = hoursWithDecimal(distribution?.he75);
     // HE 100% sem os minutos que já são contados como feriado (card HE (Feriado))
-    summaryHe100.textContent = minutesToHHMM(he100Minutes - heHolidayMinutes);
-    summaryHeHoliday.textContent = minutesToHHMM(heHolidayMinutes);
+    summaryHe100.textContent = hoursWithDecimal(he100Minutes - heHolidayMinutes);
+    summaryHeHoliday.textContent = hoursWithDecimal(heHolidayMinutes);
     summaryTotal.textContent = currencyFormatter.format(values?.total ?? 0);
 
     summaryHe50Value.textContent = currencyFormatter.format(values?.valueHe50 ?? 0)
@@ -239,16 +217,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   cancelEditButton.addEventListener('click', exitEditMode);
 
-  function monthStartDate(monthValue) {
-    return `${monthValue}-01`;
-  }
-
-  function monthEndDate(monthValue) {
-    const [year, month] = monthValue.split('-').map(Number);
-    const lastDay = new Date(Date.UTC(year, month, 0)).getUTCDate();
-    return `${monthValue}-${String(lastDay).padStart(2, '0')}`;
-  }
-
   function getActiveFilters() {
     const filters = {};
     if (filterStartDate.value) filters.startDate = filterStartDate.value;
@@ -259,6 +227,19 @@ document.addEventListener('DOMContentLoaded', () => {
     if (filterPayMonthEnd.value) filters.endPayDate = monthEndDate(filterPayMonthEnd.value);
     if (filterSort.value) filters.sort = filterSort.value;
     return filters;
+  }
+
+  function saveCurrentFilterState() {
+    return saveFilterState(FILTER_PAGE_KEY, {
+      startDate: filterStartDate.value,
+      endDate: filterEndDate.value,
+      isHoliday: filterIsHoliday.value,
+      isDayOff: filterIsDayOff.value,
+      startPayDate: filterPayMonthStart.value,
+      endPayDate: filterPayMonthEnd.value,
+      sort: filterSort.value,
+      limit: pageLimitSelect.value
+    });
   }
 
   async function loadOvertimes(page = 1) {
@@ -280,15 +261,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   applyFiltersButton.addEventListener('click', () => {
-    saveFilterState(FILTER_PAGE_KEY, {
-      startDate: filterStartDate.value,
-      endDate: filterEndDate.value,
-      isHoliday: filterIsHoliday.value,
-      isDayOff: filterIsDayOff.value,
-      startPayDate: filterPayMonthStart.value,
-      endPayDate: filterPayMonthEnd.value,
-      sort: filterSort.value
-    });
+    saveCurrentFilterState()
     loadOvertimes(1);
   });
 
@@ -366,6 +339,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   pageLimitSelect.addEventListener('change', () => {
     pageLimit = Number(pageLimitSelect.value);
+    saveCurrentFilterState()
     loadOvertimes(1);
   });
 
@@ -376,7 +350,9 @@ document.addEventListener('DOMContentLoaded', () => {
     'filter-is-day-off': 'isDayOff',
     'filter-pay-month-start': 'startPayDate',
     'filter-pay-month-end': 'endPayDate',
-    'filter-sort': 'sort'
+    'filter-sort': 'sort',
+    'page-limit': 'limit'
   });
+  pageLimit = Number(pageLimitSelect.value) || pageLimit;
   loadOvertimes(1);
 });

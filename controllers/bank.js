@@ -23,9 +23,11 @@ const simulateBankCompensation = async (req, res) => {
 
 // --------------------------- Cria um documento de banco de horas, alterando as horas extras que forem selecionadas -----------------------------------------------------
 const confirmBankCompensation = async (req, res) => {
-    const { user: { userId }, body: { date, hoursNeeded } } = req
+    const { user: { userId }, body: { date } } = req
+    const hoursNeeded = (req.body.hoursNeeded || '08:00').trim()
+
     // validações
-    if (!hoursNeeded || !date) throw new BadRequestError('Por favor, informe quantas horas para compensar e a data')
+    if (!date) throw new BadRequestError('Por favor, informe a data da compensação.')
     validateFormat(hoursNeeded, false)
 
     const minutesNeeded = timeToMinutes(hoursNeeded)

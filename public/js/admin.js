@@ -17,10 +17,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const usersTableBody = document.getElementById('users-table-body');
   const usersEmptyState = document.getElementById('users-empty-state');
 
-  const currencyFormatter = new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL'
-  });
   const dateFormatter = new Intl.DateTimeFormat('pt-BR', {
     dateStyle: 'short',
     timeStyle: 'short'

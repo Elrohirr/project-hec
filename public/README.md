@@ -19,7 +19,10 @@ public/
 ├── account.html          → ajustes da conta (perfil, senha, exclusão)
 ├── admin.html            → administração (só admin)
 ├── css/
-│   └── style.css         → design completo (tema "cartão de ponto")
+│   ├── variables.css     → tokens de design (cores, tipografia, dark mode)
+│   ├── base.css          → reset + estilos globais
+│   ├── components.css    → componentes reutilizados (tabelas, filtros, modal)
+│   └── css por página    → auth.css, dashboard.css, overtime.css, nightshift.css, helper.css, account.css, admin.css, bank.css
 └── js/
     ├── config.js         → constantes (URL da API, chaves do localStorage)
     ├── api.js            → camada de acesso à API (fetch + token + erros)
@@ -31,7 +34,7 @@ public/
     ├── overtime.js       → lógica de horas extras
     ├── nightshift.js     → lógica de turnos noturnos
     ├── mealvoucher.js    → lógica de vales-refeição
-├── bank.js             → lógica do banco de horas
+│   ├── bank.js             → lógica do banco de horas
     ├── account.js        → lógica da página "Minha conta"
     └── admin.js          → lógica de administração
 ```

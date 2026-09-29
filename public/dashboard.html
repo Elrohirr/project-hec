@@ -4,18 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Início — Hour Flow</title>
-    <script>
-    // Aplica o tema salvo antes do primeiro paint, para evitar o "flash"
-    // de tema claro seguido de escuro. Mantido inline (sem depender de
-    // js/theme.js, que só carrega depois do CSS/HTML).
-    (function () {
-      try {
-        if (localStorage.getItem('hourflow_theme') === 'dark') {
-          document.documentElement.setAttribute('data-theme', 'dark');
-        }
-      } catch (e) {}
-    })();
-  </script>
+      <script src="js/theme-init.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/variables.css">
@@ -69,7 +58,6 @@
         </a>
 
         <a href="bank.html" class="module-card">
-          <span class="module-badge module-badge--beta">BETA</span>
           <span class="module-icon" aria-hidden="true">🏦</span>
           <h3>Banco de Horas</h3>
           <p>Simule um banco de horas com base nas horas extras mais antigas cadastradas.</p>
@@ -108,28 +96,6 @@
               <p>Registre as inconsistências de pagamento do contra-cheque.</p>
         </a>
 
-        <!--
-          ── TEMPLATES DE CARD DE MÓDULO ─────────────────────────────
-          Módulo ativo (com link):
-            <a href="pagina.html" class="module-card">
-              <span class="module-icon" aria-hidden="true">ÍCONE</span>
-              <h3>Nome do módulo</h3>
-              <p>Descrição.</p>
-            </a>
-
-          Módulo em breve (sem link):
-            <a class="module-card disabled" aria-disabled="true">
-              <span class="module-badge module-badge--soon">Em breve</span>
-              <span class="module-icon" aria-hidden="true">ÍCONE</span>
-              <h3>Nome do módulo</h3>
-              <p>Descrição.</p>
-            </a>
-
-          Dicas:
-          • Troque o emoji em <span class="module-icon">.
-          • Use module-badge--ready (no ar) / module-badge--new (novo) conforme o status.
-          • Basta remover a classe "disabled" e o <span class="module-badge"> quando o módulo for lançado.
-        -->
       </div>
 
       <!-- Cards "A receber": consumidos por js/dashboard.js -->
@@ -178,6 +144,7 @@
             </div>
             <div class="receivable-lines" id="nightshift-receivable-lines" aria-live="polite"></div>
           </div>
+          
           <!-- Vale-refeição a receber -->
           <div class="account-section receivable-card">
             <div class="receivable-card-head">

@@ -2,29 +2,7 @@
 /* =========================================================
    Banco de horas
    ========================================================= */
-.bank-result-actions {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 6px;
-  margin-top: 16px;
-}
 
-.bank-result-actions .hint {
-  margin: 0;
-  font-size: 0.75rem;
-  color: var(--ink-soft);
-}
-
-.bank-result-actions .primary-button {
-  width: auto;
-  padding: 10px 22px;
-}
-
-.bank-disabled-cta:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
 
 .badge.bank-active {
   background: rgba(47, 111, 98, 0.12);

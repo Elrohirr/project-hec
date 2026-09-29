@@ -102,6 +102,9 @@ async function overtimeNetReceivableService(userId, scope) {
         {
             // stage 3: shape final
             $project: {
+                netHe50minutes: { $sum: { $subtract: ["$he50minutes", "$compensatedMinutesHe50"] } },
+                netHe75minutes: { $sum: { $subtract: ["$he75minutes", "$compensatedMinutesHe75"] } },
+                netHe100minutes: { $sum: { $subtract: ["$he100minutes", "$compensatedMinutesHe100"] } },
                 valueLost50: { $round: ["$valueLost50", 2] },
                 valueLost75: { $round: ["$valueLost75", 2] },
                 valueLost100: { $round: ["$valueLost100", 2] },

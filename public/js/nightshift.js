@@ -34,20 +34,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const infoPopup = document.getElementById('info-popup');
   const infoPopupClose = document.getElementById('info-popup-close');
 
-  const currencyFormatter = new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL'
-  });
-  // timeZone: 'UTC' evita que o navegador "puxe" a data pro fuso local
-  // e mostre um dia a menos (o backend salva as datas como UTC meia-noite).
-  const dateFormatter = new Intl.DateTimeFormat('pt-BR', { timeZone: 'UTC' });
-
-  const payDateFormatter = new Intl.DateTimeFormat('pt-BR', {
-    timeZone: 'UTC',
-    month: '2-digit',
-    year: 'numeric'
-  });
-
   let editingId = null; // null = criando novo registro; string = editando esse _id
   let recordsCache = []; // registros carregados, usados para preencher o form ao editar
   let currentPage = 1;
@@ -74,22 +60,11 @@ document.addEventListener('DOMContentLoaded', () => {
     return (h || 0) * 60 + (m || 0);
   }
 
-  function minutesToHHMM(totalMinutes) {
-    const h = String(Math.floor(totalMinutes / 60)).padStart(2, '0');
-    const m = String(totalMinutes % 60).padStart(2, '0');
-    return `${h}:${m}`;
-  }
-
   function updateSummary(totals) {
     summaryTotalClock.textContent = minutesToHHMM(totals?.nightMinutesClock || 0);
     summaryTotalReduced.textContent = minutesToHHMM(totals?.nightMinutesReduced || 0);
     summaryTotalNightValue.textContent = currencyFormatter.format(totals?.nightShiftValue || 0);
     summaryTotal.textContent = currencyFormatter.format(totals?.nightShiftValue || 0);
-
-    /*summaryTotalClock.textContent = minutesToHHMM(totalClockMinutes);
-    summaryTotalReduced.textContent = minutesToHHMM(totalReducedMinutes);
-    summaryTotalNightValue.textContent = currencyFormatter.format(totalValue);
-    summaryTotal.textContent = currencyFormatter.format(totalValue);*/
   }
 
   function renderRow(record) {
@@ -207,16 +182,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   cancelEditButton.addEventListener('click', exitEditMode);
 
-  function monthStartDate(monthValue) {
-    return `${monthValue}-01`;
-  }
-
-  function monthEndDate(monthValue) {
-    const [year, month] = monthValue.split('-').map(Number);
-    const lastDay = new Date(Date.UTC(year, month, 0)).getUTCDate();
-    return `${monthValue}-${String(lastDay).padStart(2, '0')}`;
-  }
-
   function getActiveFilters() {
     const filters = {};
     if (filterStartDate.value) filters.startDate = filterStartDate.value;
@@ -225,6 +190,17 @@ document.addEventListener('DOMContentLoaded', () => {
     if (filterPayMonthEnd.value) filters.endPayDate = monthEndDate(filterPayMonthEnd.value);
     if (filterSort.value) filters.sort = filterSort.value;
     return filters;
+  }
+
+  function saveCurrentFilterState() {
+    return saveFilterState(FILTER_PAGE_KEY, {
+      startDate: filterStartDate.value,
+      endDate: filterEndDate.value,
+      startPayDate: filterPayMonthStart.value,
+      endPayDate: filterPayMonthEnd.value,
+      sort: filterSort.value,
+      limit: pageLimitSelect.value
+    });
   }
 
   async function loadNightShifts(page = 1) {
@@ -249,13 +225,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   applyFiltersButton.addEventListener('click', () => {
-    saveFilterState(FILTER_PAGE_KEY, {
-      startDate: filterStartDate.value,
-      endDate: filterEndDate.value,
-      startPayDate: filterPayMonthStart.value,
-      endPayDate: filterPayMonthEnd.value,
-      sort: filterSort.value
-    });
+    saveCurrentFilterState()
     loadNightShifts(1);
   });
 
@@ -353,6 +323,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   pageLimitSelect.addEventListener('change', () => {
     pageLimit = Number(pageLimitSelect.value);
+    saveCurrentFilterState()
     loadNightShifts(1);
   });
 
@@ -361,7 +332,9 @@ document.addEventListener('DOMContentLoaded', () => {
     'filter-end-date': 'endDate',
     'filter-pay-month-start': 'startPayDate',
     'filter-pay-month-end': 'endPayDate',
-    'filter-sort': 'sort'
+    'filter-sort': 'sort',
+    'page-limit': 'limit'
   });
+  pageLimit = Number(pageLimitSelect.value) || pageLimit;
   loadNightShifts();
 });

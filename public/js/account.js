@@ -36,9 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
     button.textContent = isLoading ? loadingText : baseText;
   }
 
-  function formatWage(wage) {
-    return (typeof wage === 'number' && !Number.isNaN(wage)) ? String(wage) : '';
-  }
+  
 
   // ---- Carregar dados atuais do perfil (GET /user/profile) ------------------
   function loadProfile() {

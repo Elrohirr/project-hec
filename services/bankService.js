@@ -8,6 +8,7 @@ const { BadRequestError, NotFoundError } = require('../errors')
 // --------------------------- Encontra as horas extras elegíveis para compensar -----------------------------------------------------
 async function findEligibleOvetimes(userId, minutesNeeded, date, session) {
     const actualDate = getClosedMonthCutoff(date)
+    if (!minutesNeeded || minutesNeeded <= 0) throw new BadRequestError('As horas a compensar devem ser maiores que 0')
     const eligibles = await Overtime.find({
         createdBy: userId,
         isHoliday: false,

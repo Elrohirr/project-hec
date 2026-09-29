@@ -1,13 +1,15 @@
-const { extractTableFromPdf } = require('../services/mealVoucherService')
+const { StatusCodes } = require('http-status-codes')
+const { extractTableFromPdf, extractionPDFPipeline, filterEmptyDays, getRegistersByDay } = require('../services/importService')
+const { BadRequestError, NotFoundError } = require('../errors')
 
 const importPDFPreview = async (req, res) => {
     const buffer = req.file.buffer
     const data = await extractTableFromPdf(buffer)
-    const items = data.pages[0].content
-    const célula = items.filter(item => item.str.includes('24/01/2026'))
-    const linha = items.filter(item => Math.abs(item.y - 467.171) < 1)
-    console.log(linha)
-    res.send('import pdf')
+    const finalDoc = extractionPDFPipeline(data)
+    const finalDocFiltred = filterEmptyDays(finalDoc)
+    const preview = getRegistersByDay(finalDocFiltred)
+
+    res.status(StatusCodes.OK).json({ array: preview, length: preview.length })
 }
 
 const confirmPDFImport = async (req, res) => {

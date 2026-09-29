@@ -1,7 +1,6 @@
 const MealVoucher = require('../models/MealVoucher')
 const NightShift = require('../models/NightShift')
 const MealVoucherConfig = require('../models/MealVoucherConfig')
-const PDFExtractPromise = require('pdf.js-extract')
 const { calcMealVoucher, extractPayDate } = require('../utils/rules')
 const { NotFoundError } = require('../errors')
 
@@ -133,17 +132,5 @@ async function deleteMealVoucherService(ref_Id, session) {
     return mealVoucher
 }
 
-// será extraído daqui quando a função estiver em uma estrutura mais avançada
-async function extractTableFromPdf(buffer) {
-    const PDFExtract = await PDFExtractPromise
-    const pdfExtract = new PDFExtract()
-    const options = {}
-    return new Promise((resolve, reject) => {
-        pdfExtract.extractBuffer(buffer, options, (err, data) => {
-            if (err) return reject(err)
-            resolve(data)
-        })
-    })
-}
 
-module.exports = { createMealVoucherService, updateMealVoucherService, deleteMealVoucherService, extractTableFromPdf }
+module.exports = { createMealVoucherService, updateMealVoucherService, deleteMealVoucherService }

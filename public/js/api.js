@@ -108,7 +108,7 @@ const Api = {
       // Sem essa checagem, um 401 de login/senha errada (sem token) também deslogaria/redirecionaria à toa
       if (response.status === 401 && token) {
         this.clearSession();
-        window.location.href = '/index.html'
+        window.location.href = 'index.html'
         throw new ApiError('Sessão expirada', 401)
       }
       const message = data?.msg || data?.message || data?.error || 'Ocorreu um erro inesperado.';

@@ -34,7 +34,6 @@
     <a href="#vale-lanche">Vale lanche</a>
     <a href="#banco-de-horas">Banco de horas</a>
     <a href="#pdf">Importação de PDF</a>
-    <!--<a href="#admin">Administração</a>-->
     <a href="#regras">Regras em resumo</a>
     <a href="#faq">Dúvidas frequentes</a>
     <a href="#glossario">Glossário</a>
@@ -120,7 +119,7 @@
     <section id="banco-de-horas" class="searchable">
       <h2>Banco de horas</h2>
       <p>O banco de horas guarda o saldo das horas extras destinadas a compensação, separado por faixa (50%, 75% e 100%).</p>
-      <div class="note warn"><strong>Modo simulação</strong>Por enquanto, o banco de horas funciona apenas em <strong>modo simulação</strong>: você consulta o saldo e simula compensações, mas os botões de confirmar e cancelar ficam desativados. A liberação completa será anunciada em “Novidades”.</div>
+      <div class="note"><strong>Como funciona</strong>Você pode <strong>simular</strong> uma compensação primeiro (nada é gravado) e depois <strong>confirmar</strong> para aplicar ao saldo. No confirmar, o servidor recalcula a elegibilidade das horas extras para garantir que o saldo segue correto.</div>
       <h3>Em que ordem as horas são consumidas</h3>
       <div class="order" aria-label="Ordem de compensação">
         <span class="chip">Registro mais antigo primeiro</span><span class="arrow">→</span>
@@ -169,7 +168,7 @@
             <tr><td>Ordem de compensação</td><td>Registro mais antigo primeiro; dentro dele, 50% → 75% → 100%.</td></tr>
             <tr><td>Registro compensado</td><td>Não pode ser editado enquanto houver horas compensadas.</td></tr>
             <tr><td>Registro importado de PDF</td><td>Não pode ser editado; compensações importadas não podem ser canceladas.</td></tr>
-            <tr><td>Banco de horas</td><td>Em modo simulação: sem confirmar nem cancelar por enquanto.</td></tr>
+            <tr><td>Banco de horas</td><td>Compensações confirmadas podem ser canceladas pelo histórico; cancelar restaura as horas extras usadas.</td></tr>
             <tr><td>Sessão</td><td>Expira por segurança; entre novamente para continuar.</td></tr>
           </tbody>
         </table>
@@ -180,7 +179,7 @@
       <h2>Dúvidas frequentes</h2>
       <details><summary>Por que não consigo editar uma hora extra?</summary><div class="a"><p>Há dois motivos possíveis: parte das horas já foi compensada no banco de horas, ou o registro veio de uma importação de PDF. Nos dois casos a edição é bloqueada para proteger a consistência dos valores.</p></div></details>
       <details><summary>Meu vale lanche do adicional noturno não apareceu. O que houve?</summary><div class="a"><p>Provavelmente existe uma hora extra no mesmo dia. Nesse caso vale só o vale da hora extra. Se essa hora extra for cancelada, o vale do noturno volta sozinho.</p></div></details>
-      <details><summary>Por que os botões de confirmar e cancelar do banco de horas estão desativados?</summary><div class="a"><p>O banco de horas está em modo simulação. Você já consegue ver o saldo e simular, mas a confirmação será liberada em uma próxima versão.</p></div></details>
+      <details><summary>Posso desfazer uma compensação confirmada no banco de horas?</summary><div class="a"><p>Sim. No histórico de compensações, use o botão “Cancelar” — o sistema restaura exatamente as horas e os valores consumidos. Compensações vindas de importação de PDF não podem ser canceladas.</p></div></details>
       <details><summary>O valor de uma hora extra antiga não bate com meu salário atual.</summary><div class="a"><p>É o esperado. Cada registro usa o salário da época em que foi feito, por isso reajustes não mudam valores passados.</p></div></details>
       <details><summary>Fui desconectado sozinho. Perdi o que estava fazendo?</summary><div class="a"><p>A sessão expira por segurança. O que já foi salvo continua lá; só o que estava sendo digitado e não foi enviado se perde. Entre novamente e repita.</p></div></details>
       <details><summary>Uma hora extra que fiz este mês não aparece no painel do mês.</summary><div class="a"><p>O painel agrupa pela data de pagamento. O registro pode estar em um período de pagamento posterior. Ajuste o filtro de data para localizá-lo.</p></div></details>
@@ -197,7 +196,7 @@
         <dt>Data de pagamento</dt><dd>Mês em que o valor entra na folha; é o critério usado no painel.</dd>
         <dt>Faixa</dt><dd>Percentual de acréscimo da hora extra (50%, 75% ou 100%).</dd>
         <dt>Hora reduzida</dt><dd>Hora noturna de 52 min 30 s, conforme a CLT.</dd>
-        <dt>Modo simulação</dt><dd>Consulta e simulação sem gravar alterações no saldo.</dd>
+        <dt>Simulação</dt><dd>Consulta de como ficaria a compensação, sem gravar alterações no saldo. A confirmação é o passo que grava.</dd>
       </dl>
     </section>
   </main>

@@ -9,4 +9,19 @@ function roundCurrency(value, decimals = 2) {
     return Math.round(value * factor) / factor
 }
 
-module.exports = { capitalize, roundCurrency }
+function findColumn(itemX, map) {
+
+    var minor = Math.abs(itemX - map[0].x)
+    var column = map[0].column
+
+    for (let i = 1; i <= map.length - 1; i++) {
+        const distance = Math.abs(itemX - map[i].x)
+        if (distance <= minor) {
+            minor = distance
+            column = map[i].column
+        }
+    }
+    return column
+}
+
+module.exports = { capitalize, roundCurrency, findColumn }

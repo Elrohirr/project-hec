@@ -4,18 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Horas extras — Controle de Horas Extras</title>
-    <script>
-    // Aplica o tema salvo antes do primeiro paint, para evitar o "flash"
-    // de tema claro seguido de escuro. Mantido inline (sem depender de
-    // js/theme.js, que só carrega depois do CSS/HTML).
-    (function () {
-      try {
-        if (localStorage.getItem('hourflow_theme') === 'dark') {
-          document.documentElement.setAttribute('data-theme', 'dark');
-        }
-      } catch (e) {}
-    })();
-  </script>
+      <script src="js/theme-init.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/variables.css">
@@ -53,34 +42,26 @@
         <div class="summary-card">
           <span class="label">HE 50%</span>
           <span class="hint">Enc. Banco Horas 50%</span>
-          <div class="value-row">
-            <span class="value" id="summary-he50">—</span>
-            <span class="value-money" id="summary-he50-value"></span>
-          </div>
+          <span class="value hours-value" id="summary-he50">—</span>
+          <span class="value-money" id="summary-he50-value"></span>
         </div>
         <div class="summary-card">
           <span class="label">HE 75%</span>
           <span class="hint">Enc. Banco Horas 75%</span>
-          <div class="value-row">
-            <span class="value" id="summary-he75">—</span>
-            <span class="value-money" id="summary-he75-value"></span>
-          </div>
+          <span class="value hours-value" id="summary-he75">—</span>
+          <span class="value-money" id="summary-he75-value"></span>
         </div>
         <div class="summary-card">
           <span class="label">HE 100%</span>
           <span class="hint">Enc. Banco Horas 100%</span>
-          <span class="value-row">
-            <span class="value" id="summary-he100">—</span>
-            <span class="value-money" id="summary-he100-value"></span>
-          </span>
+          <span class="value hours-value" id="summary-he100">—</span>
+          <span class="value-money" id="summary-he100-value"></span>
         </div>
         <div class="summary-card">
           <span class="label">HE (Feriado)</span>
           <span class="hint">HE - 100%</span>
-          <span class="value-row">
-            <span class="value" id="summary-he-holiday">—</span>
-            <span class="value-money" id="summary-he-holiday-value"></span>
-          </span>
+          <span class="value hours-value" id="summary-he-holiday">—</span>
+          <span class="value-money" id="summary-he-holiday-value"></span>
         </div>
         <div class="summary-card total">
           <span class="label">Total a receber</span>
@@ -217,6 +198,7 @@
   <script src="js/auth-guard.js"></script>
   <script src="js/header.js"></script>
   <script src="js/filterState.js"></script>
+  <script src="js/format.js"></script>
   <script src="js/overtime.js"></script>
   <script src="js/theme.js"></script>
 </body>

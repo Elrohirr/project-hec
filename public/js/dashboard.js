@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ---- Helpers de DOM -----------------------------------------------------
 
-  function renderRow({ label, value, hint, hintBelow = false, total = false }) {
+  function renderRow({ label, value, hint, hintBelow = false, total = false, subnote = '' }) {
     const row = document.createElement('div');
     row.className = 'receivable-row' + (total ? ' total' : '');
 
@@ -86,6 +86,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     row.appendChild(groupEl);
+
+    // Linha pequena e discreta abaixo da linha principal (ex.: compensação no banco).
+    if (subnote) {
+      const subnoteEl = document.createElement('div');
+      subnoteEl.className = 'receivable-subnote';
+      subnoteEl.textContent = subnote;
+      row.appendChild(subnoteEl);
+    }
+
     return row;
   }
 
@@ -129,22 +138,22 @@ document.addEventListener('DOMContentLoaded', () => {
     renderLines(overtimeLines, [
       renderRow({
         label: 'HE 50%',
-        value: minutesToHHMM(distribution.he50),
+        value: hoursWithDecimal(distribution.he50),
         hint: formatCurrencyBRL(values.valueHe50)
       }),
       renderRow({
         label: 'HE 75%',
-        value: minutesToHHMM(distribution.he75),
+        value: hoursWithDecimal(distribution.he75),
         hint: formatCurrencyBRL(values.valueHe75)
       }),
       renderRow({
         label: 'HE 100%',
-        value: minutesToHHMM(he100Minutes - heHolidayMinutes),
+        value: hoursWithDecimal(he100Minutes - heHolidayMinutes),
         hint: formatCurrencyBRL(valueHe100 - valueHeHoliday)
       }),
       renderRow({
         label: 'HE Feriado',
-        value: minutesToHHMM(heHolidayMinutes),
+        value: hoursWithDecimal(heHolidayMinutes),
         hint: formatCurrencyBRL(valueHeHoliday)
       }),
       renderRow({
@@ -157,28 +166,57 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ---- Card: Horas extras (líquido) ---------------------------------------
 
-  function renderOvertimeLiquido(data) {
+  function renderOvertimeLiquido(data, grossData) {
     const safe = data || {};
+    const gross = grossData || {};
+    const grossDistribution = gross.distribution || {};
+    const grossValues = gross.values || {};
 
-    renderLines(overtimeLiquidLines, [
+    // Minutos compensados por tier são derivados da diferença bruto − líquido
+    // (ambos já vêm do endpoint /receivables — apenas exibição, sem API nova).
+    const compensatedMinutes = (grossMinutes, netMinutes) =>
+      Math.max(0, Number(grossMinutes || 0) - Number(netMinutes || 0));
+
+    const tiers = [
+      {
+        label: 'HE 50%',
+        netMinutes: safe.netHe50minutes,
+        netValue: Number(grossValues.valueHe50 || 0) - Number(safe.valueLost50 || 0),
+        compensated: compensatedMinutes(grossDistribution.he50, safe.netHe50minutes)
+      },
+      {
+        label: 'HE 75%',
+        netMinutes: safe.netHe75minutes,
+        netValue: Number(grossValues.valueHe75 || 0) - Number(safe.valueLost75 || 0),
+        compensated: compensatedMinutes(grossDistribution.he75, safe.netHe75minutes)
+      },
+      {
+        label: 'HE 100%',
+        netMinutes: safe.netHe100minutes,
+        netValue: Number(grossValues.valueHe100 || 0) - Number(safe.valueLost100 || 0),
+        compensated: compensatedMinutes(grossDistribution.he100, safe.netHe100minutes)
+      }
+    ];
+
+    // Mesmo formato do card Bruto: "HE X%" + HH:MM (X,XXh) + R$ líquido do tier.
+    const rows = tiers.map((tier) =>
       renderRow({
-        label: 'Desconto 50%',
-        value: formatCurrencyBRL(safe.valueLost50)
-      }),
-      renderRow({
-        label: 'Desconto 75%',
-        value: formatCurrencyBRL(safe.valueLost75)
-      }),
-      renderRow({
-        label: 'Desconto 100%',
-        value: formatCurrencyBRL(safe.valueLost100)
-      }),
-      renderRow({
-        label: 'Total líquido',
-        value: formatCurrencyBRL(safe.overtimeNetReceivable),
-        total: true
+        label: tier.label,
+        value: hoursWithDecimal(tier.netMinutes),
+        hint: formatCurrencyBRL(tier.netValue),
+        subnote: tier.compensated > 0
+          ? `−${minutesToHHMM(tier.compensated)} compensado no banco`
+          : ''
       })
-    ]);
+    );
+
+    rows.push(renderRow({
+      label: 'Total líquido',
+      value: formatCurrencyBRL(safe.overtimeNetReceivable),
+      total: true
+    }));
+
+    renderLines(overtimeLiquidLines, rows);
   }
 
   // ---- Card: Adicional noturno ----------------------------------------------
@@ -242,7 +280,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (currentRequest !== requestId) return; // resposta desatualizada
       hasData = true;
       renderOvertimeBruto(data?.overtimeReceivables);
-      renderOvertimeLiquido(data?.overtimeNetReceivables);
+      renderOvertimeLiquido(data?.overtimeNetReceivables, data?.overtimeReceivables);
       renderNightShift(data?.nightShiftReceivables);
       renderMealVoucher(data?.mealVoucherReceivables);
     } catch (err) {
