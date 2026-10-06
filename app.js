@@ -35,7 +35,7 @@ app.use('/api/v1/nightShift', authenticateUser, nightShiftRouter)
 app.use('/api/v1/mealvoucher', authenticateUser, mealVoucherRouter)
 app.use('/api/v1/user', authenticateUser, userRouter)
 app.use('/api/v1/admin', authenticateUser, authorizeUser, adminRouter)
-app.use('/api/v1/import', authenticateUser, importRouter)
+app.use('/api/v1/preview', authenticateUser, importRouter)
 app.use('/api/v1/bank', authenticateUser, bankRouter)
 app.use('/api/v1/receivables', authenticateUser, receivablesRouter)
 

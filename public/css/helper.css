@@ -16,12 +16,51 @@ No compartida com las demas telas (decisión: aislamiento). */
   --t50: #3b7ea1;
   --t75: #b8741a;
   --t100: #a83a3a;
+  --amber: #e2a400;
+  --amber-ink: #7a5400;
+  --teal: #35d6a8;
+  --danger: #b3432b;
   --font-head: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
   --font-body: "Public Sans", "Segoe UI", system-ui, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
   box-sizing: border-box;
   padding-top: env(safe-area-inset-top, 0px);
   padding-bottom: env(safe-area-inset-bottom, 0px);
+
+  .badge-day-off {
+    background: rgba(176, 105, 241, 0.12);
+    color: rgb(163, 106, 219);
+    font-weight: bold;
+    border-radius: 5px;
+  }
+
+  .badge-holiday {
+    background: rgba(226, 164, 0, 0.15);
+    color: var(--amber);
+    font-weight: bold;
+    border-radius: 5px;
+}
+.badge-status-paid {
+  background: rgba(47, 111, 98, 0.12);
+  color: var(--teal);
+  font-weight: bold;
+  border-radius: 5px;
+}
+
+.badge-status-banked {
+  background: rgba(22, 129, 216, 0.12);
+  color: rgb(77, 170, 247);
+  font-weight: bold;
+  border-radius: 5px;
+}
+
+  .badge-status-compensated,
+  .badge-status-partial {
+    background: rgba(214, 40, 40, 0.12);
+    color: var(--danger);
+    font-weight: bold;
+    border-radius: 5px;
+}
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {

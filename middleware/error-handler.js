@@ -11,7 +11,10 @@ const errorHandlerMiddleware = (err, req, res, next) => {
     // o erro E11000 do Mongo traz o nome da coleção no err.message; diferencia a origem do conflito
     if (/mealvouchers/i.test(err.message)) {
       customError.msg = `Não é permitido gerar dois vale-refeição para a mesma data e categoria.`
-    } else {
+    } else if ((/nightshifts/i.test(err.message))) {
+      customError.msg = `Não é permitido gerar dois registros de turno noturno para a mesma data.`
+    }
+    else {
       customError.msg = `Não é permitido criar dois registros de hora extra para a mesma data.`
     }
   }

@@ -159,6 +159,7 @@ function getRegistersByDay(data) {
             }
         }
 
+        // registros de turno noturno, tanto em dias de escala quanto com hora extra
         if (Object.hasOwn(data[i], 'Ad.N.') || Object.hasOwn(data[i], 'Ad.N HE.N')) {
             const date = extractDateFromDay(data[i].Data)
             previewArray.push({
@@ -167,8 +168,16 @@ function getRegistersByDay(data) {
                 nightHours: data[i]['Ad.N.'] || data[i]['Ad.N HE.N']
             })
         }
+
+        if (Object.hasOwn(data[i], 'Débito')) {
+            const date = extractDateFromDay(data[i].Data)
+            previewArray.push({
+                type: 'Compensação',
+                date,
+                hoursNeeded: data[i].Débito
+            })
+        }
     }
-    console.log({ previewArray, needsReviewArray })
     return { previewArray, needsReviewArray }
 }
 

@@ -1,9 +1,9 @@
 const mongoose = require('mongoose')
 const Overtime = require('../models/Overtime')
-const User = require('../models/User')
+const { createOvertimeService } = require('../services/createRegisterService')
 const { calcDistribution, extractPayDate, defineValue, bankMinutes } = require('../utils/rules')
-const { timeToMinutes, minutesToTime, validateFormat } = require('../utils/timeConversion')
-const { createMealVoucherService, updateMealVoucherService, deleteMealVoucherService } = require('../services/mealVoucherService')
+const { timeToMinutes, minutesToTime, validateFormat, validateDate } = require('../utils/timeConversion')
+const { updateMealVoucherService, deleteMealVoucherService } = require('../services/mealVoucherService')
 const { StatusCodes } = require('http-status-codes')
 const { BadRequestError, NotFoundError } = require('../errors')
 
@@ -100,48 +100,9 @@ const getOvertime = async (req, res) => {
 
 // --------------------------- POST um registro de hora extra do usuário -------------------------------------------------------------
 const createOvertime = async (req, res) => {
-    const session = await mongoose.startSession()
-    try {
-        const result = await session.withTransaction(async () => {
-            const { body: { workedHours, date, isDayOff, isHoliday }, user: { userId } } = req
-            if (!workedHours || !date) throw new BadRequestError('Por favor, informe quantas horas extras foram feitas e a data')
-            const wage = await User.findById(userId).select('wage').session(session)
-
-            //validar formato
-            validateFormat(workedHours, false)
-
-            //criar whitelist
-            const workedMinutes = timeToMinutes(workedHours)
-            const bankedMinutes = bankMinutes(workedMinutes, isHoliday)
-            const distributionMinutes = calcDistribution(workedMinutes, isDayOff, isHoliday)
-
-            const createFields = {
-                createdBy: userId,
-                workedHours,
-                workedMinutes,
-                date,
-                distributionMinutes,
-                distributionHours: {
-                    he50hours: minutesToTime(distributionMinutes.he50minutes),
-                    he75hours: minutesToTime(distributionMinutes.he75minutes),
-                    he100hours: minutesToTime(distributionMinutes.he100minutes)
-                },
-                values: defineValue(distributionMinutes, wage.wage),
-                wageAtCalculation: wage.wage,
-                payDate: extractPayDate(date, isHoliday),
-                isDayOff: isDayOff ?? false,
-                isHoliday: isHoliday ?? false,
-                bankedMinutes
-            }
-
-            const [overtime] = await Overtime.create([createFields], { session })
-            const mealVoucher = await createMealVoucherService(overtime, session)
-            return { overtime, mealVoucher }
-        })
-        res.status(StatusCodes.CREATED).json(result)
-    } finally {
-        await session.endSession()
-    }
+    const { body: { workedHours, date, isDayOff, isHoliday }, user: { userId } } = req
+    const result = await createOvertimeService({ date, workedHours, isHoliday, isDayOff, userId })
+    res.status(StatusCodes.CREATED).json(result)
 }
 
 // --------------------------- UPDATE apenas um registro de hora extra específico do usuário ------------------------------------------
@@ -165,13 +126,14 @@ const updateOvertime = async (req, res) => {
 
             //validar formato, whitelist e recaulcular regras de negócio
             validateFormat(finalWorkedHours, false)
+            const formatedDate = validateDate(finalDate)
             const finalWorkedMinutes = timeToMinutes(finalWorkedHours)
             const distributionMinutes = calcDistribution(finalWorkedMinutes, finalIsDayOff, finalIsHoliday)
 
             const updateFields = {
                 workedHours: finalWorkedHours,
                 workedMinutes: finalWorkedMinutes,
-                date: finalDate,
+                date: formatedDate,
                 distributionMinutes,
                 distributionHours: {
                     he50hours: minutesToTime(distributionMinutes.he50minutes),
@@ -180,7 +142,7 @@ const updateOvertime = async (req, res) => {
                 },
                 values: defineValue(distributionMinutes, wage),
                 wageAtCalculation: wage,
-                payDate: extractPayDate(finalDate, finalIsHoliday),
+                payDate: extractPayDate(formatedDate, finalIsHoliday),
                 isDayOff: finalIsDayOff,
                 isHoliday: finalIsHoliday,
                 bankedMinutes: bankMinutes(finalWorkedMinutes, finalIsHoliday)

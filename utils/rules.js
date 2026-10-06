@@ -50,12 +50,18 @@ function defineNightValue(reducedMinutes, wage) {
 }
 
 function extractPayDate(date, isHoliday) {
-    if (!date) return
-    const newDate = new Date(date)
-    if (isHoliday) {
-        return newDate.setMonth(newDate.getMonth() + 1)
-    }
-    return newDate.setMonth(newDate.getMonth() + 3)
+    if (!date) return undefined
+    const monthsToAdd = isHoliday ? 1 : 3
+    const year = date.getUTCFullYear()
+    const month = date.getUTCMonth()
+    const day = date.getUTCDate()
+    const targetMonthIndex = month + monthsToAdd
+
+    // último dia do mês alvo (dia 0 do mês seguinte, em UTC)
+    const lastDayOfTargetMonth = new Date(Date.UTC(year, targetMonthIndex + 1, 0)).getUTCDate()
+    const clampedDay = Math.min(day, lastDayOfTargetMonth)
+
+    return new Date(Date.UTC(year, targetMonthIndex, clampedDay))
 }
 
 function calcMealVoucher(minutes, nightHoursClock) {

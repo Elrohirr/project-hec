@@ -1,9 +1,10 @@
 const mongoose = require('mongoose')
 const User = require('../models/User')
 const NightShift = require('../models/NightShift')
+const { createNightShiftService } = require('../services/createRegisterService')
 const { defineNightValue, extractPayDate } = require('../utils/rules')
-const { createMealVoucherService, updateMealVoucherService, deleteMealVoucherService } = require('../services/mealVoucherService')
-const { timeToMinutes, minutesToTime, convertToReducedNightMinutes, validateFormat } = require('../utils/timeConversion')
+const { updateMealVoucherService, deleteMealVoucherService } = require('../services/mealVoucherService')
+const { timeToMinutes, minutesToTime, convertToReducedNightMinutes, validateFormat, validateDate } = require('../utils/timeConversion')
 const { StatusCodes } = require('http-status-codes')
 const { BadRequestError, NotFoundError } = require('../errors')
 
@@ -67,40 +68,10 @@ const getNightShift = async (req, res) => {
 
 // --------------------------- CREATE apenas um registro de turno noturno do usuário -----------------------------------------------------
 const createNightShift = async (req, res) => {
-    const session = await mongoose.startSession()
-    try {
-        const result = await session.withTransaction(async () => {
-            const { body: { date }, user: { userId } } = req
-            const nightHoursClock = (req.body.nightHoursClock || '07:00').trim()
-            if (!date) throw new BadRequestError('Por favor, insira a data do turno noturno')
-            const wage = await User.findById(userId).select('wage')
-
-            //validar formato
-            validateFormat(nightHoursClock, true)
-            const reducedMinutes = convertToReducedNightMinutes(nightHoursClock)
-
-            //whitelist
-            const createFields = {
-                createdBy: userId,
-                date,
-                nightHoursClock,
-                nightMinutesClock: timeToMinutes(nightHoursClock),
-                nightHoursReduced: minutesToTime(reducedMinutes),
-                nightMinutesReduced: reducedMinutes,
-                nightShiftValue: defineNightValue(reducedMinutes, wage.wage),
-                wageAtCalculation: wage.wage,
-                payDate: extractPayDate(date, true) // segundo parametro como true pois o pagamento de todo AD Noturno é no mês seguinte
-            }
-
-            const [nightShift] = await NightShift.create([createFields], { session })
-            const mealVoucher = await createMealVoucherService(nightShift, session)
-            return { nightShift, mealVoucher }
-        })
-        res.status(StatusCodes.CREATED).json(result)
-    }
-    finally {
-        await session.endSession()
-    }
+    const { body: { date }, user: { userId } } = req
+    const nightHoursClock = (req.body.nightHoursClock || '07:00').trim()
+    const result = await createNightShiftService({ date, nightHoursClock, userId })
+    res.status(StatusCodes.CREATED).json(result)
 }
 
 // --------------------------- PATCH apenas um registro de turno noturno do usuário -----------------------------------------------------
@@ -111,17 +82,17 @@ const updateNightShift = async (req, res) => {
             const { body: { date }, user: { userId }, params: { id: nightShiftId } } = req
             if (date === "") throw new BadRequestError('A data não pode ser vazia')
 
-            const wage = await User.findById(userId).select('wage')
-
             const oldNightShift = await NightShift.findOne({ createdBy: userId, _id: nightShiftId }).session(session)
             if (!oldNightShift) throw new NotFoundError("Registro de turno noturno não encontrado")
 
             // update parcial: se `nightHoursClock` vier vazio, aplica o mesmo fallback '07:00' do CREATE
             const finalNightHoursClock = ((req.body.nightHoursClock ?? oldNightShift.nightHoursClock) || '07:00').trim()
             const finalDate = req.body.date ?? oldNightShift.date
+            const wage = oldNightShift.wageAtCalculation
 
             //validar formato, whitelist e recaulcular regras de negócio
             validateFormat(finalNightHoursClock, true)
+            const formatedDate = validateDate(finalDate)
             const reducedMinutes = convertToReducedNightMinutes(finalNightHoursClock)
 
             const updateFields = {
@@ -129,10 +100,10 @@ const updateNightShift = async (req, res) => {
                 nightMinutesClock: timeToMinutes(finalNightHoursClock),
                 nightHoursReduced: minutesToTime(reducedMinutes),
                 nightMinutesReduced: reducedMinutes,
-                date: finalDate,
-                nightShiftValue: defineNightValue(reducedMinutes, wage.wage),
-                wageAtCalculation: wage.wage,
-                payDate: extractPayDate(finalDate, true) // segundo parametro como true pois o pagamento de todo AD Noturno é no mês seguinte
+                date: formatedDate,
+                nightShiftValue: defineNightValue(reducedMinutes, wage),
+                wageAtCalculation: wage,
+                payDate: extractPayDate(formatedDate, true) // segundo parametro como true pois o pagamento de todo AD Noturno é no mês seguinte
             }
 
             const newNightShift = await NightShift.findOneAndUpdate({ createdBy: userId, _id: nightShiftId },

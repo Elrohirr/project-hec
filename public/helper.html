@@ -87,6 +87,16 @@
         <li>Se parte das horas já foi <strong>compensada</strong>, o registro fica <strong>bloqueado para edição</strong>. Para alterá-lo, é preciso antes desfazer a compensação.</li>
         <li>Registros vindos de <strong>importação de PDF</strong> têm bloqueios adicionais (veja <a href="#pdf">Importação de PDF</a>).</li>
       </ul>
+      <h3>Tags</h3>
+      <p>Para faciliar a visualização, a tabela contém <strong>tags</strong> que ajudam a identificar rapidamente o que aquele registro significa. Temos:</p>
+      <ul>
+        <li><span class="badge-day-off">Folga:</span> Hora extra feita em dia de folga da escala.</li>
+        <li><span class="badge-holiday">Feriado:</span> Hora extra feita em data de feriado. Essa hora extra não entra para o banco de horas.</li>
+        <li><span class="badge-status-paid">Pago:</span> Hora extra que provavelmente já foi paga devido a data (mais de três meses) e não está mais disponível para ser compensada.</li>
+        <li><span class="badge-status-banked">No banco:</span> Hora extra está no banco e disponível para ser compensada.</li>
+        <li><span class="badge-status-partial">Parcial:</span> Hora extra que foi parcialmente compensada por algum registro de banco de horas. O valor líquido dessa HE é menor que o total quando foi criada.</li>
+        <li><span class="badge-status-compensated">Compensado:</span> Hora extra que foi totalmente compensada por algum registro de banco de horas. Seu valor passa a ser R$0.</li>
+      </ul>
       <h3>Horas para pagamento e horas para o banco</h3>
       <p>Cada registro pode ter uma parte destinada ao <strong>banco de horas</strong>. Essa parte não é paga em folha: fica como saldo para compensar folgas depois.</p>
     </section>
@@ -135,7 +145,7 @@
     </section>
 
     <section id="pdf" class="searchable">
-      <h2>Importação de PDF - (Ainda não implementado)</h2>
+      <h2>Importação de PDF - (Em produção)</h2>
       <p>Alguns registros podem ser criados a partir de um PDF importado. Para preservar a fidelidade ao documento original, eles têm proteções extras:</p>
       <ul>
         <li>Não podem ser editados pela tela comum.</li>
