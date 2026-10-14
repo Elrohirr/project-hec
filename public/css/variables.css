@@ -10,6 +10,10 @@
   --teal: #2f6f62;
   --danger: #b3432b;
 
+  /* Gráfico do dashboard (lido via getComputedStyle em js/dashboard.js) */
+  --chart-bar: #4f6bed;
+  --chart-line: #d64545;
+
   /* Tokens de conteúdo (texto e fundo de página/cards) — os únicos
      que mudam no modo escuro. --ink e --paper continuam fixos, pois
      também servem de "cromo" fixo do header, login e botões primários. */
@@ -37,5 +41,7 @@
   --amber-ink: #f2c14e;
   --teal: #35d6a8;
   --danger: #e2604a;
+  --chart-bar: #8ba2ff;
+  --chart-line: #ff7a7a;
   --shadow-card: 0 2px 14px rgba(0, 0, 0, 0.45);
 }

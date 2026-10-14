@@ -23,6 +23,7 @@
           <a href="nightshift.html">Turno noturno</a>
           <a href="mealvoucher.html">Vale-refeição</a>
           <a href="bank.html">Banco de Horas</a>
+          <!--<a href="import.html">Importar ponto</a>-->
         </nav>
       </div>
       <div class="user-area">
@@ -163,6 +164,26 @@
         </div>
       </section>
 
+      <!-- Gráfico "Horas extras por mês": consumido por js/dashboard.js -->
+      <section class="account-section chart-card" aria-labelledby="chart-horas-heading">
+        <div class="receivable-card-head">
+          <h3 id="chart-horas-heading">Horas extras realizadas por mês</h3>
+          <div class="receivables-scope-control chart-controls">
+            <div class="chart-mode-segment" role="group" aria-label="Modo do gráfico">
+              <button type="button" id="chart-mode-horas" aria-pressed="true">Horas</button>
+              <button type="button" id="chart-mode-valores" aria-pressed="false">Valores</button>
+            </div>
+            <label for="chart-year-select">Ano</label>
+            <select id="chart-year-select" class="scope-select" aria-label="Ano do gráfico de horas extras"></select>
+          </div>
+        </div>
+        <p class="hint chart-hint" id="chart-horas-hint">Mês de realização (quando a hora extra foi feita).</p>
+        <div id="chart-horas-error" class="error-box" role="alert" hidden></div>
+        <div class="chart-box">
+          <canvas id="chartHorasMes" aria-label="Gráfico de horas extras por mês"></canvas>
+        </div>
+      </section>
+
     </main>
   </div>
 
@@ -176,6 +197,7 @@
   <script src="js/motivationalMessages.js"></script>
   <script src="js/motivational.js"></script>
   <script src="js/whatsnew.js"></script>
+  <script src="js/vendor/chart.umd.min.js"></script>
   <script src="js/dashboard.js"></script>
   <script src="js/theme.js"></script>
 </body>

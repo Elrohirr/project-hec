@@ -2,6 +2,7 @@ const { overtimeReceivableService, overtimeNetReceivableService, nightShiftRecei
 const { getReceivableDateRange } = require('../utils/rules')
 const { StatusCodes } = require('http-status-codes')
 
+// agregações para os cards de recebíceis do dashboard
 const getReceivables = async (req, res) => {
     const { user: { userId }, query: { scope } } = req
     const scoped = getReceivableDateRange(scope, new Date())

@@ -80,8 +80,11 @@ const Api = {
    * @param {object} options - mesmas opções do fetch (method, body, etc.)
    */
   async request(path, options = {}) {
+    const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData;
     const headers = {
-      'Content-Type': 'application/json',
+      // FormData define o próprio Content-Type (com boundary); forçar
+      // 'application/json' aqui quebraria o upload multipart (ex.: PDF).
+      ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
       ...(options.headers || {})
     };
 
@@ -214,6 +217,22 @@ const Api = {
     });
   },
 
+  /** Totais mensais de HE — GET /graphic?year=YYYY.
+   *  Retorna sempre 12 itens [{ month: 1-12, minutes: { he50, he75, he100, holiday },
+   *  values: { he50, he75, he100, holiday } }]. `minutes` agrupa por `date`
+   *  (realização); `values` é o líquido agrupado por `payDate` (pagamento). */
+  async getOvertimeMonthlyTotals(year) {
+    // Falha cedo com mensagem clara em vez de gerar `?year=undefined`,
+    // que o backend rejeitaria com 400 ("Ano inválido").
+    const yearNumber = Number(year);
+    if (!Number.isInteger(yearNumber)) {
+      throw new ApiError('Ano inválido para o gráfico.', 400);
+    }
+    return this.request(`/graphic?year=${encodeURIComponent(yearNumber)}`, {
+      method: 'GET'
+    });
+  },
+
   // ---- Banco de horas - /api/v1/bank -------------------------------------
 
   /** GET /bank - saldo total de minutos + lista de registros. */
@@ -241,6 +260,26 @@ const Api = {
   async cancelBankCompensation(id) {
     return this.request(`/bank/cancel/${id}`, {
       method: 'PATCH'
+    });
+  },
+
+  // ---- Importação de ponto via PDF - /api/v1/preview -----------------------
+
+  /** POST /preview - envia o espelho de ponto (campo multer "file") e recebe { array: { previewArray, needsReviewArray } }. */
+  async previewPdfImport(file) {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.request('/preview', {
+      method: 'POST',
+      body: formData
+    });
+  },
+
+  /** POST /preview/confirm - confirma o lote (200, não 201). Retorna { created, rejected }. */
+  async confirmPdfImport(registers) {
+    return this.request('/preview/confirm', {
+      method: 'POST',
+      body: JSON.stringify({ registers })
     });
   },
 

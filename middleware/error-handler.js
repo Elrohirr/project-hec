@@ -8,11 +8,13 @@ const errorHandlerMiddleware = (err, req, res, next) => {
   }
   if (err.code === 11000 && err.keyValue.createdBy && err.keyValue.date) {
     customError.statusCode = StatusCodes.BAD_REQUEST
-    // o erro E11000 do Mongo traz o nome da coleção no err.message; diferencia a origem do conflito
+    // o erro E11000 do Mongo traz o nome da coleção no err.message; diferencia a origem do conflito. Coleção de hora extra é o padrão
     if (/mealvouchers/i.test(err.message)) {
       customError.msg = `Não é permitido gerar dois vale-refeição para a mesma data e categoria.`
     } else if ((/nightshifts/i.test(err.message))) {
       customError.msg = `Não é permitido gerar dois registros de turno noturno para a mesma data.`
+    } else if ((/bankcompensations/i.test(err.message))) {
+      customError.msg = `Não é permitido gerar dois registros de compensação para a mesma data.`
     }
     else {
       customError.msg = `Não é permitido criar dois registros de hora extra para a mesma data.`

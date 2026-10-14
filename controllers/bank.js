@@ -16,8 +16,7 @@ const simulateBankCompensation = async (req, res) => {
     if (!date) throw new BadRequestError('Por favor, informe a data da compensação.')
     validateFormat(hoursNeeded, false)
 
-    const minutesNeeded = timeToMinutes(hoursNeeded)
-    const entries = await findEligibleOvetimes(userId, minutesNeeded, date)
+    const entries = await findEligibleOvetimes(userId, hoursNeeded, date)
     res.status(StatusCodes.OK).json(entries)
 }
 
@@ -30,8 +29,7 @@ const confirmBankCompensation = async (req, res) => {
     if (!date) throw new BadRequestError('Por favor, informe a data da compensação.')
     validateFormat(hoursNeeded, false)
 
-    const minutesNeeded = timeToMinutes(hoursNeeded)
-    const bankCompensation = await confirmCompensation(userId, minutesNeeded, date)
+    const bankCompensation = await confirmCompensation(userId, hoursNeeded, date)
     res.status(StatusCodes.CREATED).json(bankCompensation)
 }
 

@@ -1,3 +1,234 @@
+const MESES_LABELS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+const CHART_MODO_HORAS = 'horas';
+const CHART_MODO_VALORES = 'valores';
+
+let chartHorasMes = null;
+/** Resposta bruta da API (12 itens { month, minutes, values }). Reuso ao trocar só o modo. */
+let respostaGrafico = [];
+let chartModo = CHART_MODO_HORAS;
+let chartAnoAtual = null;
+let chartRequestId = 0;
+
+const formatadorBRL = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+
+function modoGraficoValido(modo) {
+  return modo === CHART_MODO_VALORES ? CHART_MODO_VALORES : CHART_MODO_HORAS;
+}
+
+/** "XhYY" no tooltip (ex.: 490 min -> "8h10"). Recebe horas decimais. */
+function formatarHorasTooltip(horasDecimais) {
+  const totalMin = Math.max(0, Math.round((Number(horasDecimais) || 0) * 60));
+  const h = Math.floor(totalMin / 60);
+  const m = String(totalMin % 60).padStart(2, '0');
+  return `${h}h${m}`;
+}
+
+function formatarValorGrafico(valor, modo) {
+  if (modo === CHART_MODO_VALORES) return formatadorBRL.format(Number(valor) || 0);
+  return formatarHorasTooltip(valor);
+}
+
+/** 4 arrays de 12 posições (índice = month - 1). Horas: minutes/60. Valores: values direto. */
+function extrairSeries(resposta, modo) {
+  const series = { he50: Array(12).fill(0), he75: Array(12).fill(0), he100: Array(12).fill(0), holiday: Array(12).fill(0) };
+  (resposta || []).forEach((item) => {
+    const idx = Number(item?.month) - 1;
+    if (!Number.isInteger(idx) || idx < 0 || idx > 11) return;
+    if (modo === CHART_MODO_VALORES) {
+      const v = item?.values || {};
+      series.he50[idx] = Number(v.he50 ?? 0) || 0;
+      series.he75[idx] = Number(v.he75 ?? 0) || 0;
+      series.he100[idx] = Number(v.he100 ?? 0) || 0;
+      series.holiday[idx] = Number(v.holiday ?? 0) || 0;
+    } else {
+      const m = item?.minutes || {};
+      const paraHoras = (min) => Math.round(((Number(min ?? 0) || 0) / 60) * 100) / 100;
+      series.he50[idx] = paraHoras(m.he50);
+      series.he75[idx] = paraHoras(m.he75);
+      series.he100[idx] = paraHoras(m.he100);
+      series.holiday[idx] = paraHoras(m.holiday);
+    }
+  });
+  return series;
+}
+
+function somarMeses(series) {
+  return MESES_LABELS.map((_, i) => {
+    const total = (Number(series.he50[i]) || 0) + (Number(series.he75[i]) || 0)
+      + (Number(series.he100[i]) || 0) + (Number(series.holiday[i]) || 0);
+    return Math.round(total * 100) / 100;
+  });
+}
+
+function acumular(valores) {
+  let total = 0;
+  return (valores || []).map((valor) => {
+    total = Math.round((total + (Number(valor) || 0)) * 100) / 100;
+    return total;
+  });
+}
+
+function lerCssVar(nome, fallback, elemento) {
+  const alvo = elemento || document.documentElement;
+  const valor = getComputedStyle(alvo).getPropertyValue(nome);
+  const normalizado = (valor || '').trim();
+  return normalizado || fallback;
+}
+
+/** Cores das faixas ficam escopadas em .chart-card (não colidem com --line global da grade). */
+function elementoCoresGrafico() {
+  const canvas = document.getElementById('chartHorasMes');
+  const card = canvas ? canvas.closest('.chart-card') : null;
+  return card || document.documentElement;
+}
+
+function montarDados(modo) {
+  const el = elementoCoresGrafico();
+  const cores = {
+    he50: lerCssVar('--t50', '#4f46e5', el),
+    he75: lerCssVar('--t75', '#0284c7', el),
+    he100: lerCssVar('--t100', '#d97706', el),
+    holiday: lerCssVar('--tfer', '#dc2626', el),
+    linha: lerCssVar('--tline', '#111827', el)
+  };
+  const series = extrairSeries(respostaGrafico, modo);
+  const totais = somarMeses(series);
+  const acumulados = acumular(totais);
+  const barra = (label, data, cor) => ({
+    type: 'bar', label, data, yAxisID: 'y', order: 2, backgroundColor: cor, stack: 'faixas'
+  });
+  return {
+    labels: MESES_LABELS,
+    datasets: [
+      barra('50%', series.he50, cores.he50),
+      barra('75%', series.he75, cores.he75),
+      barra('100%', series.he100, cores.he100),
+      barra('100% feriado', series.holiday, cores.holiday),
+      {
+        type: 'line', label: 'Acumulado', data: acumulados, yAxisID: 'yAcum', order: 1,
+        borderColor: cores.linha, backgroundColor: cores.linha, tension: 0.3
+      }
+    ]
+  };
+}
+
+function montarOpcoes(modo) {
+  const corTexto = lerCssVar('--text', '#161f2b');
+  const corGrade = lerCssVar('--line', '#d8dcd3');
+  const tituloY = modo === CHART_MODO_VALORES ? 'Valor líquido no mês (R$)' : 'Horas no mês';
+  const noEixo = (v) => (modo === CHART_MODO_VALORES
+    ? formatadorBRL.format(Number(v) || 0)
+    : String(v ?? 0));
+  return {
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: { mode: 'index', intersect: false },
+    plugins: {
+      legend: { labels: { color: corTexto } },
+      tooltip: {
+        callbacks: {
+          label(ctx) {
+            return `${ctx.dataset?.label || ''}: ${formatarValorGrafico(ctx.parsed?.y, modo)}`;
+          },
+          footer(items) {
+            if (!items || !items.length) return '';
+            const idx = items[0].dataIndex;
+            const sets = items[0].chart?.data?.datasets || [];
+            let total = 0;
+            sets.forEach((ds) => {
+              if (ds?.yAxisID !== 'y') return;
+              total += Number(ds?.data?.[idx]) || 0;
+            });
+            total = Math.round(total * 100) / 100;
+            return `Total do mês: ${formatarValorGrafico(total, modo)}`;
+          }
+        }
+      }
+    },
+    scales: {
+      x: { stacked: true, ticks: { color: corTexto }, grid: { color: corGrade } },
+      y: {
+        stacked: true, beginAtZero: true,
+        title: { display: true, text: tituloY, color: corTexto },
+        ticks: { color: corTexto, callback: noEixo }, grid: { color: corGrade }
+      },
+      yAcum: {
+        stacked: false, position: 'right', beginAtZero: true,
+        title: { display: true, text: 'Acumulado', color: corTexto },
+        ticks: { color: corTexto, callback: noEixo }, grid: { drawOnChartArea: false }
+      }
+    }
+  };
+}
+
+function atualizarTextosGrafico(modo) {
+  const titulo = document.getElementById('chart-horas-heading');
+  if (titulo) {
+    titulo.textContent = modo === CHART_MODO_VALORES
+      ? 'Valor líquido recebido por mês'
+      : 'Horas extras realizadas por mês';
+  }
+  const hint = document.getElementById('chart-horas-hint');
+  if (hint) {
+    hint.textContent = modo === CHART_MODO_VALORES
+      ? 'Mês do pagamento (valor líquido, já descontado o banco de horas).'
+      : 'Mês de realização (quando a hora extra foi feita).';
+  }
+}
+
+function renderGrafico() {
+  const canvas = document.getElementById('chartHorasMes');
+  if (!canvas) return;
+  if (typeof Chart === 'undefined') {
+    const erro = document.getElementById('chart-horas-error');
+    if (erro) {
+      erro.textContent = 'Não foi possível carregar o gráfico (Chart.js indisponível).';
+      erro.hidden = false;
+    }
+    return;
+  }
+  atualizarTextosGrafico(chartModo);
+  const dados = montarDados(chartModo);
+  const opcoes = montarOpcoes(chartModo);
+  if (chartHorasMes) {
+    chartHorasMes.data = dados;
+    chartHorasMes.options = opcoes;
+    chartHorasMes.update();
+    return;
+  }
+  chartHorasMes = new Chart(canvas, { type: 'bar', data: dados, options: opcoes });
+}
+
+async function carregarChartHorasMes(ano) {
+  const erroBox = document.getElementById('chart-horas-error');
+  const anoNumero = Number(ano);
+  if (!Number.isInteger(anoNumero)) return;
+  if (anoNumero === chartAnoAtual && respostaGrafico.length) {
+    renderGrafico();
+    return;
+  }
+  const atual = ++chartRequestId;
+  try {
+    const bruto = await Api.getOvertimeMonthlyTotals(anoNumero);
+    if (atual !== chartRequestId) return;
+    const lista = Array.isArray(bruto) ? bruto : (bruto?.totals || bruto?.data || []);
+    respostaGrafico = Array.isArray(lista) ? lista : [];
+    chartAnoAtual = anoNumero;
+    renderGrafico();
+    if (erroBox) {
+      erroBox.textContent = '';
+      erroBox.hidden = true;
+    }
+  } catch (err) {
+    if (atual !== chartRequestId) return;
+    if (erroBox) {
+      erroBox.textContent = err?.message || 'Não foi possível carregar o gráfico de horas extras.';
+      erroBox.hidden = false;
+      erroBox.scrollIntoView({ block: 'nearest' });
+    }
+  }
+}
+
 /**
  * Lógica dos cards "A receber" do dashboard.
  *
@@ -298,16 +529,107 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   scopeSelect.addEventListener('change', () => {
-    saveFilterState(FILTER_PAGE_KEY, { receivablesScope: scopeSelect.value });
+    persistirEstadoDashboard();
     fetchReceivables(scopeSelect.value);
+  });
+
+  // ---- Gráfico "Horas extras por mês" --------------------------------------
+  const chartYearSelect = document.getElementById('chart-year-select');
+
+  function anoPadraoChart() {
+    return new Date().getFullYear();
+  }
+
+  function anoValidoChart(valor) {
+    const ano = Number(valor);
+    return Number.isInteger(ano) ? ano : anoPadraoChart();
+  }
+
+  function preencherAnosChart(anoSelecionado) {
+    if (!chartYearSelect) return;
+    const atual = anoPadraoChart();
+    const salvo = Number(anoSelecionado);
+    // Janela fixa ao redor do ano corrente: o ano corrente precisa estar
+    // sempre disponível. Antes a janela era montada ao redor do ano salvo,
+    // então um chartYear obsoleto (ex.: 2020) prendia o select em 2022–2018
+    // sem opção de voltar ao ano corrente — gráfico vazio persistente.
+    // Anos salvos fora da janela são considerados obsoletos e descartados.
+    const anos = [];
+    for (let i = 2; i >= -3; i -= 1) anos.push(atual + i);
+    const base = (Number.isInteger(salvo) && anos.includes(salvo)) ? salvo : atual;
+    chartYearSelect.innerHTML = '';
+    anos.forEach((ano) => {
+      const opt = document.createElement('option');
+      opt.value = String(ano);
+      opt.textContent = String(ano);
+      chartYearSelect.appendChild(opt);
+    });
+    chartYearSelect.value = String(base);
+  }
+
+  function lerEstadoDashboard() {
+    return getFilterState(FILTER_PAGE_KEY) || {};
+  }
+
+  function persistirEstadoDashboard() {
+    saveFilterState(FILTER_PAGE_KEY, {
+      ...lerEstadoDashboard(),
+      receivablesScope: scopeSelect.value,
+      chartYear: chartYearSelect ? chartYearSelect.value : undefined,
+      chartMode: chartModo
+    });
+  }
+
+  // ---- Gráfico: seletor Horas | Valores (segmentado, sem nova requisição) ----
+  const chartModeHoras = document.getElementById('chart-mode-horas');
+  const chartModeValores = document.getElementById('chart-mode-valores');
+
+  function sincronizarBotoesModo() {
+    if (chartModeHoras) chartModeHoras.setAttribute('aria-pressed', String(chartModo === CHART_MODO_HORAS));
+    if (chartModeValores) chartModeValores.setAttribute('aria-pressed', String(chartModo === CHART_MODO_VALORES));
+  }
+
+  function trocarModoGrafico(novoModo) {
+    const modo = modoGraficoValido(novoModo);
+    if (modo === chartModo) {
+      sincronizarBotoesModo();
+      return;
+    }
+    chartModo = modo; // só o modo: reusa respostaGrafico, sem fetch
+    sincronizarBotoesModo();
+    persistirEstadoDashboard();
+    renderGrafico();
+  }
+
+  chartModeHoras?.addEventListener('click', () => trocarModoGrafico(CHART_MODO_HORAS));
+  chartModeValores?.addEventListener('click', () => trocarModoGrafico(CHART_MODO_VALORES));
+
+  if (chartYearSelect) {
+    const estadoInicial = lerEstadoDashboard();
+    preencherAnosChart(estadoInicial.chartYear);
+    chartModo = modoGraficoValido(estadoInicial.chartMode);
+    sincronizarBotoesModo();
+    chartYearSelect.addEventListener('change', () => {
+      persistirEstadoDashboard();
+      carregarChartHorasMes(anoValidoChart(chartYearSelect.value));
+    });
+  } else {
+    sincronizarBotoesModo();
+  }
+
+  window.addEventListener('hourflow:theme-changed', () => {
+    if (respostaGrafico.length) renderGrafico(); // relê getComputedStyle, sem fetch
   });
 
   // ---- Carga inicial --------------------------------------------------------
   // Restaura o escopo salvo antes da primeira carga (migrado da chave antiga).
-  const dashboardState = getFilterState(FILTER_PAGE_KEY);
+  const dashboardState = lerEstadoDashboard();
   if (dashboardState && dashboardState.receivablesScope) {
     scopeSelect.value = dashboardState.receivablesScope;
   }
 
   fetchReceivables(scopeSelect.value);
+  carregarChartHorasMes(
+    chartYearSelect ? anoValidoChart(chartYearSelect.value) : anoPadraoChart()
+  );
 });

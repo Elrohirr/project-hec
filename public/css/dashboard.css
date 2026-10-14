@@ -279,6 +279,95 @@
 }
 
 /* =========================================================
+   Dashboard — gráfico "Horas extras por mês"
+   ========================================================= */
+.chart-card {
+  margin-top: 24px;
+  margin-bottom: 36px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.chart-card .error-box {
+  margin: 0 0 12px;
+}
+
+.chart-hint {
+  margin: 0 0 12px;
+}
+
+.chart-box {
+  position: relative;
+  height: 320px;
+  width: 100%;
+  min-width: 0;
+}
+
+.chart-box canvas {
+  max-width: 100%;
+}
+
+/* Cores do gráfico empilhado (lidas via getComputedStyle em js/dashboard.js).
+   Divergência do pedido: a spec pedia `--line` para a cor da linha, mas
+   `--line` já existe como cor da grade; usamos `--tline` para não colidir. */
+.chart-card {
+  --t50: #4f46e5;
+  --t75: #0284c7;
+  --t100: #d97706;
+  --tfer: #dc2626;
+  --tline: #111827;
+}
+
+[data-theme="dark"] .chart-card {
+  --t50: #818cf8;
+  --t75: #38bdf8;
+  --t100: #fbbf24;
+  --tfer: #f87171;
+  --tline: #f8fafc;
+}
+
+/* Seletor Horas | Valores: mesmo visual dos controles existentes */
+.chart-controls {
+  flex-wrap: wrap;
+}
+
+.chart-mode-segment {
+  display: inline-flex;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--surface);
+}
+
+.chart-mode-segment button {
+  border: 0;
+  background: transparent;
+  color: var(--ink-soft);
+  font-size: 0.82rem;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+.chart-mode-segment button + button {
+  border-left: 1px solid var(--line);
+}
+
+.chart-mode-segment button[aria-pressed="true"] {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+[data-theme="dark"] .chart-mode-segment button[aria-pressed="true"] {
+  background: var(--teal);
+  color: #0e1a22;
+}
+
+.chart-mode-segment button:focus-visible {
+  outline: 2px solid var(--amber);
+  outline-offset: -2px;
+}
+
+/* =========================================================
    Dashboard — banner motivacional
    ========================================================= */
 .motivational-banner {

@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Importar ponto — Controle de Horas Extras</title>
+  <script src="js/theme-init.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/import.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="app-header">
+      <div class="header-left">
+        <p class="brand-name">Hour Flow - Controle de Horas e Pagamentos</p>
+        <nav class="app-nav">
+          <a href="dashboard.html">Início</a>
+          <a href="overtime.html">Horas extras</a>
+          <a href="nightshift.html">Turno noturno</a>
+          <a href="mealvoucher.html">Vale-refeição</a>
+          <a href="bank.html">Banco de Horas</a>
+          <!--<a href="import.html" class="active">Importar ponto</a>-->
+        </nav>
+      </div>
+      <div class="user-area">
+        <span id="user-greeting"></span>
+        <a href="account.html">Minha conta</a>
+        <button id="logout-button" class="ghost-button" type="button">Sair</button>
+      </div>
+    </header>
+
+    <main class="app-content">
+      <div class="page-heading">
+        <h2>Importar ponto via PDF</h2>
+      </div>
+
+      <div class="import-layout">
+        <!-- 1. Quadro de avisos: bloco fixo, estático, sem lógica -->
+        <section class="form-card import-notices" aria-label="Avisos sobre a importação">
+          <h3>Avisos Importantes:</h3>
+          <ul>
+            <li>Antes de importar o PDF do ponto, confira antes se todos os dias lançados estão corretos. O sucesso da importação depende disso.</li>
+            <li>Lembre-se que você ainda é responsável pela validação do seu ponto. Caso tenha alguma marcação errada gerando débitos ou créditos, converse antes com o engenheiro ou o RH.</li>
+            <li>Verifique se o salário-hora atual condiz com o mês importado. Caso importe um mês passado com um salário diferente do sistema, os registros usaram o salário atual para cálculo, gerando valores errados.</li>
+            <li>Importe apenas o espelho de ponto oficial exportado do sistema do SAP Ponto (Link em <i>dashboard</i> ).</li>
+            <li>Itens marcados como "revisão" não são enviados na confirmação — regularize-os manualmente.</li>
+          </ul>
+        </section>
+
+        <!-- 2. Área de importação: drag-and-drop + botão seletor -->
+        <section class="form-card" aria-label="Enviar arquivo PDF">
+          <h3>Enviar espelho de ponto (PDF)</h3>
+
+          <div id="import-error-box" class="error-box" role="alert" hidden></div>
+          <div id="import-success-box" class="success-box" role="status" hidden></div>
+
+          <div id="import-dropzone" class="import-dropzone" role="button" tabindex="0" aria-label="Arraste o PDF para cá ou clique para selecionar">
+            <p class="import-dropzone-title">Arraste o arquivo PDF para cá</p>
+            <p class="import-dropzone-hint">ou clique para abrir o seletor de arquivos do sistema</p>
+            <button type="button" id="import-browse-button" class="ghost-button-light small">Selecionar arquivo</button>
+            <p id="import-file-name" class="import-dropzone-file" aria-live="polite"></p>
+            <input type="file" id="import-file-input" accept=".pdf,application/pdf" hidden>
+          </div>
+
+          <div class="import-actions">
+            <button type="button" id="import-upload-button" class="primary-button" disabled>Enviar PDF</button>
+          </div>
+        </section>
+
+        <!-- 3. Tabela de preview: POST /api/v1/preview -->
+        <section class="table-card" id="import-preview-section" hidden>
+          <div class="table-toolbar">
+            <strong>Prévia da importação</strong>
+          </div>
+
+          <div class="table-scroll">
+            <table class="overtime-table">
+              <thead>
+                <tr>
+                  <th>Data</th>
+                  <th>Tipo</th>
+                  <th>Detalhe</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="import-preview-body">
+                <!-- linhas geradas via JS -->
+              </tbody>
+            </table>
+          </div>
+          <div id="import-empty-state" class="empty-state" hidden>Nenhum item na prévia.</div>
+
+          <!-- 4. Botão Confirmar importação -->
+          <div class="import-confirm-bar">
+            <button type="button" id="confirm-import-button" class="primary-button" disabled>Confirmar importação</button>
+            <p class="import-confirm-hint">Confere os itens acima antes de confirmar.</p>
+          </div>
+        </section>
+
+        <!-- 3b. needsReviewArray: seção separada, visualmente distinta, sem Status -->
+        <section class="form-card import-review-card" id="import-review-section" hidden>
+          <h3>Itens que precisam de revisão</h3>
+          <p class="section-hint">Estes itens NÃO são enviados para a confirmação.</p>
+          <ul id="import-review-list" class="import-review-list"></ul>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/auth-guard.js"></script>
+  <script src="js/header.js"></script>
+  <script src="js/format.js"></script>
+  <script src="js/import.js"></script>
+  <script src="js/theme.js"></script>
+</body>
+</html>

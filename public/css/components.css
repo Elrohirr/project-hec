@@ -673,6 +673,14 @@
   color: var(--teal);
 }
 
+[data-theme="dark"] .import-notices li::marker {
+  color: var(--teal);
+}
+
+[data-theme="dark"] .import-notices {
+  border-left-color: var(--teal);
+}
+
 /* =========================================================
    Responsivo — mobile
    ========================================================= */

@@ -55,6 +55,7 @@
       applyTheme(next);
       setStoredTheme(next);
       syncToggleState(button, knob);
+      window.dispatchEvent(new CustomEvent('hourflow:theme-changed', { detail: { theme: next } }));
     });
 
     return button;

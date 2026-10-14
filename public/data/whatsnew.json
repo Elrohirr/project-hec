@@ -1,8 +1,16 @@
 [{
+    "version":"2.1.0",
+    "date":"14-10-2026",
+    "highlights":[
+      "Adicionado um gráfico em \"Dashboard\" de barra com linha acumulativa com dois modos: Horas e Valores. O modo horas realiza a soma de horas extras por adicional por mês, enquanto o modo valores realiza a soma monetária das horas extras por adicional em seus meses de pagamento. ",
+      "Corrigido um bug que permitia a simulação e confirmação de compensações de horas extras futuras. (Ex: solicitado banco no dia 07/10/2026 e o sistema consome hora extra do dia 10/10/2026 que foi lançada préviamente pelo usuário)."
+    ]
+  },
+  {
     "version":"2.0.1",
     "date":"06-10-2026",
     "highlights":[
-      "Corrigido bug que permitia a criação de dois registros de turno noturno no mesmo dia;",
+      "Corrigido um bug que permitia a criação de dois registros de turno noturno no mesmo dia;",
       "Incluído a explicação das tags do módulo \"Hora extra\" na documentação."
     ]
   },

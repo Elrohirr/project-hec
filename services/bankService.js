@@ -2,17 +2,20 @@ const mongoose = require('mongoose')
 const Overtime = require('../models/Overtime')
 const BankCompensation = require('../models/BankCompensation')
 const { getClosedMonthCutoff } = require('../utils/rules')
+const { timeToMinutes, validateDate } = require('../utils/timeConversion')
 const { capitalize, roundCurrency } = require('../utils/tools')
 const { BadRequestError, NotFoundError } = require('../errors')
 
 // --------------------------- Encontra as horas extras elegíveis para compensar -----------------------------------------------------
-async function findEligibleOvetimes(userId, minutesNeeded, date, session) {
-    const actualDate = getClosedMonthCutoff(date)
+async function findEligibleOvetimes(userId, hoursNeeded, date, session) {
+    const formatedDate = validateDate(date)
+    const cutOffDate = getClosedMonthCutoff(formatedDate)
+    const minutesNeeded = timeToMinutes(hoursNeeded)
     if (!minutesNeeded || minutesNeeded <= 0) throw new BadRequestError('As horas a compensar devem ser maiores que 0')
     const eligibles = await Overtime.find({
         createdBy: userId,
         isHoliday: false,
-        date: { $gte: actualDate },
+        date: { $gte: cutOffDate, $lte: formatedDate },
         $expr: { $lt: ['$compensatedMinutes', '$bankedMinutes'] },
     }).sort('date').session(session)
 
@@ -68,17 +71,18 @@ async function findEligibleOvetimes(userId, minutesNeeded, date, session) {
 
         if (remaining <= 0) break
     }
-    if (remaining > 0) throw new BadRequestError('Não há hora extra suficente no banco')
+    if (remaining > 0) throw new BadRequestError('Não há hora extra suficente no banco para a data específicada.')
 
     return entries
 }
 
 // --------------------------- Criar o documento banco de horas e alterar as horas extras -----------------------------------------------------
-async function confirmCompensation(userId, minutesNeeded, date) {
+async function confirmCompensation(userId, hoursNeeded, date) {
     const session = await mongoose.startSession()
     try {
         const result = await session.withTransaction(async () => {
-            const eligibles = await findEligibleOvetimes(userId, minutesNeeded, date, session)
+            const eligibles = await findEligibleOvetimes(userId, hoursNeeded, date, session)
+            const minutesNeeded = timeToMinutes(hoursNeeded)
 
             for (const overtime of eligibles) {
                 await Overtime.findByIdAndUpdate(

@@ -1,6 +1,7 @@
 const PDFExtractPromise = require('pdf.js-extract')
 const { timeToMinutes, minutesToTime } = require('../utils/timeConversion')
 const { findColumn } = require('../utils/tools')
+const { BadRequestError } = require('../errors')
 
 // extrai os dados brutos do pdf
 async function extractTableFromPdf(buffer) {
@@ -26,6 +27,9 @@ function extractionPDFPipeline(data) {
 
         const totaisLine = items.filter(item => item.str.includes('Totais'))
         const firstDate = items.filter(item => item.str.startsWith('01/') && item.x <= 15.7 + 1 && item.x >= 15.7 - 1)
+        if (firstDate.length === 0) { // lançamento de erro para PDFs importados que não são do espelho do ponto
+            throw new BadRequestError('PDF não reconhecido como espelho de ponto. Verifique se o arquivo enviado é o relatório correto.')
+        }
         let yRef = firstDate[0].y  // referencia inicial y do primeiro dia de dados
 
         for (let i = items.length - 1; i >= 0; i--) {
@@ -131,17 +135,26 @@ function getRegistersByDay(data) {
 
         // registros de datas que tenham crédito em dias de folga ou prorrogações/antecipações
         if (Object.hasOwn(data[i], 'Crédito') && (data[i].Horário === 'FOLG' || data[i].Horário === 'FOL2')) {
+            // alguns minutos podem vir como ìmpar. Nesses casos, pegar o valor de H.Trab - errado
             const date = extractDateFromDay(data[i].Data)
-            previewArray.push({
-                type: 'Hora extra',
-                date,
-                workedHours: data[i]['H.Trab'],
-                isDayOff: true
-            })
+            const credit = timeToMinutes(data[i].Crédito)
+            if (credit % 2 !== 0) {
+                needsReviewArray.push({
+                    date,
+                    msg: `Erro ao tentar registrar a hora extra do dia ${date}. Favor verificar com o administrador.`
+                })
+            } else {
+                previewArray.push({
+                    type: 'Hora extra',
+                    date,
+                    workedHours: data[i]['H.Trab'],
+                    isDayOff: false
+                })
+            }
 
             // registros de hora extra em dias de trabalho normal (prorrogações/antecipações)
         } else if (Object.hasOwn(data[i], 'Crédito')) {
-            // alguns minutos podem vir como ìmpar. Nesses casos, pegar o valor de H.Trab
+            // alguns minutos podem vir como ìmpar. Nesses casos, pegar o valor de H.Trab - errado
             const date = extractDateFromDay(data[i].Data)
             const credit = timeToMinutes(data[i].Crédito)
             if (credit % 2 !== 0) {
@@ -169,6 +182,7 @@ function getRegistersByDay(data) {
             })
         }
 
+        // registros de débito (compensações)
         if (Object.hasOwn(data[i], 'Débito')) {
             const date = extractDateFromDay(data[i].Data)
             previewArray.push({

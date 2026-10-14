@@ -1,9 +1,12 @@
 const { StatusCodes } = require('http-status-codes')
 const { createOvertimeService, createNightShiftService } = require('../services/createRegisterService')
+const { confirmCompensation } = require('../services/bankService')
 const { extractTableFromPdf, extractionPDFPipeline, filterEmptyDays, getRegistersByDay } = require('../services/importService')
 const { BadRequestError } = require('../errors')
 
+// --------------------------- extrai dados do pdf do ponto e monta a preview --------------------------------
 const importPDFPreview = async (req, res) => {
+    if (!req.file?.buffer) throw new BadRequestError('Arquivo não enviado.')
     const buffer = req.file.buffer
     const data = await extractTableFromPdf(buffer)
     const finalDoc = extractionPDFPipeline(data)
@@ -13,6 +16,7 @@ const importPDFPreview = async (req, res) => {
     res.status(StatusCodes.OK).json({ array: preview })
 }
 
+// usa vários serviços de criação de hora extra, adicional noturno e banco de horas a partir do resultado do import do pdf do ponto --------------------------------
 const confirmPDFImport = async (req, res) => {
     const { body: { registers }, user: { userId } } = req
     if (!registers) throw new BadRequestError('Por favor, envie a lista de dias.')
@@ -76,10 +80,11 @@ const confirmPDFImport = async (req, res) => {
                     rejected.push(errorFields)
                 }
             }
-            // ------------------------------------------------ para types desconhecidos e que não são type === débito -> envia ao rejected ------------------------------------------------------
-        } else if (registers[i].type !== 'Débito') {
+            // ------------------------------------------------ para types desconhecidos e que não são type === compensação -> envia ao rejected ------------------------------------------------------
+        } else if (registers[i].type !== 'Compensação') {
             const unknowFields = {
                 type: 'Desconhecido',
+                docType: registers[i].type,
                 date: registers[i].date,
                 msg: 'Registro desconhecido. Necessário verificação manual'
             }
@@ -87,11 +92,48 @@ const confirmPDFImport = async (req, res) => {
         }
     }
 
-    // pseudocódigo aqui:
-    // filtrar somente os type ===  débito
-    // criar loop for para criar os registros de banco de horas, adicionando ao created os com sucesso e adiconando ao rejected os rejeitados
+    // após criar todos os registros de hora extra e turno noturno, serão criados os registros de banco de horas, se houver
+    const onlyCompensations = registers.filter(day => day.type === 'Compensação')
+    for (let i = 0; i <= onlyCompensations.length - 1; i++) {
+        try {
+            const bankCompensation = await confirmCompensation(userId, onlyCompensations[i].hoursNeeded, onlyCompensations[i].date)
+            created.push(bankCompensation)
+        } catch (error) {
+            if (error.code === 11000) {
+                const errorFields = {
+                    type: onlyCompensations[i].type,
+                    date: onlyCompensations[i].date,
+                    msg: `Compensação do dia ${onlyCompensations[i].date} já cadastrada no sistema.`
+                }
+                rejected.push(errorFields)
+            } else {
+                const errorFields = {
+                    type: 'Compensação',
+                    date: onlyCompensations[i].date,
+                    msg: error.message
+                }
+                rejected.push(errorFields)
+            }
+        }
+    }
 
-    res.status(StatusCodes.CREATED).json({ created, rejected })
+    res.status(StatusCodes.OK).json({ created, rejected })
 }
 
-module.exports = { importPDFPreview, confirmPDFImport }
+const importPaycheck = async (req, res) => {
+    if (!req.file?.buffer) throw new BadRequestError('Arquivo não enviado.')
+    const buffer = req.file.buffer
+    const data = await extractTableFromPdf(buffer)
+    const items = data.pages[0].content
+    for (let i = items.length - 1; i >= 0; i--) {
+        if (items[i].str === ' ' || items[i].str === '') {
+            items.splice(i, 1)
+        }
+    }
+    res.json(items)
+}
+
+module.exports = {
+    importPDFPreview, confirmPDFImport,
+    importPaycheck
+}

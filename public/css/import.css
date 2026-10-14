@@ -1,0 +1,170 @@
+/* import.css — estilos exclusivos da tela de importação de ponto (import.html) */
+/* A base (variables/base/components) já cobre cards, tabelas, badges e dark mode via variáveis. */
+
+.import-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* 1. Quadro de avisos: card estático, usa tokens para herdar dark mode */
+.import-notices {
+  border-left: 4px solid var(--amber);
+}
+
+.import-notices ul {
+  margin: 0;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 0.9rem;
+  color: var(--text);
+}
+
+.import-notices li::marker {
+  color: var(--amber-ink);
+}
+
+/* 2. Zona de drag-and-drop */
+.import-dropzone {
+  border: 2px dashed var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: 32px 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.import-dropzone:hover,
+.import-dropzone.dragover {
+  border-color: var(--teal);
+  background: rgba(47, 111, 98, 0.06);
+}
+
+.import-dropzone:focus-visible {
+  outline: 2px solid var(--amber);
+  outline-offset: 2px;
+}
+
+.import-dropzone-title {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  margin: 0 0 8px;
+  color: var(--text);
+}
+
+.import-dropzone-hint {
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  margin: 0 0 16px;
+}
+
+.import-dropzone-file {
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  margin: 12px 0 0;
+  font-family: var(--font-mono);
+  word-break: break-all;
+}
+
+.import-dropzone-file:empty {
+  display: none;
+}
+
+.import-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.import-actions .primary-button {
+  flex: 1;
+}
+
+/* 3b. needsReview: seção visualmente distinta (alerta) */
+.import-review-card {
+  border: 1px solid rgba(179, 67, 43, 0.4);
+  border-left: 4px solid var(--danger);
+}
+
+.import-review-card h3 {
+  color: var(--danger);
+}
+
+.import-review-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.import-review-list li {
+  padding: 10px 12px;
+  border: 1px solid rgba(179, 67, 43, 0.25);
+  border-radius: var(--radius);
+  background: rgba(179, 67, 43, 0.06);
+  font-size: 0.88rem;
+}
+
+.import-review-list strong {
+  font-family: var(--font-mono);
+}
+
+/* 5. Status da tabela de preview */
+.badge.status-preview {
+  background: rgba(22, 129, 216, 0.12);
+  color: rgb(77, 170, 247);
+}
+
+.badge.status-created {
+  background: rgba(47, 111, 98, 0.12);
+  color: var(--teal);
+}
+
+.badge.status-rejected {
+  background: rgba(179, 67, 43, 0.12);
+  color: var(--danger);
+}
+
+.import-row-error {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--danger);
+  white-space: normal;
+}
+
+.import-confirm-bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  border-top: 1px solid var(--line);
+}
+
+.import-confirm-bar .primary-button {
+  width: auto;
+  min-width: 220px;
+}
+
+.import-confirm-hint {
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+  margin: 0;
+}
+
+@media (max-width: 480px) {
+  .import-confirm-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .import-confirm-bar .primary-button {
+    width: 100%;
+  }
+}
