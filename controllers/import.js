@@ -1,7 +1,8 @@
 const { StatusCodes } = require('http-status-codes')
-const { createOvertimeService, createNightShiftService } = require('../services/createRegisterService')
+const { createOvertimeService } = require('../services/overtimeService')
+const { createNightShiftService } = require('../services/nightShiftService')
 const { confirmCompensation } = require('../services/bankService')
-const { extractTableFromPdf, extractionPDFPipeline, filterEmptyDays, getRegistersByDay } = require('../services/importService')
+const { extractTableFromPdf, extractionPDFPipeline, filterEmptyDays, getRegistersByDay, clearEmptyStr } = require('../services/importService')
 const { BadRequestError } = require('../errors')
 
 // --------------------------- extrai dados do pdf do ponto e monta a preview --------------------------------
@@ -124,13 +125,10 @@ const importPaycheck = async (req, res) => {
     if (!req.file?.buffer) throw new BadRequestError('Arquivo não enviado.')
     const buffer = req.file.buffer
     const data = await extractTableFromPdf(buffer)
-    const items = data.pages[0].content
-    for (let i = items.length - 1; i >= 0; i--) {
-        if (items[i].str === ' ' || items[i].str === '') {
-            items.splice(i, 1)
-        }
-    }
-    res.json(items)
+    const items = clearEmptyStr(data.pages[0].content)
+    var itemSorted = items.sort(({ y: a }, { y: b }) => a - b)
+
+    res.status(StatusCodes.OK).json(itemSorted)
 }
 
 module.exports = {

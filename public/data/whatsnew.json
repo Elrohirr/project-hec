@@ -1,4 +1,12 @@
 [{
+    "version":"3.0.0",
+    "date":"21-10-2026",
+    "highlights":[
+      "Liberado a função de \"Registro Automático\". Essa função cria registros de hora extra, turno noturno, vale-lanche e compensações através da importação do PDF do SAP Ponto.",
+      "Adicionado a função de exclusão em massa de registros de hora extra e turno noturno, ambas respectivamente em suas páginas."
+    ]
+  },
+  {
     "version":"2.1.0",
     "date":"14-10-2026",
     "highlights":[

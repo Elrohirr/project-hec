@@ -885,3 +885,161 @@ body.modal-open {
     justify-content: flex-end;
   }
 }
+
+/* =========================================================
+   Seleção múltipla e ação em lote (selection.js)
+   ========================================================= */
+
+/* A coluna de seleção só aparece no modo de exclusão em massa
+   (classe `selection-active` aplicada no <table> pelo JS). */
+.overtime-table:not(.selection-active) .select-column {
+  display: none;
+}
+
+.select-column {
+  width: 44px;
+  padding-right: 8px !important;
+  padding-left: 8px !important;
+}
+
+/* Botão que liga/desliga o modo de exclusão em massa (barra de filtros) */
+.batch-toggle-button {
+  margin-left: auto;
+  border-color: var(--teal);
+  color: var(--teal);
+}
+
+.batch-toggle-button:hover {
+  border-color: var(--teal);
+  color: var(--teal);
+}
+
+.batch-toggle-button.active {
+  background: var(--teal);
+  border-color: var(--teal);
+  color: #fff;
+}
+
+.batch-toggle-button.active:hover {
+  color: #fff;
+}
+
+/* No modo escuro o --teal é claro: o texto do botão ativo precisa ser escuro. */
+[data-theme="dark"] .batch-toggle-button.active,
+[data-theme="dark"] .batch-toggle-button.active:hover {
+  color: #0e1a22;
+}
+
+.select-column input[type="checkbox"],
+.table-row-select {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--teal);
+  vertical-align: middle;
+}
+
+.table-row-select:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.selection-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 12px 16px;
+  border-top: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.selection-count {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.selection-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.button-danger,
+.button-ghost {
+  padding: 8px 14px;
+  border-radius: var(--radius);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.button-danger {
+  border: 1px solid var(--danger);
+  background: var(--danger);
+  color: #fff;
+}
+
+.button-danger:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.button-danger:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.button-ghost {
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--ink-soft);
+}
+
+.button-ghost:hover {
+  border-color: var(--ink-soft);
+  color: var(--text);
+}
+
+/* Modal de confirmação da exclusão em lote */
+.batch-confirm-text {
+  margin: 0 0 10px;
+  font-size: 0.95rem;
+  color: var(--text);
+}
+
+.batch-warning-text {
+  margin: 0 0 18px;
+  font-size: 0.85rem;
+  color: var(--danger);
+}
+
+.batch-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.batch-actions .primary-button,
+.batch-actions .ghost-button-light {
+  width: 100%;
+  margin-top: 0;
+}
+
+.batch-delete-spinner {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  margin-left: 8px;
+  vertical-align: middle;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: batch-spin 0.7s linear infinite;
+}
+
+@keyframes batch-spin {
+  to { transform: rotate(360deg); }
+}
+

@@ -23,7 +23,7 @@
           <a href="nightshift.html">Turno noturno</a>
           <a href="mealvoucher.html">Vale-refeição</a>
           <a href="bank.html">Banco de Horas</a>
-          <!--<a href="import.html">Importar ponto</a>-->
+          <a href="import.html">Importar ponto</a>
         </nav>
       </div>
       <div class="user-area">
@@ -64,17 +64,16 @@
           <p>Simule um banco de horas com base nas horas extras mais antigas cadastradas.</p>
         </a>
 
+        <a href="import.html" class="module-card">
+          <span class="module-icon" aria-hidden="true"> 📌 </span>
+          <h3>Registro automático</h3>
+          <p>Importe o PDF do ponto para registro automático de horas extras, turnos noturnos, vale-refeições e compensações.</p>
+        </a>
+
         <a href="https://fioris4.edpbr.com.br/sap/bc/ui2/flp#Shell-home" target="_blank" class="module-card">
               <span class="module-icon" aria-hidden="true">⏱️</span>
               <h3>Registro do Ponto</h3>
-              <p>Link do SAP Ponto para registrar entrada e saída dos turnos e emitir relatórios oficiais</p>
-        </a>
-
-        <!-- Card Admin: só fica visível para usuários com isAdmin === true (header.js) -->
-        <a href="admin.html" class="module-card" id="admin-module-card" hidden>
-          <span class="module-icon" aria-hidden="true">⚙️</span>
-          <h3>Administração</h3>
-          <p>Gerenciar configurações de vale-refeição e valores padrão.</p>
+              <p>Link do SAP Ponto para registrar entrada e saída dos turnos e emitir relatórios oficiais.</p>
         </a>
 
         <a href="helper.html" target="_blank" class="module-card">
@@ -82,13 +81,6 @@
               <h3>Documentação e ajuda</h3>
               <p>Está com dúvidas? Acesse aqui a documentação do projeto e saiba como utilizá-lo.</p>
             </a>
-
-        <a class="module-card disabled" aria-disabled="true">
-          <span class="module-badge module-badge--soon">Em breve</span>
-          <span class="module-icon" aria-hidden="true"> 📌 </span>
-          <h3>Registro automático</h3>
-          <p>Importe o PDF do ponto para cadastro automático de horas extras, turnos noturnos e vale refeição.</p>
-        </a>
 
         <a class="module-card disabled" aria-disabled="true">
               <span class="module-badge module-badge--soon">Em breve</span>
@@ -102,6 +94,13 @@
               <span class="module-icon" aria-hidden="true">❌</span>
               <h3>Inconsistências</h3>
               <p>Registre as inconsistências de pagamento do contra-cheque.</p>
+        </a>
+
+        <!-- Card Admin: só fica visível para usuários com isAdmin === true (header.js) -->
+        <a href="admin.html" class="module-card" id="admin-module-card" hidden>
+          <span class="module-icon" aria-hidden="true">⚙️</span>
+          <h3>Administração</h3>
+          <p>Gerenciar configurações de vale-refeição e valores padrão.</p>
         </a>
 
       </div>

@@ -10,7 +10,7 @@ function fileFilterPDF(req, file, cb) {
     if (mimetypeOk && extnameOk) {
         cb(null, true)
     } else {
-        cb(new BadRequestError('Apenas arquivos PDF são aceitos'), false)
+        cb(new BadRequestError('Apenas arquivos PDF são aceitos.'), false)
     }
 }
 

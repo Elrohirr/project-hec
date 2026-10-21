@@ -115,9 +115,10 @@
 }
 
 /* 5. Status da tabela de preview */
+/* "Prévia" = amarelo (--amber); "Criado" = verde (--teal); "Rejeitado" = vermelho */
 .badge.status-preview {
-  background: rgba(22, 129, 216, 0.12);
-  color: rgb(77, 170, 247);
+  background: rgba(226, 164, 0, 0.15);
+  color: var(--amber-ink);
 }
 
 .badge.status-created {
@@ -127,6 +128,23 @@
 
 .badge.status-rejected {
   background: rgba(179, 67, 43, 0.12);
+  color: var(--danger);
+}
+
+/* 6. Selos da coluna "Tipo" do preview do PDF
+   Hora extra = verde (--teal) | Turno noturno = azul | Compensação = vermelho */
+.badge.type-overtime {
+  background: rgba(47, 111, 98, 0.12);
+  color: var(--teal);
+}
+
+.badge.type-nightshift {
+  background: rgba(22, 129, 216, 0.12);
+  color: var(--blue-ink);
+}
+
+.badge.type-compensation {
+  background: rgba(214, 40, 40, 0.12);
   color: var(--danger);
 }
 

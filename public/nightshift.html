@@ -24,7 +24,7 @@
           <a href="nightshift.html" class="active">Turno noturno</a>
           <a href="mealvoucher.html">Vale-refeição</a>
           <a href="bank.html">Banco de Horas</a>
-          <!--<a href="import.html">Importar ponto</a>-->
+          <a href="import.html">Importar ponto</a>
         </nav>
       </div>
       <div class="user-area">
@@ -125,12 +125,18 @@
             </div>
             <button type="button" id="apply-filters-button" class="ghost-button-light small">Filtrar</button>
             <button type="button" id="clear-filters-button" class="ghost-button-light small">Limpar</button>
+            <button type="button" id="toggle-batch-select-button"
+              class="ghost-button-light small batch-toggle-button"
+              aria-pressed="false">Excluir em massa</button>
           </div>
 
           <div class="table-scroll">
-            <table class="overtime-table">
+            <table class="overtime-table" id="nightshift-table">
               <thead>
                 <tr>
+                  <th class="select-column">
+                    <input type="checkbox" id="select-all-nightshifts" aria-label="Selecionar todos os registros">
+                  </th>
                   <th>Data</th>
                   <th>Horário de relógio</th>
                   <th>Horário reduzido</th>
@@ -145,6 +151,7 @@
               </tbody>
             </table>
           </div>
+          <div id="selection-toolbar"></div>
 
           <div id="empty-state" class="empty-state" hidden>Nenhum registro encontrado.</div>
 
@@ -176,6 +183,8 @@
   <script src="js/header.js"></script>
   <script src="js/filterState.js"></script>
   <script src="js/format.js"></script>
+  <script src="js/modal.js"></script>
+  <script src="js/selection.js"></script>
   <script src="js/nightshift.js"></script>
   <script src="js/theme.js"></script>
 </body>

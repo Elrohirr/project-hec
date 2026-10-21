@@ -1,9 +1,10 @@
 const mongoose = require('mongoose')
 const User = require('../models/User')
 const NightShift = require('../models/NightShift')
-const { createNightShiftService } = require('../services/createRegisterService')
+const { createNightShiftService, deleteNightShiftService } = require('../services/nightShiftService')
+const { updateMealVoucherService } = require('../services/mealVoucherService')
 const { defineNightValue, extractPayDate } = require('../utils/rules')
-const { updateMealVoucherService, deleteMealVoucherService } = require('../services/mealVoucherService')
+const { validadeIdArray } = require('../utils/helper')
 const { timeToMinutes, minutesToTime, convertToReducedNightMinutes, validateFormat, validateDate } = require('../utils/timeConversion')
 const { StatusCodes } = require('http-status-codes')
 const { BadRequestError, NotFoundError } = require('../errors')
@@ -124,19 +125,32 @@ const updateNightShift = async (req, res) => {
 
 // --------------------------- DELETE apenas um registro de turno noturno do usuário -----------------------------------------------------
 const deleteNightShift = async (req, res) => {
-    const session = await mongoose.startSession()
-    try {
-        const result = await session.withTransaction(async () => {
-            const { user: { userId }, params: { id: nightShiftId } } = req
-            const nightShift = await NightShift.findOneAndDelete({ createdBy: userId, _id: nightShiftId }, { session })
-            if (!nightShift) throw new NotFoundError('Turno noturno não encontrada')
-            const mealVoucher = await deleteMealVoucherService(nightShift._id, session)
-            return { nightShift, mealVoucher }
-        })
-        res.status(StatusCodes.OK).json(result)
-    } finally {
-        await session.endSession()
-    }
+    const { user: { userId }, params: { id: nightShiftId } } = req
+    const result = await deleteNightShiftService(userId, nightShiftId)
+    res.status(StatusCodes.OK).json(result)
 }
 
-module.exports = { getAllNightShift, getNightShift, createNightShift, updateNightShift, deleteNightShift }
+const multiDeleteNightShift = async (req, res) => {
+    const { body: { nightShifts }, user: { userId } } = req
+
+    // validações
+    const validadedNightShifts = validadeIdArray(nightShifts, 'noturnas')
+
+    let deleted = []
+    let rejected = []
+
+    for (const nightShiftId of validadedNightShifts) {
+        try {
+            if (!mongoose.isValidObjectId(nightShiftId)) throw new BadRequestError('Objeto inválido.')
+            const nightShift = await deleteNightShiftService(userId, nightShiftId)
+            deleted.push(nightShift)
+        } catch (error) {
+            rejected.push({ id: nightShiftId, msg: error.message })
+        }
+    }
+
+    res.status(StatusCodes.OK).json({ deleted, rejected })
+
+}
+
+module.exports = { getAllNightShift, getNightShift, createNightShift, updateNightShift, deleteNightShift, multiDeleteNightShift }

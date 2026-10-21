@@ -23,7 +23,7 @@
           <a href="nightshift.html">Turno noturno</a>
           <a href="mealvoucher.html">Vale-refeição</a>
           <a href="bank.html">Banco de Horas</a>
-          <!--<a href="import.html" class="active">Importar ponto</a>-->
+          <a href="import.html" class="active">Importar ponto</a>
         </nav>
       </div>
       <div class="user-area">
@@ -35,7 +35,7 @@
 
     <main class="app-content">
       <div class="page-heading">
-        <h2>Importar ponto via PDF</h2>
+        <h2>Registro Automático - Import PDF</h2>
       </div>
 
       <div class="import-layout">
@@ -44,8 +44,8 @@
           <h3>Avisos Importantes:</h3>
           <ul>
             <li>Antes de importar o PDF do ponto, confira antes se todos os dias lançados estão corretos. O sucesso da importação depende disso.</li>
-            <li>Lembre-se que você ainda é responsável pela validação do seu ponto. Caso tenha alguma marcação errada gerando débitos ou créditos, converse antes com o engenheiro ou o RH.</li>
-            <li>Verifique se o salário-hora atual condiz com o mês importado. Caso importe um mês passado com um salário diferente do sistema, os registros usaram o salário atual para cálculo, gerando valores errados.</li>
+            <li>Lembre-se: você ainda é responsável pela validação do seu ponto. Caso tenha alguma marcação errada gerando débitos ou créditos, converse antes com o ETR ou o RH.</li>
+            <li>Verifique se o salário-hora atual condiz com o mês importado. Caso importe um mês passado com um salário-hora diferente do sistema, os registros usaram o salário atual para cálculo, gerando valores que não condizem com o real.</li>
             <li>Importe apenas o espelho de ponto oficial exportado do sistema do SAP Ponto (Link em <i>dashboard</i> ).</li>
             <li>Itens marcados como "revisão" não são enviados na confirmação — regularize-os manualmente.</li>
           </ul>
@@ -114,6 +114,7 @@
   <script src="js/config.js"></script>
   <script src="js/api.js"></script>
   <script src="js/auth-guard.js"></script>
+  <script src="js/filterState.js"></script>
   <script src="js/header.js"></script>
   <script src="js/format.js"></script>
   <script src="js/import.js"></script>

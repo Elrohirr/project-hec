@@ -3,7 +3,7 @@ const { timeToMinutes, minutesToTime } = require('../utils/timeConversion')
 const { findColumn } = require('../utils/tools')
 const { BadRequestError } = require('../errors')
 
-// extrai os dados brutos do pdf
+// extrai os dados brutos do pdf - usado em pdf ponto e contracheque
 async function extractTableFromPdf(buffer) {
     const PDFExtract = await PDFExtractPromise
     const pdfExtract = new PDFExtract()
@@ -16,14 +16,25 @@ async function extractTableFromPdf(buffer) {
     })
 }
 
+// remove strs vazias do pdf - - usado em pdf ponto e contracheque
+function clearEmptyStr(items) {
+    for (let i = items.length - 1; i >= 0; i--) {
+        if (items[i].str === ' ' || items[i].str === '') {
+            items.splice(i, 1)
+        }
+    }
+    return items
+}
+
 // pipeline para extração de dados de forma "burra" de várias tabelas do ponto
 function extractionPDFPipeline(data) {
 
     // iteração para cada página que contém a table com os dados
     let finalDoc = []
     for (let p = 0; p <= data.pages.length - 1; p += 2) {
-        // stage 1 - remove ruídos do pdf e pega
-        const items = data.pages[p].content
+
+        // stage 1 - remove ruídos e pega posições referenciais do pdf
+        const items = clearEmptyStr(data.pages[p].content)
 
         const totaisLine = items.filter(item => item.str.includes('Totais'))
         const firstDate = items.filter(item => item.str.startsWith('01/') && item.x <= 15.7 + 1 && item.x >= 15.7 - 1)
@@ -32,13 +43,7 @@ function extractionPDFPipeline(data) {
         }
         let yRef = firstDate[0].y  // referencia inicial y do primeiro dia de dados
 
-        for (let i = items.length - 1; i >= 0; i--) {
-            if (items[i].str === ' ' || items[i].str === '') {
-                items.splice(i, 1)
-            }
-        }
-
-        // stage 2 - filtra somente os valores em que y já representa linhas de dados utilizáveis dos dias e depois ordena em ordem crescente os y
+        // stage 2 - filtra somente os valores em que y já representa linhas de dados utilizáveis dos dias e depois ordena em ordem crescente por y
         var itemFiltred = items.filter((object) => object.y > yRef - 1)
         var itemSorted = itemFiltred.sort(({ y: a }, { y: b }) => a - b)
 
@@ -133,24 +138,15 @@ function getRegistersByDay(data) {
             })
         }
 
-        // registros de datas que tenham crédito em dias de folga ou prorrogações/antecipações
-        if (Object.hasOwn(data[i], 'Crédito') && (data[i].Horário === 'FOLG' || data[i].Horário === 'FOL2')) {
-            // alguns minutos podem vir como ìmpar. Nesses casos, pegar o valor de H.Trab - errado
+        // registros de datas que tenham horas trabalhadas em dias de folga
+        if (Object.hasOwn(data[i], 'H.Trab') && (data[i].Horário === 'FOLG' || data[i].Horário === 'FOL2')) {
             const date = extractDateFromDay(data[i].Data)
-            const credit = timeToMinutes(data[i].Crédito)
-            if (credit % 2 !== 0) {
-                needsReviewArray.push({
-                    date,
-                    msg: `Erro ao tentar registrar a hora extra do dia ${date}. Favor verificar com o administrador.`
-                })
-            } else {
-                previewArray.push({
-                    type: 'Hora extra',
-                    date,
-                    workedHours: data[i]['H.Trab'],
-                    isDayOff: false
-                })
-            }
+            previewArray.push({
+                type: 'Hora extra',
+                date,
+                workedHours: data[i]['H.Trab'],
+                isDayOff: true
+            })
 
             // registros de hora extra em dias de trabalho normal (prorrogações/antecipações)
         } else if (Object.hasOwn(data[i], 'Crédito')) {
@@ -195,4 +191,8 @@ function getRegistersByDay(data) {
     return { previewArray, needsReviewArray }
 }
 
-module.exports = { extractTableFromPdf, extractionPDFPipeline, filterEmptyDays, getRegistersByDay }
+module.exports = {
+    extractTableFromPdf, extractionPDFPipeline,
+    filterEmptyDays, getRegistersByDay,
+    clearEmptyStr
+}

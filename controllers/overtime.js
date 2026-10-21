@@ -1,9 +1,10 @@
 const mongoose = require('mongoose')
 const Overtime = require('../models/Overtime')
-const { createOvertimeService } = require('../services/createRegisterService')
+const { createOvertimeService, deleteOvertimeService } = require('../services/overtimeService')
 const { calcDistribution, extractPayDate, defineValue, bankMinutes } = require('../utils/rules')
 const { timeToMinutes, minutesToTime, validateFormat, validateDate } = require('../utils/timeConversion')
-const { updateMealVoucherService, deleteMealVoucherService } = require('../services/mealVoucherService')
+const { validadeIdArray } = require('../utils/helper')
+const { updateMealVoucherService } = require('../services/mealVoucherService')
 const { StatusCodes } = require('http-status-codes')
 const { BadRequestError, NotFoundError } = require('../errors')
 
@@ -165,19 +166,32 @@ const updateOvertime = async (req, res) => {
 
 // --------------------------- DELETE apenas um registro de hora extra específico do usuário ------------------------------------------
 const deleteOvertime = async (req, res) => {
-    const session = await mongoose.startSession()
-    try {
-        const result = await session.withTransaction(async () => {
-            const { user: { userId }, params: { id: overtimeId } } = req
-            const overtime = await Overtime.findOneAndDelete({ createdBy: userId, _id: overtimeId }, { session })
-            if (!overtime) throw new NotFoundError('Hora extra não encontrada')
-            const mealVoucher = await deleteMealVoucherService(overtime._id, session)
-            return { overtime, mealVoucher }
-        })
-        res.status(StatusCodes.OK).json(result)
-    } finally {
-        await session.endSession()
-    }
+    const { user: { userId }, params: { id: overtimeId } } = req
+    const result = await deleteOvertimeService(userId, overtimeId)
+    res.status(StatusCodes.OK).json(result)
 }
 
-module.exports = { getAllOvertime, getOvertime, createOvertime, updateOvertime, deleteOvertime }
+// --------------------------- DELETE vários registros de hora extra específico do usuário ------------------------------------------
+const multiDeleteOvertime = async (req, res) => {
+    const { body: { overtimes }, user: { userId } } = req
+
+    //validações
+    const validadedOvertimes = validadeIdArray(overtimes, 'extras')
+
+    let deleted = []
+    let rejected = []
+
+    for (const overtimeId of validadedOvertimes) {
+        try {
+            if (!mongoose.isValidObjectId(overtimeId)) throw new BadRequestError('Objeto inválido.')
+            const overtime = await deleteOvertimeService(userId, overtimeId)
+            deleted.push(overtime)
+        } catch (error) {
+            rejected.push({ id: overtimeId, msg: error.message })
+        }
+
+    }
+    res.status(StatusCodes.OK).json({ deleted, rejected })
+}
+
+module.exports = { getAllOvertime, getOvertime, createOvertime, updateOvertime, deleteOvertime, multiDeleteOvertime }

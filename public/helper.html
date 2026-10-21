@@ -33,7 +33,7 @@
     <a href="#adicional-noturno">Adicional noturno</a>
     <a href="#vale-lanche">Vale lanche</a>
     <a href="#banco-de-horas">Banco de horas</a>
-    <a href="#pdf">Importação de PDF</a>
+    <a href="#pdf">Registro automático</a>
     <a href="#regras">Regras em resumo</a>
     <a href="#faq">Dúvidas frequentes</a>
     <a href="#glossario">Glossário</a>
@@ -145,13 +145,9 @@
     </section>
 
     <section id="pdf" class="searchable">
-      <h2>Importação de PDF - (Em produção)</h2>
-      <p>Alguns registros podem ser criados a partir de um PDF importado. Para preservar a fidelidade ao documento original, eles têm proteções extras:</p>
-      <ul>
-        <li>Não podem ser editados pela tela comum.</li>
-        <li>Compensações importadas não podem ser canceladas.</li>
-      </ul>
-      <p>Se um dado importado estiver errado, fale com o administrador para corrigir na origem.</p>
+      <h2>Registro Automático - Importação de PDF</h2>
+      <p>Registros de hora extra, turno noturno, vale-lanche e compensações podem ser criados a partir de um PDF importado do SAP Ponto.</p>
+      <p>Antes de importar o PDF para o aplicativo, atente-se ao quadro de avisos importantes da página, pois o sucesso da importação depende do respeito às regras daquele quadro.</p>
     </section>
 
     
@@ -176,8 +172,7 @@
             <tr><td>Hora noturna</td><td>Reduzida pela CLT: 52 min 30 s = 1 hora (fator 8/7).</td></tr>
             <tr><td>Vale lanche no mesmo dia</td><td>O da hora extra prevalece sobre o do adicional noturno.</td></tr>
             <tr><td>Ordem de compensação</td><td>Registro mais antigo primeiro; dentro dele, 50% → 75% → 100%.</td></tr>
-            <tr><td>Registro compensado</td><td>Não pode ser editado enquanto houver horas compensadas.</td></tr>
-            <tr><td>Registro importado de PDF</td><td>Não pode ser editado; compensações importadas não podem ser canceladas.</td></tr>
+            <tr><td>Registro compensado</td><td>Não pode ser editado ou excluído enquanto houver horas compensadas.</td></tr>
             <tr><td>Banco de horas</td><td>Compensações confirmadas podem ser canceladas pelo histórico; cancelar restaura as horas extras usadas.</td></tr>
             <tr><td>Sessão</td><td>Expira por segurança; entre novamente para continuar.</td></tr>
           </tbody>
@@ -194,7 +189,6 @@
       <details><summary>Fui desconectado sozinho. Perdi o que estava fazendo?</summary><div class="a"><p>A sessão expira por segurança. O que já foi salvo continua lá; só o que estava sendo digitado e não foi enviado se perde. Entre novamente e repita.</p></div></details>
       <details><summary>Uma hora extra que fiz este mês não aparece no painel do mês.</summary><div class="a"><p>O painel agrupa pela data de pagamento. O registro pode estar em um período de pagamento posterior. Ajuste o filtro de data para localizá-lo.</p></div></details>
       <details><summary>Minha lista está incompleta ou vazia.</summary><div class="a"><p>Verifique se há um filtro ativo. Os filtros são mantidos ao trocar de página durante a sessão.</p></div></details>
-      <details><summary>Não vejo as opções de administração.</summary><div class="a"><p>Elas aparecem só para contas de administrador. Se você acha que deveria ter acesso, fale com o responsável pela ferramenta.</p></div></details>
     </section>
 
     <section id="glossario" class="searchable">

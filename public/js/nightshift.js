@@ -40,6 +40,23 @@ document.addEventListener('DOMContentLoaded', () => {
   let pageLimit = 10;
   let totalPages = 1;
 
+  // Seleção múltipla / ação em lote
+  const selectionState = Selection.createState();
+  const selectionToolbarContainer = document.getElementById('selection-toolbar');
+  const selectAllCheckbox = document.getElementById('select-all-nightshifts');
+  const toggleBatchSelectButton = document.getElementById('toggle-batch-select-button');
+  const nightshiftTable = document.getElementById('nightshift-table');
+  selectionState.table = nightshiftTable;
+
+  // Liga/desliga o modo de exclusão em massa (mostra a coluna de checkboxes).
+  function setBatchMode(enabled) {
+    Selection.setTableSelectionMode(selectionState, enabled, { table: nightshiftTable });
+    if (!toggleBatchSelectButton) return;
+    toggleBatchSelectButton.classList.toggle('active', enabled);
+    toggleBatchSelectButton.setAttribute('aria-pressed', enabled ? 'true' : 'false');
+    toggleBatchSelectButton.textContent = enabled ? 'Cancelar' : 'Excluir em massa';
+  }
+
   function formatDate(isoString) {
     return dateFormatter.format(new Date(isoString));
   }
@@ -71,6 +88,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const tr = document.createElement('tr');
 
     tr.innerHTML = `
+      <td class="select-column">
+        <input type="checkbox" class="table-row-select" data-id="${record._id}"
+          aria-label="Selecionar registro de ${formatDate(record.date)}">
+      </td>
       <td>${formatDate(record.date)}</td>
       <td class="numeric">${record.nightHoursClock ?? '07:00'}</td>
       <td class="numeric">${record.nightHoursReduced ?? '08:00'}</td>
@@ -90,6 +111,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const actionsMenu = tr.querySelector('.actions-menu');
     const dropdown = tr.querySelector('.actions-dropdown');
+    const rowCheckbox = tr.querySelector('.table-row-select');
+    if (rowCheckbox) {
+      Selection.registerRow(selectionState, record._id, rowCheckbox);
+    }
     tr.querySelector('.actions-toggle').addEventListener('click', (event) => {
       event.stopPropagation();
       toggleActionsMenu(actionsMenu, dropdown);
@@ -130,12 +155,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function renderTable(records) {
     tableBody.innerHTML = '';
+    // A página mudou: a seleção da página anterior não é mais válida.
+    Selection.resetRows(selectionState);
     if (!records.length) {
       emptyState.hidden = false;
+      Selection.setAllCheckboxDisabled(selectionState, true);
       return;
     }
     emptyState.hidden = true;
+    Selection.setAllCheckboxDisabled(selectionState, false);
     records.forEach((record) => tableBody.appendChild(renderRow(record)));
+    Selection.refreshSelectAll(selectionState);
   }
 
   async function handleDelete(id) {
@@ -148,6 +178,34 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (err) {
       alert(err.message || 'Não foi possível excluir o registro.');
     }
+  }
+
+  /**
+   * Exclusão em lote dos registros selecionados.
+   */
+  async function handleBatchDelete() {
+    const ids = Selection.getSelectedIds(selectionState);
+    if (!ids.length) return;
+
+    Selection.confirmAndDeleteBatch(selectionState, recordsCache, {
+      title: 'Excluir turnos noturnos',
+      warning: 'Esta ação não pode ser desfeita.',
+      submitLabel: 'Excluir',
+      onConfirm: (batchIds) => Api.multiDeleteNightShifts(batchIds),
+      onResult: async (result) => {
+        const deleted = result?.deleted?.length ?? 0;
+        const rejected = result?.rejected?.length ?? 0;
+        await loadNightShifts(currentPage);
+        // Sai do modo de exclusão em massa: as checkboxes somem.
+        setBatchMode(false);
+        if (rejected > 0) {
+          alert(`${deleted} registro(s) excluído(s). ${rejected} registro(s) não puderam ser excluídos.`);
+        }
+      },
+      onNetworkError: (err) => {
+        alert(err?.message || 'Não foi possível excluir os registros selecionados.');
+      }
+    });
   }
 
   async function handleEditClick(id) {
@@ -336,5 +394,24 @@ document.addEventListener('DOMContentLoaded', () => {
     'page-limit': 'limit'
   });
   pageLimit = Number(pageLimitSelect.value) || pageLimit;
+
+  // Seleção múltipla: barra de ação em lote + "selecionar todos"
+  Selection.buildBatchToolbar(selectionState, selectionToolbarContainer, {
+    idPrefix: 'nightshift-',
+    countLabel: 'registro(s) selecionado(s)',
+    deleteLabel: 'Excluir selecionados',
+    clearLabel: 'Limpar seleção'
+  });
+  selectionState.onBatchDelete = handleBatchDelete;
+  selectionState.onLimitReached = (max) => {
+    alert(`É possível selecionar no máximo ${max} registros por vez.`);
+  };
+  Selection.setAllCheckbox(selectionState, selectAllCheckbox, false);
+  if (toggleBatchSelectButton) {
+    toggleBatchSelectButton.addEventListener('click', () => {
+      setBatchMode(!selectionState.selectionEnabled);
+    });
+  }
+
   loadNightShifts();
 });

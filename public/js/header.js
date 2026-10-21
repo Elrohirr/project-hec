@@ -12,7 +12,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const logoutButton = document.getElementById('logout-button');
   logoutButton?.addEventListener('click', () => {
-    clearAllFilterStates();
+    // clearAllFilterStates só existe nas páginas que carregam js/filterState.js.
+    // Sem esta guarda, o logout quebraria com ReferenceError nessas páginas.
+    if (typeof clearAllFilterStates === 'function') clearAllFilterStates();
     Api.logout();
     window.location.href = 'index.html';
   });

@@ -60,12 +60,13 @@
 }
 
 /* Badges do panel de resultado (Prévia / Confirmado) */
+/* "Prévia" = amarelo (--amber); "Confirmado" = verde (--teal) */
 .badge.bank-preview {
-  background: rgba(47, 111, 98, 0.12);
-  color: var(--teal);
+  background: rgba(226, 164, 0, 0.15);
+  color: var(--amber-ink);
 }
 
 .badge.bank-confirmed {
-  background: rgba(226, 164, 0, 0.15);
-  color: var(--amber-ink);
+  background: rgba(47, 111, 98, 0.12);
+  color: var(--teal);
 }

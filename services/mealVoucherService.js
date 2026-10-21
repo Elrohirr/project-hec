@@ -120,7 +120,7 @@ async function updateMealVoucherService(ref, session) {
     return mealVoucher
 }
 
-// ----------------------------- Service para excluir ticket originado por hora extra ou turno noturno ---------------------------------------------------------------     
+// ------------------------------------ Service para excluir ticket originado por hora extra ou turno noturno ---------------------------------------------------------------     
 async function deleteMealVoucherService(ref_Id, session) {
     const mealVoucher = await MealVoucher.findOneAndDelete({ ref_Id }, { session })
     if (!mealVoucher) return null

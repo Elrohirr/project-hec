@@ -10,6 +10,11 @@
   --teal: #2f6f62;
   --danger: #b3432b;
 
+  /* Azul usado nos selos de "Turno noturno" (mesma paleta do selo
+     "No banco" das horas extras). O texto usa --blue-ink, que clareia
+     no modo escuro. */
+  --blue-ink: #4daaf7;
+
   /* Gráfico do dashboard (lido via getComputedStyle em js/dashboard.js) */
   --chart-bar: #4f6bed;
   --chart-line: #d64545;
@@ -41,6 +46,7 @@
   --amber-ink: #f2c14e;
   --teal: #35d6a8;
   --danger: #e2604a;
+  --blue-ink: #7cc0fb;
   --chart-bar: #8ba2ff;
   --chart-line: #ff7a7a;
   --shadow-card: 0 2px 14px rgba(0, 0, 0, 0.45);

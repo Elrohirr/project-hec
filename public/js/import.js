@@ -57,6 +57,21 @@ document.addEventListener('DOMContentLoaded', () => {
     return '—';
   }
 
+  // Classe do selo da coluna "Tipo" conforme o tipo do registro do PDF.
+  const TYPE_BADGES = {
+    'Hora extra': 'type-overtime',
+    'Turno noturno': 'type-nightshift',
+    'Compensação': 'type-compensation'
+  };
+
+  function typeBadgeOf(item) {
+    const type = item.type || '';
+    const badge = document.createElement('span');
+    badge.className = 'badge ' + (TYPE_BADGES[type] || 'type-overtime');
+    badge.textContent = type;
+    return badge;
+  }
+
   function toISODate(value) {
     if (!value) return '';
     return String(value).slice(0, 10);
@@ -93,7 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
       dateTd.textContent = formatDate(item.date);
 
       const typeTd = document.createElement('td');
-      typeTd.textContent = item.type;
+      typeTd.appendChild(typeBadgeOf(item));
 
       const detailTd = document.createElement('td');
       detailTd.className = 'numeric';

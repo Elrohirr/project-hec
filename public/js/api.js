@@ -202,6 +202,24 @@ const Api = {
     });
   },
 
+  /** Exclusão em lote de horas extras — DELETE /overtime
+   *  Body: { overtimes: [id, ...] }. Retorna { deleted, rejected }. */
+  async multiDeleteOvertimes(ids) {
+    return this.request('/overtime', {
+      method: 'DELETE',
+      body: JSON.stringify({ overtimes: ids })
+    });
+  },
+
+  /** Exclusão em lote de turnos noturnos — DELETE /nightShift
+   *  Body: { nightShifts: [id, ...] }. Retorna { deleted, rejected }. */
+  async multiDeleteNightShifts(ids) {
+    return this.request('/nightShift', {
+      method: 'DELETE',
+      body: JSON.stringify({ nightShifts: ids })
+    });
+  },
+
   async getMealVouchers(params = {}) {
     const query = new URLSearchParams(params).toString();
     return this.request(`/mealvoucher${query ? `?${query}` : ''}`, {
