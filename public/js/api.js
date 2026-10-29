@@ -135,10 +135,10 @@ const Api = {
     return data;
   },
 
-  async register({ name, surname, email, wage, password }) {
+  async register({ name, surname, email, wage, wageDate, password }) {
     return this.request('/auth/register', {
       method: 'POST',
-      body: JSON.stringify({ name, surname, email, wage, password })
+      body: JSON.stringify({ name, surname, email, wage, wageDate, password })
     });
   },
 
@@ -350,6 +350,26 @@ const Api = {
     return this.request('/user', {
       method: 'DELETE',
       body: JSON.stringify({ password })
+    });
+  },
+
+  /** Lista todos os salários hora do usuário autenticado — GET /user/wage. */
+  async getWages() {
+    return this.request('/user/wage', { method: 'GET' });
+  },
+
+  /** Cria um novo salário-hora — POST /user/wage. */
+  async createWage({ wage, date }) {
+    return this.request('/user/wage', {
+      method: 'POST',
+      body: JSON.stringify({ wage, date })
+    });
+  },
+
+  /** Exclui um salário-hora — DELETE /user/wage/:id. */
+  async deleteWage(id) {
+    return this.request(`/user/wage/${id}`, {
+      method: 'DELETE'
     });
   },
 

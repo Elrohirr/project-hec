@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', () => {
+﻿﻿document.addEventListener('DOMContentLoaded', () => {
   // Se já existe sessão, não faz sentido ficar na tela de login
   if (Api.isAuthenticated()) {
     window.location.href = 'dashboard.html';
@@ -43,8 +43,6 @@ document.addEventListener('DOMContentLoaded', () => {
       await Api.login(email, password);
       window.location.href = 'dashboard.html';
     } catch (err) {
-      // err.message já vem do backend (via ApiError, lá em api.js);
-      // só caímos num texto genérico se por algum motivo ele vier vazio.
       showError(err.message || 'Não foi possível entrar agora. Tente novamente em instantes.');
     } finally {
       setLoading(false);

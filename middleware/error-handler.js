@@ -20,6 +20,11 @@ const errorHandlerMiddleware = (err, req, res, next) => {
       customError.msg = `Não é permitido criar dois registros de hora extra para a mesma data.`
     }
   }
+  // erro de duplicação E11000 para a collection wages
+  if (err.code === 11000 && err.keyValue.createdBy && err.keyValue.effectiveFrom) {
+    customError.statusCode = StatusCodes.BAD_REQUEST
+    customError.msg = `Não é permitido gerar dois valores de salários horas para a mesma data.`
+  }
   // erro de e-mail já cadastrado
   if (err.code === 11000 && err.keyValue.email) {
     customError.statusCode = StatusCodes.BAD_REQUEST
@@ -31,7 +36,7 @@ const errorHandlerMiddleware = (err, req, res, next) => {
   }
   if (err.name === 'CastError' && err.kind === 'ObjectId') {
     customError.statusCode = StatusCodes.NOT_FOUND
-    customError.msg = `Nenhuma hora extra com o ID: ${err.value}`
+    customError.msg = `Nenhum registro com o ID: ${err.value}`
   }
   if (err.name === 'CastError' && err.kind === 'date') {
     customError.statusCode = StatusCodes.BAD_REQUEST

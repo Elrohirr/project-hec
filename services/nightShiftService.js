@@ -1,7 +1,6 @@
 const mongoose = require('mongoose')
 const NightShift = require('../models/NightShift')
-const User = require('../models/User')
-const { extractPayDate, defineNightValue } = require('../utils/rules')
+const { getWageAt, extractPayDate, defineNightValue } = require('../utils/rules')
 const { timeToMinutes, minutesToTime, validateFormat, validateDate, convertToReducedNightMinutes } = require('../utils/timeConversion')
 const { createMealVoucherService, deleteMealVoucherService } = require('./mealVoucherService')
 const { BadRequestError, NotFoundError } = require('../errors')
@@ -18,8 +17,7 @@ async function createNightShiftService({ date, nightHoursClock, userId }) {
             const formatedDate = validateDate(date)
             const reducedMinutes = convertToReducedNightMinutes(nightHoursClock)
 
-            const wage = await User.findById(userId).select('wage').session(session)
-            if (!wage) throw new BadRequestError('Usuário não encontrado')
+            const wage = await getWageAt(userId, date, session)
 
             // criar whitelist
             const createFields = {
@@ -30,6 +28,7 @@ async function createNightShiftService({ date, nightHoursClock, userId }) {
                 nightHoursReduced: minutesToTime(reducedMinutes),
                 nightMinutesReduced: reducedMinutes,
                 nightShiftValue: defineNightValue(reducedMinutes, wage.wage),
+                wageId: wage._id,
                 wageAtCalculation: wage.wage,
                 payDate: extractPayDate(formatedDate, true) // segundo parametro como true pois o pagamento de todo AD Noturno é no mês seguinte
             }

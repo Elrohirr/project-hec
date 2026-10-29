@@ -34,8 +34,96 @@
   cursor: default;
 }
 
-@media (max-width: 860px) {
-  .account-layout {
-    grid-template-columns: 1fr;
-  }
+.account-layout {
+  grid-template-columns: 1fr;
+  gap: 24px;
+}
+
+/* Salário-hora — seção na tela Minha conta */
+.wage-table {
+  width: 100%;
+  min-width: 600px;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+  margin-top: 10px;
+}
+
+.wage-table th,
+.wage-table td {
+  text-align: center;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.wage-table th {
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  background: var(--surface);
+}
+
+.wage-table td.numeric {
+  font-family: var(--font-mono);
+}
+
+.wage-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.wage-row-current {
+  background: rgba(47, 111, 98, 0.10);
+}
+
+[data-theme="dark"] .wage-row-current {
+  background: rgba(53, 214, 168, 0.10);
+}
+
+.wage-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  background: var(--teal);
+  color: var(--paper);
+}
+
+[data-theme="dark"] .wage-badge {
+  color: #0e1a22;
+}
+
+/* Ações na tabela de salários */
+.wage-actions {
+  text-align: center;
+}
+
+.wage-delete {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border: none;
+  border-radius: var(--radius);
+  background: var(--danger);
+  color: var(--paper);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.wage-delete:hover:not(:disabled) {
+  background: #8f3522;
+}
+
+.wage-delete:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* Excluir só aparece na tabela de salários (não herda do danger-button genérico) */
+.wage-table tr .wage-delete {
+  font-size: 0.85rem;
+  padding: 4px 8px;
 }

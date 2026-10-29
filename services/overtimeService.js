@@ -1,9 +1,8 @@
 const mongoose = require('mongoose')
 const Overtime = require('../models/Overtime')
-const User = require('../models/User')
-const { calcDistribution, extractPayDate, defineValue, bankMinutes } = require('../utils/rules')
+const { getWageAt, calcDistribution, extractPayDate, defineValue, bankMinutes } = require('../utils/rules')
 const { timeToMinutes, minutesToTime, validateFormat, validateDate } = require('../utils/timeConversion')
-const { createMealVoucherService, updateMealVoucherService, deleteMealVoucherService } = require('./mealVoucherService')
+const { createMealVoucherService, deleteMealVoucherService } = require('./mealVoucherService')
 const { BadRequestError, NotFoundError } = require('../errors')
 
 // ------------------------------------ Service para criar um registro de hora extra - usado pelo controller e pelo pdf import ----------------------------------------------------------
@@ -16,8 +15,7 @@ async function createOvertimeService({ date, workedHours, isHoliday = false, isD
             validateFormat(workedHours, false)
             const formatedDate = validateDate(date)
 
-            const wage = await User.findById(userId).select('wage').session(session)
-            if (!wage) throw new BadRequestError('Usuário não encontrado')
+            const wage = await getWageAt(userId, date, session)
 
             // criar whitelist
             const workedMinutes = timeToMinutes(workedHours)
@@ -36,6 +34,7 @@ async function createOvertimeService({ date, workedHours, isHoliday = false, isD
                     he100hours: minutesToTime(distributionMinutes.he100minutes)
                 },
                 values: defineValue(distributionMinutes, wage.wage),
+                wageId: wage._id,
                 wageAtCalculation: wage.wage,
                 payDate: extractPayDate(formatedDate, isHoliday),
                 isDayOff,
@@ -44,7 +43,6 @@ async function createOvertimeService({ date, workedHours, isHoliday = false, isD
             }
 
             const [overtime] = await Overtime.create([createFields], { session })
-            console.log(overtime._id)
             const mealVoucher = await createMealVoucherService(overtime, session)
             return { overtime, mealVoucher }
         })

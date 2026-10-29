@@ -36,7 +36,7 @@ function extractionPDFPipeline(data) {
         // stage 1 - remove ruídos e pega posições referenciais do pdf
         const items = clearEmptyStr(data.pages[p].content)
 
-        const totaisLine = items.filter(item => item.str.includes('Totais'))
+        const totaisLine = items.find(item => item.str.includes('Totais'))
         const firstDate = items.filter(item => item.str.startsWith('01/') && item.x <= 15.7 + 1 && item.x >= 15.7 - 1)
         if (firstDate.length === 0) { // lançamento de erro para PDFs importados que não são do espelho do ponto
             throw new BadRequestError('PDF não reconhecido como espelho de ponto. Verifique se o arquivo enviado é o relatório correto.')
@@ -52,7 +52,7 @@ function extractionPDFPipeline(data) {
         var tempArray = []
 
         for (let i = 0; i <= itemSorted.length - 1; i++) {
-            if (itemSorted[i].y > totaisLine[0].y - 1) {
+            if (itemSorted[i].y > totaisLine.y - 1) {
                 tempArray.sort(({ x: a }, { x: b }) => a - b)
                 itemArray.push(tempArray)
                 break
@@ -122,6 +122,7 @@ function extractDateFromDay(str) {
     return [year, month, day].join('-')
 }
 
+// transforma a extração em dados válidos para os services a utilizados no /confirm do registro automático
 function getRegistersByDay(data) {
     let previewArray = []
     let needsReviewArray = []
@@ -191,8 +192,57 @@ function getRegistersByDay(data) {
     return { previewArray, needsReviewArray }
 }
 
+// extrai salário-hora e mês referência do CQ
+function getRefs(data) {
+    // pega o mês de referência do CQ
+    const dateRegex = /^\d{2}\/\d{4}$/
+    const monthRef = data.find(item => dateRegex.test(item.str))
+    if (!monthRef) throw new BadRequestError('Mês referência não encontrado no PDF do Contracheque.')
+
+    // pega o salário-hora referência do CQ
+    const monetaryRegex = /^(?:\d{1,3}(?:\.\d{3})+|\d+),\d{2}$/
+    const parseBR = s => parseFloat(s.replace(/\./g, '').replace(',', '.'))
+
+    const wageLabel = data.find(i => i.str === 'Salário-Hora')
+    if (!wageLabel) throw new BadRequestError('Salário-hora não encontrado no PDF do Contracheque.')
+
+    const wageItem = data.find(i =>
+        monetaryRegex.test(i.str.trim()) &&
+        Math.abs(i.y - (wageLabel.y + 12)) < 1 &&
+        i.x >= wageLabel.x - 1
+    )
+    if (!wageItem) throw new BadRequestError('Valor do salário-hora não encontrado no PDF do Contracheque.')
+    const wageRef = parseBR(wageItem.str)
+
+    return { monthRef: monthRef.str, wageRef }
+}
+
+// pipeline para extração dos dados das rúbricas do CQ
+function getRubrics(data) {
+
+    // pega a primeira rúbrica do CQ
+    const rubricLabel = data.find(i => i.str === 'Rubrica')
+    if (!rubricLabel) throw new BadRequestError('Rúbrica não encontrado no PDF do Contracheque.')
+
+    const rubricRef = data.find(i =>
+        i.str.length === 4 &&
+        Math.abs(i.y - (rubricLabel.y + 17)) < 1 &&
+        i.x >= rubricLabel.x - 1
+    )
+    if (!rubricRef) throw new BadRequestError('Nenhuma rúbrica valida encontrada no PDF do Contracheque.')
+
+    // pega a parte final do CQ, dados que não serão utilizados
+    const totaisLine = data.find(item => item.str.includes('Total Proventos'))
+
+    // remove o cabeçalho do CQ
+    var itemFiltred = data.filter((object) => object.y > rubricRef.y - 1)
+    var itemFiltredFinal = itemFiltred.filter((object) => object.y < totaisLine.y - 1)
+
+    return itemFiltredFinal
+}
+
 module.exports = {
     extractTableFromPdf, extractionPDFPipeline,
     filterEmptyDays, getRegistersByDay,
-    clearEmptyStr
+    clearEmptyStr, getRefs, getRubrics
 }

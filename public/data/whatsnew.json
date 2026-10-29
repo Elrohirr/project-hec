@@ -1,4 +1,11 @@
 [{
+  "version":"3.1.0",
+    "date":"XX-10-2026",
+    "highlights":[
+      "Novo controle de salário-hora: agora você pode cadastrar vários valores de salário-hora, cada um com a sua data de início de vigência, em \"Minha conta\". Ao registrar uma hora extra ou um turno noturno, o sistema usa automaticamente o salário que estava vigente na data do registro. Se o seu salário mudou, basta cadastrar o novo valor com a data da mudança; os registros já feitos mantêm os valores com que foram calculados."
+    ]
+},
+  {
     "version":"3.0.0",
     "date":"21-10-2026",
     "highlights":[

@@ -28,8 +28,7 @@ const UserSchema = new mongoose.Schema({
         minlength: 6
     },
     wage: {
-        type: Number,
-        required: [true, "Por favor, insira seu salário hora"]
+        type: Number
     },
     isAdmin: {
         type: Boolean,

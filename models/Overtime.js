@@ -35,6 +35,11 @@ const OvertimeSchema = new mongoose.Schema({
         valueHe100: { type: Number, default: 0 },
         total: { type: Number, default: 0 },
     },
+    wageId: {
+        type: mongoose.Types.ObjectId,
+        ref: 'Wage',
+        required: [true, 'Por favor, insira um valor de salário-hora.']
+    },
     wageAtCalculation: {
         type: Number,
         required: true
@@ -95,6 +100,7 @@ OvertimeSchema.virtual('netValue').get(function () {
     return totalValue - compensatedValue
 })
 
+OvertimeSchema.index({ createdBy: 1, wageId: 1 })
 OvertimeSchema.index({ createdBy: 1, date: 1 }, { unique: true })
 OvertimeSchema.index({ createdBy: 1, isHoliday: 1, date: 1 })
 

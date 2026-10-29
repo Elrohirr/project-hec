@@ -1,9 +1,8 @@
 const mongoose = require('mongoose')
-const User = require('../models/User')
 const NightShift = require('../models/NightShift')
 const { createNightShiftService, deleteNightShiftService } = require('../services/nightShiftService')
 const { updateMealVoucherService } = require('../services/mealVoucherService')
-const { defineNightValue, extractPayDate } = require('../utils/rules')
+const { getWageAt, defineNightValue, extractPayDate } = require('../utils/rules')
 const { validadeIdArray } = require('../utils/helper')
 const { timeToMinutes, minutesToTime, convertToReducedNightMinutes, validateFormat, validateDate } = require('../utils/timeConversion')
 const { StatusCodes } = require('http-status-codes')
@@ -89,22 +88,34 @@ const updateNightShift = async (req, res) => {
             // update parcial: se `nightHoursClock` vier vazio, aplica o mesmo fallback '07:00' do CREATE
             const finalNightHoursClock = ((req.body.nightHoursClock ?? oldNightShift.nightHoursClock) || '07:00').trim()
             const finalDate = req.body.date ?? oldNightShift.date
-            const wage = oldNightShift.wageAtCalculation
 
-            //validar formato, whitelist e recaulcular regras de negócio
-            validateFormat(finalNightHoursClock, true)
+            //validar formato e recaulcular regras de negócio
+            let wageId = null
+            let wageAtCalculation = null
             const formatedDate = validateDate(finalDate)
+            if (formatedDate.getTime() !== oldNightShift.date.getTime() || oldNightShift.wageId == null) {
+                const wage = await getWageAt(userId, formatedDate, session)
+                wageId = wage._id
+                wageAtCalculation = wage.wage
+            } else {
+                wageId = oldNightShift.wageId
+                wageAtCalculation = oldNightShift.wageAtCalculation
+            }
+
+            validateFormat(finalNightHoursClock, true)
             const reducedMinutes = convertToReducedNightMinutes(finalNightHoursClock)
 
+            // whitelist
             const updateFields = {
                 nightHoursClock: finalNightHoursClock,
                 nightMinutesClock: timeToMinutes(finalNightHoursClock),
                 nightHoursReduced: minutesToTime(reducedMinutes),
                 nightMinutesReduced: reducedMinutes,
                 date: formatedDate,
-                nightShiftValue: defineNightValue(reducedMinutes, wage),
-                wageAtCalculation: wage,
-                payDate: extractPayDate(formatedDate, true) // segundo parametro como true pois o pagamento de todo AD Noturno é no mês seguinte
+                nightShiftValue: defineNightValue(reducedMinutes, wageAtCalculation),
+                wageId,
+                wageAtCalculation,
+                payDate: extractPayDate(formatedDate, true) // segundo argumento como true, pois o pagamento de AD Noturno é sempre no mês seguinte
             }
 
             const newNightShift = await NightShift.findOneAndUpdate({ createdBy: userId, _id: nightShiftId },

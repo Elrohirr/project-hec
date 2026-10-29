@@ -29,6 +29,7 @@
     <a href="#visao-geral">Visão geral</a>
     <a href="#primeiros-passos">Primeiros passos</a>
     <a href="#painel">Painel</a>
+    <a href="#salário-hora">Salário-Hora</a>
     <a href="#horas-extras">Horas extras</a>
     <a href="#adicional-noturno">Adicional noturno</a>
     <a href="#vale-lanche">Vale lanche</a>
@@ -69,6 +70,17 @@
         <li>Altere o filtro de data para consultar outros períodos.</li>
       </ul>
       <div class="note"><strong>Dica</strong>Se o valor do painel parecer diferente do que você esperava, veja primeiro em qual mês de pagamento o registro foi enquadrado.</div>
+    </section>
+
+        <section id="salário-hora" class="searchable">
+      <h2>Valores de salário-hora</h2>
+      <p>Ao criar uma conta, você preenche um valor de salário-hora e a data de vigência dele. Esse valor é usado para calcular os valores dos registros de horas extras e turnos noturnos. A data de vigência identifica a qual salário o registro pertence, fazendo o cálculo correto. O valor do salário-hora não pode ser menor ou igual a 0.
+      <p>É permitido apagar valores de salário-hora, porém há algumas regras:</p>
+      <ul>
+        <li>Tem que haver pelo menos um valor de salário-hora registrado por conta. Sem essa informação, a aplicação não realiza nenhum cálculo dos registros.</li>
+        <li>Se existir registros de hora extra ou turno noturno que utilizem um salário-hora candidato a ser excluído, a exclusão não acontece. Primeiro, deverá ser apagado os registros que estão usando esse salário primeiro, depois realizar a exclusão.</li>
+      </ul>
+      <p>Por hora, criar ou apagar um salário-hora não recalcula registros. O sistema mantém uma foto do registro de quando foi feito.</p>
     </section>
 
     <section id="horas-extras" class="searchable">

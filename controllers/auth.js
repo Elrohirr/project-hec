@@ -1,19 +1,36 @@
+const mongoose = require('mongoose')
 const User = require('../models/User')
+const Wage = require('../models/Wage')
+const { createWageService } = require('../services/userService')
 const { StatusCodes } = require('http-status-codes')
 const { BadRequestError, UnauthenticatedError } = require('../errors')
 
 // ----- funcionalidade cadastrar
 const register = async (req, res) => {
-    const createFields = {
-        name: req.body.name,
-        surname: req.body.surname,
-        email: req.body.email,
-        password: req.body.password,
-        wage: req.body.wage,
+    const { body: { name, surname, email, password, wage, wageDate } } = req
+
+    const session = await mongoose.startSession()
+    try {
+        const result = await session.withTransaction(async () => {
+
+            const createFields = {
+                name,
+                surname,
+                email,
+                password,
+            }
+
+            // primeiro cria o usuário, depois cria o valor do salário-hora, pois o usuário precisa existir antes
+            const user = await User.create([createFields], { session: session })
+            const wageObject = createWageService(user[0]._id, wage, wageDate)
+            await Wage.create([wageObject], { session: session })
+            return { user }
+        })
+        const token = result.user[0].createJWT()
+        res.status(StatusCodes.CREATED).json({ user: { name: result.user[0].name + " " + result.user[0].surname }, token })
+    } finally {
+        await session.endSession()
     }
-    const user = await User.create(createFields)
-    const token = user.createJWT()
-    res.status(StatusCodes.CREATED).json({ user: { name: user.name + " " + user.surname }, token })
 }
 
 // ----- funcionalidade login

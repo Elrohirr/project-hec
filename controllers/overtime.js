@@ -1,7 +1,7 @@
 const mongoose = require('mongoose')
 const Overtime = require('../models/Overtime')
 const { createOvertimeService, deleteOvertimeService } = require('../services/overtimeService')
-const { calcDistribution, extractPayDate, defineValue, bankMinutes } = require('../utils/rules')
+const { getWageAt, calcDistribution, extractPayDate, defineValue, bankMinutes } = require('../utils/rules')
 const { timeToMinutes, minutesToTime, validateFormat, validateDate } = require('../utils/timeConversion')
 const { validadeIdArray } = require('../utils/helper')
 const { updateMealVoucherService } = require('../services/mealVoucherService')
@@ -123,14 +123,25 @@ const updateOvertime = async (req, res) => {
             const finalDate = date ?? oldOvertime.date
             const finalIsDayOff = isDayOff ?? oldOvertime.isDayOff
             const finalIsHoliday = isHoliday ?? oldOvertime.isHoliday
-            const wage = oldOvertime.wageAtCalculation
 
-            //validar formato, whitelist e recaulcular regras de negócio
-            validateFormat(finalWorkedHours, false)
+            //validar formato e recaulcular regras de negócio
+            let wageId = null
+            let wageAtCalculation = null
             const formatedDate = validateDate(finalDate)
+            if (formatedDate.getTime() !== oldOvertime.date.getTime() || oldOvertime.wageId == null) {
+                const wage = await getWageAt(userId, formatedDate, session)
+                wageId = wage._id
+                wageAtCalculation = wage.wage
+            } else {
+                wageId = oldOvertime.wageId
+                wageAtCalculation = oldOvertime.wageAtCalculation
+            }
+
+            validateFormat(finalWorkedHours, false)
             const finalWorkedMinutes = timeToMinutes(finalWorkedHours)
             const distributionMinutes = calcDistribution(finalWorkedMinutes, finalIsDayOff, finalIsHoliday)
 
+            // whitelist
             const updateFields = {
                 workedHours: finalWorkedHours,
                 workedMinutes: finalWorkedMinutes,
@@ -141,8 +152,9 @@ const updateOvertime = async (req, res) => {
                     he75hours: minutesToTime(distributionMinutes.he75minutes),
                     he100hours: minutesToTime(distributionMinutes.he100minutes)
                 },
-                values: defineValue(distributionMinutes, wage),
-                wageAtCalculation: wage,
+                values: defineValue(distributionMinutes, wageAtCalculation),
+                wageId,
+                wageAtCalculation,
                 payDate: extractPayDate(formatedDate, finalIsHoliday),
                 isDayOff: finalIsDayOff,
                 isHoliday: finalIsHoliday,

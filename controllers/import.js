@@ -2,7 +2,7 @@ const { StatusCodes } = require('http-status-codes')
 const { createOvertimeService } = require('../services/overtimeService')
 const { createNightShiftService } = require('../services/nightShiftService')
 const { confirmCompensation } = require('../services/bankService')
-const { extractTableFromPdf, extractionPDFPipeline, filterEmptyDays, getRegistersByDay, clearEmptyStr } = require('../services/importService')
+const { extractTableFromPdf, extractionPDFPipeline, filterEmptyDays, getRegistersByDay, clearEmptyStr, getRefs, getRubrics } = require('../services/importService')
 const { BadRequestError } = require('../errors')
 
 // --------------------------- extrai dados do pdf do ponto e monta a preview --------------------------------
@@ -127,10 +127,11 @@ const importPaycheck = async (req, res) => {
     const data = await extractTableFromPdf(buffer)
     const items = clearEmptyStr(data.pages[0].content)
     var itemSorted = items.sort(({ y: a }, { y: b }) => a - b)
+    const refs = getRefs(itemSorted)
+    const rubricsData = getRubrics(itemSorted)
 
-    res.status(StatusCodes.OK).json(itemSorted)
+    res.status(StatusCodes.OK).json(rubricsData)
 }
-
 module.exports = {
     importPDFPreview, confirmPDFImport,
     importPaycheck

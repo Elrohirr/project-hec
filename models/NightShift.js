@@ -34,6 +34,11 @@ const NightShiftSchema = new mongoose.Schema({
         type: Number,
         required: true
     },
+    wageId: {
+        type: mongoose.Types.ObjectId,
+        ref: 'Wage',
+        required: [true, 'Por favor, insira um valor de salário-hora.']
+    },
     wageAtCalculation: {
         type: Number,
         required: true
@@ -44,6 +49,7 @@ const NightShiftSchema = new mongoose.Schema({
     }
 })
 
+NightShiftSchema.index({ createdBy: 1, wageId: 1 })
 NightShiftSchema.index({ createdBy: 1, date: 1 }, { unique: true })
 
 module.exports = mongoose.model('nightShift', NightShiftSchema)

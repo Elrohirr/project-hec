@@ -1,6 +1,19 @@
+const Wage = require('../models/Wage')
 const { timeToMinutes } = require('./timeConversion')
 const { roundCurrency } = require('./tools')
-const { BadRequestError } = require('../errors')
+const { BadRequestError, NotFoundError } = require('../errors')
+
+async function getWageAt(userId, date, session = null) {
+    const wage = await Wage.findOne({
+        createdBy: userId,
+        effectiveFrom: { $lte: date }
+    })
+        .sort({ effectiveFrom: -1 })
+        .session(session)
+
+    if (!wage) throw new NotFoundError('Valor de salário-hora não encontrado para a data da hora extra.')
+    return wage
+}
 
 function calcDistribution(minutes, isDayOff, isHoliday) {
     if (minutes <= 0 || minutes > 810) throw new BadRequestError('A quantidade de horas extras não pode ser menor ou igual a 0 ou maior que 13 horas')
@@ -128,7 +141,7 @@ function getClosedMonthCutoff(date) {
 }
 
 module.exports = {
-    calcDistribution, defineValue, defineNightValue,
+    getWageAt, calcDistribution, defineValue, defineNightValue,
     extractPayDate, calcMealVoucher, getLabel,
     getReceivableDateRange, bankMinutes, getClosedMonthCutoff
 }
