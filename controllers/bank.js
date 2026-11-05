@@ -2,10 +2,10 @@ const mongoose = require('mongoose')
 const { StatusCodes } = require('http-status-codes')
 const Overtime = require('../models/Overtime')
 const BankCompensation = require('../models/BankCompensation')
-const { findEligibleOvetimes, confirmCompensation, cancelCompensation } = require('../services/bankService')
+const { findEligibleOvetimes } = require('../services/bankService')
 const { getClosedMonthCutoff } = require('../utils/rules')
-const { timeToMinutes, validateFormat } = require('../utils/timeConversion')
-const { BadRequestError } = require('../errors')
+const { timeToMinutes, validateFormat, validateDate } = require('../utils/timeConversion')
+const { BadRequestError, NotFoundError } = require('../errors')
 
 // --------------------------- Realiza a simulação de um banco de hroas, sem gravar no banco -----------------------------------------------------
 const simulateBankCompensation = async (req, res) => {
@@ -14,9 +14,10 @@ const simulateBankCompensation = async (req, res) => {
 
     //validações
     if (!date) throw new BadRequestError('Por favor, informe a data da compensação.')
+    const formattedDate = validateDate(date)
     validateFormat(hoursNeeded, false)
 
-    const entries = await findEligibleOvetimes(userId, hoursNeeded, date)
+    const entries = await findEligibleOvetimes(userId, hoursNeeded, formattedDate)
     res.status(StatusCodes.OK).json(entries)
 }
 
@@ -27,10 +28,45 @@ const confirmBankCompensation = async (req, res) => {
 
     // validações
     if (!date) throw new BadRequestError('Por favor, informe a data da compensação.')
+    const formattedDate = validateDate(date)
     validateFormat(hoursNeeded, false)
 
-    const bankCompensation = await confirmCompensation(userId, hoursNeeded, date)
-    res.status(StatusCodes.CREATED).json(bankCompensation)
+    const session = await mongoose.startSession()
+    try {
+        const result = await session.withTransaction(async () => {
+            const eligibles = await findEligibleOvetimes(userId, hoursNeeded, formattedDate, session)
+            const minutesNeeded = timeToMinutes(hoursNeeded)
+
+            for (const overtime of eligibles) {
+                await Overtime.findByIdAndUpdate(
+                    overtime.overtimeId,
+                    {
+                        $inc: {
+                            compensatedMinutes: overtime.minutesUsed,
+                            "compensatedMinutesByTier.he50minutes": overtime.minutesUsedByTier.he50,
+                            "compensatedMinutesByTier.he75minutes": overtime.minutesUsedByTier.he75,
+                            "compensatedMinutesByTier.he100minutes": overtime.minutesUsedByTier.he100,
+                            compensatedValue: overtime.valueLost
+                        }
+                    }, { runValidators: true, session })
+            }
+
+            const createObject = {
+                createdBy: userId,
+                date,
+                totalMinutes: minutesNeeded,
+                entries: eligibles,
+                source: 'manual', // refatorar quando entrar o pdf import
+                status: 'active'
+            }
+
+            const bankCompensation = await BankCompensation.create([createObject], { session: session })
+            return bankCompensation
+        })
+        res.status(StatusCodes.CREATED).json(result[0])
+    } finally {
+        await session.endSession()
+    }
 }
 
 // --------------------------- GET todos os registros de banco de horas -----------------------------------------------------
@@ -106,14 +142,43 @@ const getAllBankCompensation = async (req, res) => {
     })
 }
 
-// --------------------------- Cancela um registro de banco de horas, restorando as horas extras relacionadas -----------------------------------------------------
-const cancelBankCompesation = async (req, res) => {
+// --------------------------- Cancela um registro de banco de horas, restaurando as horas extras relacionadas -----------------------------------------------------
+const cancelBankCompensation = async (req, res) => {
     const { user: { userId }, params: { id: bankCompId } } = req
-    await cancelCompensation(bankCompId)
-    res.status(StatusCodes.OK).json({ msg: 'Banco de horas cancelado com sucesso' })
+    const session = await mongoose.startSession()
+    try {
+        const result = await session.withTransaction(async () => {
+            const bankCompensation = await BankCompensation.findOne({ createdBy: userId, _id: bankCompId }).session(session)
+
+            // validações para se o banco de horas está valido para cancelamento
+            if (!bankCompensation) throw new NotFoundError('Banco de horas não encontrado')
+            if (bankCompensation.status === 'cancelled') throw new BadRequestError('Banco de hora selecionado já se encontra cancelado')
+            if (bankCompensation.source === 'pdf_import') throw new BadRequestError('Compensações vindas de PDF import não podem ser canceladas. Verifique com o administrador')
+
+            // iteração sobre cada documento de overtime dentro de entries para restaurar ao valor original
+            for (const overtime of bankCompensation.entries) {
+                await Overtime.findByIdAndUpdate(
+                    overtime.overtimeId,
+                    {
+                        $inc: {
+                            compensatedMinutes: -overtime.minutesUsed,
+                            "compensatedMinutesByTier.he50minutes": -overtime.minutesUsedByTier.he50,
+                            "compensatedMinutesByTier.he75minutes": -overtime.minutesUsedByTier.he75,
+                            "compensatedMinutesByTier.he100minutes": -overtime.minutesUsedByTier.he100,
+                            compensatedValue: -overtime.valueLost
+                        }
+                    }, { runValidators: true, session }
+                )
+            }
+            await bankCompensation.updateOne({ status: 'cancelled' }, { session })
+        })
+        res.status(StatusCodes.OK).json({ msg: 'Banco de horas cancelado com sucesso' })
+    } finally {
+        await session.endSession()
+    }
 }
 
 module.exports = {
     simulateBankCompensation, confirmBankCompensation,
-    getAllBankCompensation, cancelBankCompesation
+    getAllBankCompensation, cancelBankCompensation
 }

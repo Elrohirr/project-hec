@@ -1,21 +1,18 @@
-const mongoose = require('mongoose')
 const Overtime = require('../models/Overtime')
-const BankCompensation = require('../models/BankCompensation')
 const { getClosedMonthCutoff } = require('../utils/rules')
-const { timeToMinutes, validateDate } = require('../utils/timeConversion')
+const { timeToMinutes } = require('../utils/timeConversion')
 const { capitalize, roundCurrency } = require('../utils/tools')
-const { BadRequestError, NotFoundError } = require('../errors')
+const { BadRequestError } = require('../errors')
 
-// --------------------------- Encontra as horas extras elegíveis para compensar -----------------------------------------------------
+// --------------------------- Encontra as horas extras elegíveis para compensar - usado na simulação e confirmação do banco de horas ---------------------------
 async function findEligibleOvetimes(userId, hoursNeeded, date, session) {
-    const formatedDate = validateDate(date)
-    const cutOffDate = getClosedMonthCutoff(formatedDate)
+    const cutOffDate = getClosedMonthCutoff(date)
     const minutesNeeded = timeToMinutes(hoursNeeded)
     if (!minutesNeeded || minutesNeeded <= 0) throw new BadRequestError('As horas a compensar devem ser maiores que 0')
     const eligibles = await Overtime.find({
         createdBy: userId,
         isHoliday: false,
-        date: { $gte: cutOffDate, $lte: formatedDate },
+        date: { $gte: cutOffDate, $lte: date },
         $expr: { $lt: ['$compensatedMinutes', '$bankedMinutes'] },
     }).sort('date').session(session)
 
@@ -53,7 +50,7 @@ async function findEligibleOvetimes(userId, hoursNeeded, date, session) {
             remainingTier = remainingTier - usedTier
         }
 
-        if (remainingTier > 0) throw new BadRequestError(`Inconsistência de dados da HE ${overtime.overtimeId}: 
+        if (remainingTier > 0) throw new BadRequestError(`Inconsistência de dados da HE ${overtime._id}: 
         bankedMinutes não corresponde à distribuição de tiers`)
 
         const valueLostTotal = valueLostByTier.he50 + valueLostByTier.he75 + valueLostByTier.he100
@@ -76,80 +73,4 @@ async function findEligibleOvetimes(userId, hoursNeeded, date, session) {
     return entries
 }
 
-// --------------------------- Criar o documento banco de horas e alterar as horas extras -----------------------------------------------------
-async function confirmCompensation(userId, hoursNeeded, date) {
-    const session = await mongoose.startSession()
-    try {
-        const result = await session.withTransaction(async () => {
-            const eligibles = await findEligibleOvetimes(userId, hoursNeeded, date, session)
-            const minutesNeeded = timeToMinutes(hoursNeeded)
-
-            for (const overtime of eligibles) {
-                await Overtime.findByIdAndUpdate(
-                    overtime.overtimeId,
-                    {
-                        $inc: {
-                            compensatedMinutes: overtime.minutesUsed,
-                            "compensatedMinutesByTier.he50minutes": overtime.minutesUsedByTier.he50,
-                            "compensatedMinutesByTier.he75minutes": overtime.minutesUsedByTier.he75,
-                            "compensatedMinutesByTier.he100minutes": overtime.minutesUsedByTier.he100,
-                            compensatedValue: overtime.valueLost
-                        }
-                    }, { runValidators: true, session })
-            }
-
-            const createObject = {
-                createdBy: userId,
-                date,
-                totalMinutes: minutesNeeded,
-                entries: eligibles,
-                source: 'manual', // refatorar quando entrar o pdf import
-                status: 'active'
-            }
-
-            const bankCompensation = await BankCompensation.create(createObject)
-            return bankCompensation
-        })
-        return result
-    } finally {
-        await session.endSession()
-    }
-}
-
-// --------------------------- Cancela o banco de horas, restaurando as horas extras afetadas -----------------------------------------------------
-async function cancelCompensation(bankCompId) {
-    const session = await mongoose.startSession()
-    try {
-        const result = await session.withTransaction(async () => {
-            const bankCompensation = await BankCompensation.findById(bankCompId).session(session)
-
-            // validações para se o banco de horas está valido para cancelamento
-            if (!bankCompensation) throw new NotFoundError('Banco de horas não encontrado')
-            if (bankCompensation.status === 'cancelled') throw new BadRequestError('Banco de hora selecionado já se encontra cancelado')
-            if (bankCompensation.source === 'pdf_import') throw new BadRequestError('Compensações vindas de PDF import não podem ser canceladas. Verfiique com o administrador')
-
-            // iteração sobre cada documento de overtime dentro de entries para restaurar ao valor original
-            for (const overtime of bankCompensation.entries) {
-                await Overtime.findByIdAndUpdate(
-                    overtime.overtimeId,
-                    {
-                        $inc: {
-                            compensatedMinutes: -overtime.minutesUsed,
-                            "compensatedMinutesByTier.he50minutes": -overtime.minutesUsedByTier.he50,
-                            "compensatedMinutesByTier.he75minutes": -overtime.minutesUsedByTier.he75,
-                            "compensatedMinutesByTier.he100minutes": -overtime.minutesUsedByTier.he100,
-                            compensatedValue: -overtime.valueLost
-                        }
-                    }, { runValidators: true, session }
-                )
-            }
-            await bankCompensation.updateOne({ status: 'cancelled' }, { session })
-            return bankCompensation
-        })
-        return result
-    } finally {
-        await session.endSession()
-    }
-}
-
-module.exports = { findEligibleOvetimes, confirmCompensation, cancelCompensation }
+module.exports = { findEligibleOvetimes }

@@ -27,9 +27,6 @@ const UserSchema = new mongoose.Schema({
         required: [true, 'Por favor, insira uma senha'],
         minlength: 6
     },
-    wage: {
-        type: Number
-    },
     isAdmin: {
         type: Boolean,
         default: false

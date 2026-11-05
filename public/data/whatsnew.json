@@ -1,6 +1,14 @@
 [{
+  "version":"3.1.1",
+    "date":"05-11-2026",
+    "highlights":[
+      "Adicionado dois novos cards de valores em \"Vale-Refeição\": um com a somatória de ticket de hora extra e outro com a somatória de ticket de turno noturno.",
+      "Ajustado o tamanho da fonte do valor monetário nos cards A receber em \"Dashboard\"."
+    ]
+},
+{
   "version":"3.1.0",
-    "date":"XX-10-2026",
+    "date":"29-10-2026",
     "highlights":[
       "Novo controle de salário-hora: agora você pode cadastrar vários valores de salário-hora, cada um com a sua data de início de vigência, em \"Minha conta\". Ao registrar uma hora extra ou um turno noturno, o sistema usa automaticamente o salário que estava vigente na data do registro. Se o seu salário mudou, basta cadastrar o novo valor com a data da mudança; os registros já feitos mantêm os valores com que foram calculados."
     ]

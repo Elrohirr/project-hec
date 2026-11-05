@@ -4,7 +4,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const profileName = document.getElementById('profile-name');
   const profileSurname = document.getElementById('profile-surname');
   const profileEmail = document.getElementById('profile-email');
-  const profileWage = document.getElementById('profile-wage');
   const profileSubmit = document.getElementById('profile-submit-button');
   const profileError = document.getElementById('profile-error-box');
   const profileSuccess = document.getElementById('profile-success-box');
@@ -49,7 +48,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Email e salário ficam em branco; o usuário pode digitá-los novamente
     // e submeter o formulário (PATCH /user/profile faz update parcial).
     profileEmail.placeholder = 'Informe novamente para atualizar';
-    profileWage.placeholder = 'Informe novamente para atualizar';
   }
 
   // ---- Atualizar perfil (PATCH /user/profile) -------------------------------

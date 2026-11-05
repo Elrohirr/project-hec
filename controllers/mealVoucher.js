@@ -1,7 +1,7 @@
 const mongoose = require('mongoose')
 const MealVoucher = require('../models/MealVoucher')
 const { StatusCodes } = require('http-status-codes')
-const { BadRequestError, NotFoundError } = require('../errors')
+const { NotFoundError } = require('../errors')
 
 // --------------------------- GET todos os registros de vale-refeição do usuário -----------------------------------------------------
 const getAllMealVouchers = async (req, res) => {
@@ -38,10 +38,20 @@ const getAllMealVouchers = async (req, res) => {
             $group: {
                 _id: null,
                 totalCount: { $sum: "$quantity" },
+                totalOvertimeValue: { $sum: { $cond: [{ $eq: ["$source", 'overtime'] }, "$totalValue", 0] } },
+                totalNightShiftValue: { $sum: { $cond: [{ $eq: ["$source", 'nightShift'] }, "$totalValue", 0] } },
                 totalValue: { $sum: "$totalValue" }
             }
+        },
+        {
+            $project: {
+                totalCount: 1,
+                totalOvertimeValue: { $round: ["$totalOvertimeValue", 2] },
+                totalNightShiftValue: { $round: ["$totalNightShiftValue", 2] },
+                totalValue: 1
+            }
         }
-    ]))[0] || { quantity: 0, totalValue: 0 }
+    ]))[0] || { quantity: 0, totalOvertimeValue: 0, totalNightShiftValue: 0, totalValue: 0 }
     const totalRecords = await MealVoucher.countDocuments(queryObject)
 
     const mealVoucher = await result.lean()

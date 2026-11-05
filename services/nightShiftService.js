@@ -14,7 +14,7 @@ async function createNightShiftService({ date, nightHoursClock, userId }) {
 
             // validar formato
             validateFormat(nightHoursClock, true)
-            const formatedDate = validateDate(date)
+            const formattedDate = validateDate(date)
             const reducedMinutes = convertToReducedNightMinutes(nightHoursClock)
 
             const wage = await getWageAt(userId, date, session)
@@ -22,7 +22,7 @@ async function createNightShiftService({ date, nightHoursClock, userId }) {
             // criar whitelist
             const createFields = {
                 createdBy: userId,
-                date: formatedDate,
+                date: formattedDate,
                 nightHoursClock,
                 nightMinutesClock: timeToMinutes(nightHoursClock),
                 nightHoursReduced: minutesToTime(reducedMinutes),
@@ -30,7 +30,7 @@ async function createNightShiftService({ date, nightHoursClock, userId }) {
                 nightShiftValue: defineNightValue(reducedMinutes, wage.wage),
                 wageId: wage._id,
                 wageAtCalculation: wage.wage,
-                payDate: extractPayDate(formatedDate, true) // segundo parametro como true pois o pagamento de todo AD Noturno é no mês seguinte
+                payDate: extractPayDate(formattedDate, true) // segundo parametro como true pois o pagamento de todo AD Noturno é no mês seguinte
             }
 
             const [nightShift] = await NightShift.create([createFields], { session })

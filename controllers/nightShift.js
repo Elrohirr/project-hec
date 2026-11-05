@@ -92,9 +92,9 @@ const updateNightShift = async (req, res) => {
             //validar formato e recaulcular regras de negócio
             let wageId = null
             let wageAtCalculation = null
-            const formatedDate = validateDate(finalDate)
-            if (formatedDate.getTime() !== oldNightShift.date.getTime() || oldNightShift.wageId == null) {
-                const wage = await getWageAt(userId, formatedDate, session)
+            const formattedDate = validateDate(finalDate)
+            if (formattedDate.getTime() !== oldNightShift.date.getTime() || oldNightShift.wageId == null) {
+                const wage = await getWageAt(userId, formattedDate, session)
                 wageId = wage._id
                 wageAtCalculation = wage.wage
             } else {
@@ -111,11 +111,11 @@ const updateNightShift = async (req, res) => {
                 nightMinutesClock: timeToMinutes(finalNightHoursClock),
                 nightHoursReduced: minutesToTime(reducedMinutes),
                 nightMinutesReduced: reducedMinutes,
-                date: formatedDate,
+                date: formattedDate,
                 nightShiftValue: defineNightValue(reducedMinutes, wageAtCalculation),
                 wageId,
                 wageAtCalculation,
-                payDate: extractPayDate(formatedDate, true) // segundo argumento como true, pois o pagamento de AD Noturno é sempre no mês seguinte
+                payDate: extractPayDate(formattedDate, true) // segundo argumento como true, pois o pagamento de AD Noturno é sempre no mês seguinte
             }
 
             const newNightShift = await NightShift.findOneAndUpdate({ createdBy: userId, _id: nightShiftId },

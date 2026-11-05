@@ -16,6 +16,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const summaryCount = document.getElementById('summary-count');
   const summarySubtotal = document.getElementById('summary-subtotal');
+  const summaryOvertime = document.getElementById('summary-overtime');
+  const summaryNightShift = document.getElementById('summary-nightshift');
 
   const sourceLabels = {
     overtime: 'Hora extra',
@@ -82,7 +84,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function updateSummary(totals) {
     summaryCount.textContent = String(totals?.totalCount || 0);
-    summarySubtotal.textContent = currencyFormatter.format(totals?.totalValue || 0)
+    summarySubtotal.textContent = currencyFormatter.format(totals?.totalValue || 0);
+    summaryOvertime.textContent = currencyFormatter.format(totals?.totalOvertimeValue || 0);
+    summaryNightShift.textContent = currencyFormatter.format(totals?.totalNightShiftValue || 0);
   }
 
 

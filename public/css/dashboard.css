@@ -208,7 +208,7 @@
 }
 
 .receivable-row .hint {
-  font-size: 0.72rem;
+  font-size: 0.9rem;
   color: var(--ink-soft);
 }
 
@@ -223,6 +223,12 @@
 #overtime-liquid-receivable-lines > .receivable-row:not(.total) .value {
   white-space: nowrap;
   font-size: clamp(14px, 6.5cqi, 20px);
+}
+
+#overtime-receivable-lines > .receivable-row:not(.total) .hint,
+#overtime-liquid-receivable-lines > .receivable-row:not(.total) .hint {
+  white-space: nowrap;
+  font-size: clamp(12px, 5.5cqi, 16px);
 }
 
 /* Linha discreta de compensação no card Líquido ("−HH:MM compensado no banco") */

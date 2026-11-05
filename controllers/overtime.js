@@ -127,9 +127,9 @@ const updateOvertime = async (req, res) => {
             //validar formato e recaulcular regras de negócio
             let wageId = null
             let wageAtCalculation = null
-            const formatedDate = validateDate(finalDate)
-            if (formatedDate.getTime() !== oldOvertime.date.getTime() || oldOvertime.wageId == null) {
-                const wage = await getWageAt(userId, formatedDate, session)
+            const formattedDate = validateDate(finalDate)
+            if (formattedDate.getTime() !== oldOvertime.date.getTime() || oldOvertime.wageId == null) {
+                const wage = await getWageAt(userId, formattedDate, session)
                 wageId = wage._id
                 wageAtCalculation = wage.wage
             } else {
@@ -145,7 +145,7 @@ const updateOvertime = async (req, res) => {
             const updateFields = {
                 workedHours: finalWorkedHours,
                 workedMinutes: finalWorkedMinutes,
-                date: formatedDate,
+                date: formattedDate,
                 distributionMinutes,
                 distributionHours: {
                     he50hours: minutesToTime(distributionMinutes.he50minutes),
@@ -155,7 +155,7 @@ const updateOvertime = async (req, res) => {
                 values: defineValue(distributionMinutes, wageAtCalculation),
                 wageId,
                 wageAtCalculation,
-                payDate: extractPayDate(formatedDate, finalIsHoliday),
+                payDate: extractPayDate(formattedDate, finalIsHoliday),
                 isDayOff: finalIsDayOff,
                 isHoliday: finalIsHoliday,
                 bankedMinutes: bankMinutes(finalWorkedMinutes, finalIsHoliday)

@@ -35,6 +35,7 @@ function validateFormat(format, isNIghtShift) {
 }
 
 function validateDate(date) {
+    if (!date) throw new BadRequestError('Por favor, forneça a data para validação.')
     // validar formato YYYY-MM-DD
     const formatRegex = /^\d{4}-\d{2}-\d{2}$/
     if (!formatRegex.test(date.trim())) throw new BadRequestError('Informe a data em formato YYYY-MM-DD')

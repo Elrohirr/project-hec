@@ -11,7 +11,7 @@ async function getWageAt(userId, date, session = null) {
         .sort({ effectiveFrom: -1 })
         .session(session)
 
-    if (!wage) throw new NotFoundError('Valor de salário-hora não encontrado para a data da hora extra.')
+    if (!wage) throw new NotFoundError('Valor de salário-hora não encontrado para a data do registro.')
     return wage
 }
 

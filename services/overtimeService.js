@@ -13,7 +13,7 @@ async function createOvertimeService({ date, workedHours, isHoliday = false, isD
             if (!workedHours || !date) throw new BadRequestError('Por favor, informe quantas horas extras foram feitas e a data')
             // validar formatos
             validateFormat(workedHours, false)
-            const formatedDate = validateDate(date)
+            const formattedDate = validateDate(date)
 
             const wage = await getWageAt(userId, date, session)
 
@@ -26,7 +26,7 @@ async function createOvertimeService({ date, workedHours, isHoliday = false, isD
                 createdBy: userId,
                 workedHours,
                 workedMinutes,
-                date: formatedDate,
+                date: formattedDate,
                 distributionMinutes,
                 distributionHours: {
                     he50hours: minutesToTime(distributionMinutes.he50minutes),
@@ -36,7 +36,7 @@ async function createOvertimeService({ date, workedHours, isHoliday = false, isD
                 values: defineValue(distributionMinutes, wage.wage),
                 wageId: wage._id,
                 wageAtCalculation: wage.wage,
-                payDate: extractPayDate(formatedDate, isHoliday),
+                payDate: extractPayDate(formattedDate, isHoliday),
                 isDayOff,
                 isHoliday,
                 bankedMinutes
