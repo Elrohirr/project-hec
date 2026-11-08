@@ -1,0 +1,387 @@
+/**
+ * Camada de acesso à API.
+ * Toda chamada ao backend passa por aqui, para que o token e os
+ * erros sejam tratados de um jeito só em todo o projeto.
+ */
+
+/**
+ * Decodifica o payload de um JWT (segmento base64url) sem validar assinatura.
+ * Usado no frontend apenas para ler dados não sensíveis do token,
+ * como o flag `isAdmin` emitido no login (ver models/User.js -> createJWT).
+ */
+function decodeJwtPayload(token) {
+  try {
+    const base64Url = token.split('.')[1];
+    if (!base64Url) return null;
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const padded = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), '=');
+    const json = decodeURIComponent(
+      atob(padded)
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    return JSON.parse(json);
+  } catch {
+    return null;
+  }
+}
+
+const Api = {
+  getToken() {
+    return localStorage.getItem(APP_CONFIG.TOKEN_STORAGE_KEY);
+  },
+
+  setSession({ token, user }) {
+    localStorage.setItem(APP_CONFIG.TOKEN_STORAGE_KEY, token);
+    if (user) {
+      localStorage.setItem(APP_CONFIG.USER_STORAGE_KEY, JSON.stringify(user));
+    }
+  },
+
+  getUser() {
+    const raw = localStorage.getItem(APP_CONFIG.USER_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  },
+
+  clearSession() {
+    localStorage.removeItem(APP_CONFIG.TOKEN_STORAGE_KEY);
+    localStorage.removeItem(APP_CONFIG.USER_STORAGE_KEY);
+  },
+
+  isAuthenticated() {
+    return !!this.getToken();
+  },
+
+  /**
+   * Decodifica o payload do token JWT armazenado (não valida assinatura).
+   * @returns {object|null} payload do token ou null quando indisponível/inválido.
+   */
+  decodeToken() {
+    const token = this.getToken();
+    if (!token) return null;
+    return decodeJwtPayload(token);
+  },
+
+  /**
+   * Verifica se o usuário autenticado é admin olhando o payload do token,
+   * que inclui o campo `isAdmin` (ver middleware/authorizeAdmin.js no backend).
+   */
+  isAdmin() {
+    const payload = this.decodeToken();
+    return payload && payload.isAdmin === true;
+  },
+
+  /**
+   * Faz uma requisição para a API já anexando o token (quando existir)
+   * e tratando erros de forma padronizada.
+   *
+   * @param {string} path - ex: '/login', '/horas-extras'
+   * @param {object} options - mesmas opções do fetch (method, body, etc.)
+   */
+  async request(path, options = {}) {
+    const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData;
+    const headers = {
+      // FormData define o próprio Content-Type (com boundary); forçar
+      // 'application/json' aqui quebraria o upload multipart (ex.: PDF).
+      ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
+      ...(options.headers || {})
+    };
+
+    const token = this.getToken();
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    let response;
+    try {
+      response = await fetch(`${APP_CONFIG.API_BASE_URL}${path}`, {
+        ...options,
+        headers
+      });
+    } catch (networkError) {
+      throw new ApiError('Não foi possível conectar ao servidor. Verifique se a API está no ar.', 0);
+    }
+
+    const isJson = response.headers.get('content-type')?.includes('application/json');
+    const data = isJson ? await response.json().catch(() => null) : null;
+
+    if (!response.ok) {
+      // Auto-logoff: só dispoara se HAVIA um token sendo enviado
+      // Sem essa checagem, um 401 de login/senha errada (sem token) também deslogaria/redirecionaria à toa
+      if (response.status === 401 && token) {
+        this.clearSession();
+        window.location.href = 'index.html'
+        throw new ApiError('Sessão expirada', 401)
+      }
+      const message = data?.msg || data?.message || data?.error || 'Ocorreu um erro inesperado.';
+      throw new ApiError(message, response.status);
+    }
+
+    return data;
+  },
+
+  async login(email, password) {
+    const data = await this.request('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password })
+    });
+
+    if (!data?.token) {
+      throw new ApiError('A resposta do servidor não trouxe o token de acesso.', 500);
+    }
+
+    this.setSession({ token: data.token, user: data.user || { email } });
+    return data;
+  },
+
+  async register({ name, surname, email, wage, wageDate, password }) {
+    return this.request('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify({ name, surname, email, wage, wageDate, password })
+    });
+  },
+
+  async getOvertimes(params = {}) {
+    const query = new URLSearchParams(params).toString();
+    return this.request(`/overtime${query ? `?${query}` : ''}`, {
+      method: 'GET'
+    });
+  },
+
+  async createOvertime({ workedHours, date, isDayOff, isHoliday }) {
+    return this.request('/overtime', {
+      method: 'POST',
+      body: JSON.stringify({ workedHours, date, isDayOff, isHoliday })
+    });
+  },
+
+  async getOvertime(id) {
+    return this.request(`/overtime/${id}`, {
+      method: 'GET'
+    });
+  },
+
+  async getNightShifts(params = {}) {
+    const query = new URLSearchParams(params).toString();
+    return this.request(`/nightShift${query ? `?${query}` : ''}`, {
+      method: 'GET'
+    });
+  },
+
+  async createNightShift({ date, nightHoursClock }) {
+    return this.request('/nightShift', {
+      method: 'POST',
+      body: JSON.stringify({ date, nightHoursClock })
+    });
+  },
+
+  async deleteNightShift(id) {
+    return this.request(`/nightShift/${id}`, {
+      method: 'DELETE'
+    });
+  },
+
+  async updateNightShift(id, { date, nightHoursClock }) {
+    return this.request(`/nightShift/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ date, nightHoursClock })
+    });
+  },
+
+  async updateOvertime(id, { workedHours, date, isDayOff, isHoliday }) {
+    return this.request(`/overtime/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ workedHours, date, isDayOff, isHoliday })
+    });
+  },
+
+  async deleteOvertime(id) {
+    return this.request(`/overtime/${id}`, {
+      method: 'DELETE'
+    });
+  },
+
+  /** Exclusão em lote de horas extras — DELETE /overtime
+   *  Body: { overtimes: [id, ...] }. Retorna { deleted, rejected }. */
+  async multiDeleteOvertimes(ids) {
+    return this.request('/overtime', {
+      method: 'DELETE',
+      body: JSON.stringify({ overtimes: ids })
+    });
+  },
+
+  /** Exclusão em lote de turnos noturnos — DELETE /nightShift
+   *  Body: { nightShifts: [id, ...] }. Retorna { deleted, rejected }. */
+  async multiDeleteNightShifts(ids) {
+    return this.request('/nightShift', {
+      method: 'DELETE',
+      body: JSON.stringify({ nightShifts: ids })
+    });
+  },
+
+  async getMealVouchers(params = {}) {
+    const query = new URLSearchParams(params).toString();
+    return this.request(`/mealvoucher${query ? `?${query}` : ''}`, {
+      method: 'GET'
+    });
+  },
+
+  /** Todos os receivables do dashboard — GET /receivables?scope=current|total|previous.
+   *  Retorna os quatro agregados de uma vez (HE bruto, HE líquido, noturno e vales). */
+  async getReceivables(scope = 'current') {
+    return this.request(`/receivables?scope=${encodeURIComponent(scope)}`, {
+      method: 'GET'
+    });
+  },
+
+  /** Totais mensais de HE — GET /graphic?year=YYYY.
+   *  Retorna sempre 12 itens [{ month: 1-12, minutes: { he50, he75, he100, holiday },
+   *  values: { he50, he75, he100, holiday } }]. `minutes` agrupa por `date`
+   *  (realização); `values` é o líquido agrupado por `payDate` (pagamento). */
+  async getOvertimeMonthlyTotals(year) {
+    // Falha cedo com mensagem clara em vez de gerar `?year=undefined`,
+    // que o backend rejeitaria com 400 ("Ano inválido").
+    const yearNumber = Number(year);
+    if (!Number.isInteger(yearNumber)) {
+      throw new ApiError('Ano inválido para o gráfico.', 400);
+    }
+    return this.request(`/graphic?year=${encodeURIComponent(yearNumber)}`, {
+      method: 'GET'
+    });
+  },
+
+  // ---- Banco de horas - /api/v1/bank -------------------------------------
+
+  /** GET /bank - saldo total de minutos + lista de registros. */
+  async getBankCompensations() {
+    return this.request('/bank', { method: 'GET' });
+  },
+
+  /** POST /bank/preview - simula o uso de horas extras sem gravar. */
+  async previewBankCompensation({ date, hoursNeeded }) {
+    return this.request('/bank/preview', {
+      method: 'POST',
+      body: JSON.stringify({ date, hoursNeeded })
+    });
+  },
+
+  /** POST /bank/confirm - confirma a compensação simulada e grava o registro. */
+  async confirmBankCompensation({ date, hoursNeeded }) {
+    return this.request('/bank/confirm', {
+      method: 'POST',
+      body: JSON.stringify({ date, hoursNeeded })
+    });
+  },
+
+  /** PATCH /bank/cancel/:id - cancela um registro ativo e restaura as horas extras. */
+  async cancelBankCompensation(id) {
+    return this.request(`/bank/cancel/${id}`, {
+      method: 'PATCH'
+    });
+  },
+
+  // ---- Importação de ponto via PDF - /api/v1/preview -----------------------
+
+  /** POST /preview - envia o espelho de ponto (campo multer "file") e recebe { array: { previewArray, needsReviewArray } }. */
+  async previewPdfImport(file) {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.request('/preview', {
+      method: 'POST',
+      body: formData
+    });
+  },
+
+  /** POST /preview/confirm - confirma o lote (200, não 201). Retorna { created, rejected }. */
+  async confirmPdfImport(registers) {
+    return this.request('/preview/confirm', {
+      method: 'POST',
+      body: JSON.stringify({ registers })
+    });
+  },
+
+  // ---- Admin (protegido no backend por middleware/authorizeAdmin) ----------
+
+  /** Lista todas as configurações de vale-refeição cadastradas (GET /admin). */
+  async getMealVoucherConfigs() {
+    return this.request('/admin', {
+      method: 'GET'
+    });
+  },
+
+  /** Lista todos os usuários do sistema (somente admin — GET /admin/users). */
+  async getAllUsers() {
+    return this.request('/admin/users', {
+      method: 'GET'
+    });
+  },
+
+  /** Cria uma nova configuração de vale-refeição ativa (POST /admin). */
+  async createMealVoucherConfig({ code, unitValue }) {
+    return this.request('/admin', {
+      method: 'POST',
+      body: JSON.stringify({ code, unitValue })
+    });
+  },
+
+  /** Ativa uma configuração de vale-refeição existente (PATCH /admin/:id). */
+  async activateMealVoucherConfig(id) {
+    return this.request(`/admin/${id}`, {
+      method: 'PATCH'
+    });
+  },
+
+  async updateProfile({ name, surname, wage, email }) {
+    return this.request('/user/profile', {
+      method: 'PATCH',
+      body: JSON.stringify({ name, surname, wage, email })
+    });
+  },
+
+  async updatePassword({ currentPassword, newPassword }) {
+    return this.request('/user/password', {
+      method: 'PATCH',
+      body: JSON.stringify({ currentPassword, newPassword })
+    });
+  },
+
+  async deleteAccount({ password }) {
+    return this.request('/user', {
+      method: 'DELETE',
+      body: JSON.stringify({ password })
+    });
+  },
+
+  /** Lista todos os salários hora do usuário autenticado — GET /user/wage. */
+  async getWages() {
+    return this.request('/user/wage', { method: 'GET' });
+  },
+
+  /** Cria um novo salário-hora — POST /user/wage. */
+  async createWage({ wage, date }) {
+    return this.request('/user/wage', {
+      method: 'POST',
+      body: JSON.stringify({ wage, date })
+    });
+  },
+
+  /** Exclui um salário-hora — DELETE /user/wage/:id. */
+  async deleteWage(id) {
+    return this.request(`/user/wage/${id}`, {
+      method: 'DELETE'
+    });
+  },
+
+  logout() {
+    this.clearSession();
+  }
+};
+
+class ApiError extends Error {
+  constructor(message, status) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+  }
+}

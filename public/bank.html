@@ -1,0 +1,159 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Banco de Horas — Hour Flow</title>
+    <script src="js/theme-init.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/bank.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="app-header">
+      <div class="header-left">
+        <p class="brand-name">Hour Flow - Controle de Horas e Pagamentos</p>
+        <nav class="app-nav">
+          <a href="dashboard.html">Início</a>
+          <a href="overtime.html">Horas extras</a>
+          <a href="nightshift.html">Turno noturno</a>
+          <a href="mealvoucher.html">Vale-refeição</a>
+          <a href="bank.html" class="active">Banco de Horas</a>
+          <a href="import.html">Registro Automático</a>
+        </nav>
+      </div>
+      <div class="user-area">
+        <span id="user-greeting"></span>
+        <a href="account.html">Minha conta</a>
+        <button id="logout-button" class="ghost-button" type="button">Sair</button>
+      </div>
+    </header>
+
+    <main class="app-content">
+      <div class="page-heading">
+        <h2>Banco de Horas</h2>
+      </div>
+
+      <!-- Saldo acumulado no banco: GET /bank -->
+      <section class="summary-cards">
+        <div class="summary-card total">
+          <span class="label">Saldo no banco</span>
+          <span class="hint">Horas acumuladas disponíveis para compensação</span>
+          <div class="value-row">
+            <span class="value" id="bank-balance">—</span>
+          </div>
+        </div>
+        <div class="summary-card">
+          <span class="label">Compensado 50%</span>
+          <span class="hint">Valor compensado</span>
+          <span class="value" id="bank-comp-50">—</span>
+        </div>
+        <div class="summary-card">
+          <span class="label">Compensado 75%</span>
+          <span class="hint">Valor compensado</span>
+          <span class="value" id="bank-comp-75">—</span>
+        </div>
+        <div class="summary-card">
+          <span class="label">Compensado 100%</span>
+          <span class="hint">Valor compensado</span>
+          <span class="value" id="bank-comp-100">—</span>
+        </div>
+        <div class="summary-card total">
+          <span class="label">Total compensado</span>
+          <span class="hint">Valor total já compensado</span>
+          <span class="value" id="bank-comp-total">—</span>
+        </div>
+      </section>
+
+      <div id="bank-error-box" class="error-box" role="alert" hidden></div>
+      <div id="bank-success-box" class="success-box" role="status" hidden></div>
+
+      <!-- Simular / Confirmar: layout 2 columnas -->
+      <div class="bank-sections">
+      <div class="bank-split">
+        <section class="account-section bank-form-panel">
+          <h3>Simular compensação</h3>
+          <p class="section-hint">Escolha a data e quantas horas quer compensar.</p>
+
+          <form id="bank-form" novalidate>
+            <div class="field">
+              <label for="bank-date">Data</label>
+              <input type="date" id="bank-date" name="date" required>
+            </div>
+            <div class="field">
+              <label for="bank-hours">Horas a compensar</label>
+              <input type="time" id="bank-hours" name="hoursNeeded" min="00:00" max="23:59" step="60" value="08:00">
+              <span class="hint">Formato HH:MM — padrão 08:00.</span>
+            </div>
+            <div class="bank-form-actions">
+              <button type="button" id="simulate-button" class="primary-button">Simular</button>
+              <button type="button" id="confirm-bank-button" class="primary-button">Confirmar banco</button>
+            </div>
+          </form>
+        </section>
+
+        <!-- Panel de resultado: sempre visível, alterna entre vazio/simulación/confirmado -->
+        <section class="account-section bank-result-panel" id="bank-preview-section">
+          <h3>Resultado <span id="bank-result-badge" class="badge" hidden></span></h3>
+          <p class="section-hint">Horas extras que serão usadas para compensar <span id="bank-preview-requested">—</span>.</p>
+
+          <div class="table-scroll" id="bank-result-table-wrap" hidden>
+            <table class="overtime-table">
+              <thead>
+                <tr>
+                  <th>Data</th>
+                  <th>Horas usadas</th>
+                  <th>Valor perdido</th>
+                  <th>Horas por adicional (50/75/100)</th>
+                  <th>Valor por adicional (50/75/100)</th>
+                </tr>
+              </thead>
+              <tbody id="bank-preview-body"></tbody>
+              <tfoot id="bank-preview-totals"></tfoot>
+            </table>
+          </div>
+          <div id="bank-preview-empty" class="empty-state">Escolha data e horas e clique em Simular para ver o resultado aqui</div>
+        </section>
+      </div>
+
+      <!-- Histórico: GET /bank -->
+      <section class="account-section">
+        <h3>Histórico de compensações</h3>
+        <p class="section-hint">Compensações registradas, ativas e canceladas. Cancelar restaura as horas extras usadas nela.</p>
+
+        <div class="table-scroll">
+          <table class="overtime-table">
+            <thead>
+              <tr>
+                <th>Data</th>
+                <th>Horas usadas</th>
+                <th>Valor perdido</th>
+                <th>Estado</th>
+                <th>Origem</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="bank-history-body"></tbody>
+          </table>
+        </div>
+        <div id="bank-history-empty" class="empty-state" hidden>Não há compensações registradas ainda.</div>
+      </section>
+      </div>
+    </main>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/auth-guard.js"></script>
+  <script src="js/header.js"></script>
+  <script src="js/filterState.js"></script>
+  <script src="js/format.js"></script>
+  <script src="js/modal.js"></script>
+  <script src="js/bank.js"></script>
+  <script src="js/theme.js"></script>
+</body>
+</html>

@@ -1,0 +1,31 @@
+/* base.css — reset e estilos globais (html/body/tipografia) */
+/* =========================================================
+   Utilitário: hidden (autor sobrepõe UA para evitar conflitos)
+   ========================================================= */
+[hidden] {
+  display: none !important;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--surface);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+button {
+  font-family: inherit;
+}
+
+a {
+  color: var(--teal);
+}

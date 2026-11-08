@@ -1,0 +1,209 @@
+const mongoose = require('mongoose')
+const Overtime = require('../models/Overtime')
+const { createOvertimeService, deleteOvertimeService } = require('../services/overtimeService')
+const { getWageAt, calcDistribution, extractPayDate, defineValue, bankMinutes } = require('../utils/rules')
+const { timeToMinutes, minutesToTime, validateFormat, validateDate } = require('../utils/timeConversion')
+const { validadeIdArray } = require('../utils/helper')
+const { updateMealVoucherService } = require('../services/mealVoucherService')
+const { StatusCodes } = require('http-status-codes')
+const { BadRequestError, NotFoundError } = require('../errors')
+
+// --------------------------- GET todos os registros de hora extra do usuário -----------------------------------------------------
+const getAllOvertime = async (req, res) => {
+    const { user: { userId }, query: { isHoliday, isDayOff, startDate, endDate, startPayDate, endPayDate, sort } } = req
+
+    const queryObject = { createdBy: new mongoose.Types.ObjectId(userId) }
+    if (isHoliday) queryObject.isHoliday = isHoliday === 'true' ? true : false
+    if (isDayOff) queryObject.isDayOff = isDayOff === 'true' ? true : false
+    if (startDate || endDate) {
+        queryObject.date = {}
+        if (startDate) queryObject.date.$gte = new Date(startDate)
+        if (endDate) queryObject.date.$lte = new Date(endDate)
+    }
+    if (startPayDate || endPayDate) {
+        queryObject.payDate = {}
+        if (startPayDate) queryObject.payDate.$gte = new Date(startPayDate)
+        if (endPayDate) queryObject.payDate.$lte = new Date(endPayDate)
+    }
+    let result = Overtime.find(queryObject)
+    if (sort) {
+        const sortedList = sort.split(',').join(' ')
+        result = result.sort(sortedList)
+    }
+    else {
+        result = result.sort('-date')
+    }
+    const page = Number(req.query.page) || 1
+    const limit = Number(req.query.limit) || 10
+    const skip = (page - 1) * limit
+    result = result.skip(skip).limit(limit)
+
+    const distribution = (await Overtime.aggregate([
+        { $match: queryObject },
+        {
+            $group: {
+                _id: null,
+                he50: { $sum: "$distributionMinutes.he50minutes" },
+                he75: { $sum: "$distributionMinutes.he75minutes" },
+                he100: { $sum: "$distributionMinutes.he100minutes" },
+                heHoliday: { $sum: { $cond: [{ $eq: ["$isHoliday", true] }, "$workedMinutes", 0] } }
+            }
+        }
+    ])
+    )[0]
+
+    const values = (await Overtime.aggregate([
+        { $match: queryObject },
+        {
+            $group: {
+                _id: null,
+                valueHe50: { $sum: "$values.valueHe50" },
+                valueHe75: { $sum: "$values.valueHe75" },
+                valueHe100: { $sum: "$values.valueHe100" },
+                valueHeHoliday: { $sum: { $cond: [{ $eq: ["$isHoliday", true] }, "$values.valueHe100", 0] } },
+                total: { $sum: "$values.total" }
+            }
+        },
+        {
+            $project: {
+                valueHe50: { $round: ["$valueHe50", 2] },
+                valueHe75: { $round: ["$valueHe75", 2] },
+                valueHe100: { $round: ["$valueHe100", 2] },
+                valueHeHoliday: { $round: ["$valueHeHoliday", 2] },
+                total: { $round: ["$total", 2] },
+            }
+        }
+    ])
+    )[0] || { valueHe50: 0, valueHe75: 0, valueHe100: 0, valueHeHoliday: 0, total: 0 }
+
+    const overtime = await result
+    const totalRecords = await Overtime.countDocuments(queryObject)
+    res.status(StatusCodes.OK).json({
+        totalRecords,
+        numberOfPages: Math.ceil(totalRecords / limit),
+        currentPage: page,
+        distribution,
+        values,
+        overtime
+    })
+}
+
+// --------------------------- GET apenas um registro de hora extra específico do usuário ------------------------------------------
+const getOvertime = async (req, res) => {
+    const { user: { userId }, params: { id: overtimeId } } = req
+    const overtime = await Overtime.findOne({ createdBy: userId, _id: overtimeId }).lean()
+    if (!overtime) throw new NotFoundError('Hora extra não encontrada')
+
+    const values = overtime.values || { valueHe50: 0, valueHe75: 0, valueHe100: 0, total: 0 }
+
+    res.status(StatusCodes.OK).json({ values, overtime })
+}
+
+// --------------------------- POST um registro de hora extra do usuário -------------------------------------------------------------
+const createOvertime = async (req, res) => {
+    const { body: { workedHours, date, isDayOff, isHoliday }, user: { userId } } = req
+    const result = await createOvertimeService({ date, workedHours, isHoliday, isDayOff, userId })
+    res.status(StatusCodes.CREATED).json(result)
+}
+
+// --------------------------- UPDATE apenas um registro de hora extra específico do usuário ------------------------------------------
+const updateOvertime = async (req, res) => {
+    const session = await mongoose.startSession()
+    try {
+        const result = await session.withTransaction(async () => {
+            const { body: { workedHours, date, isHoliday, isDayOff }, user: { userId }, params: { id: overtimeId } } = req
+            if (workedHours === '' || date === '') throw new BadRequestError('Campos de quantidade e data não podem ser vazios')
+
+            const oldOvertime = await Overtime.findOne({ createdBy: userId, _id: overtimeId }).session(session)
+            if (!oldOvertime) throw new NotFoundError('Hora extra não encontrada')
+            if (oldOvertime.compensatedMinutes > 0) throw new BadRequestError('Não é possível editar horas extras que foram compensadas parcialmente ou totalmente. Primeiro, verifique a qual compensação ela está atrelada e cancele a mesma.')
+
+            // update parcial
+            const finalWorkedHours = (workedHours ?? oldOvertime.workedHours).trim()
+            const finalDate = date ?? oldOvertime.date
+            const finalIsDayOff = isDayOff ?? oldOvertime.isDayOff
+            const finalIsHoliday = isHoliday ?? oldOvertime.isHoliday
+
+            //validar formato e recaulcular regras de negócio
+            let wageId = null
+            let wageAtCalculation = null
+            const formattedDate = validateDate(finalDate)
+            if (formattedDate.getTime() !== oldOvertime.date.getTime() || oldOvertime.wageId == null) {
+                const wage = await getWageAt(userId, formattedDate, session)
+                wageId = wage._id
+                wageAtCalculation = wage.wage
+            } else {
+                wageId = oldOvertime.wageId
+                wageAtCalculation = oldOvertime.wageAtCalculation
+            }
+
+            validateFormat(finalWorkedHours, false)
+            const finalWorkedMinutes = timeToMinutes(finalWorkedHours)
+            const distributionMinutes = calcDistribution(finalWorkedMinutes, finalIsDayOff, finalIsHoliday)
+
+            // whitelist
+            const updateFields = {
+                workedHours: finalWorkedHours,
+                workedMinutes: finalWorkedMinutes,
+                date: formattedDate,
+                distributionMinutes,
+                distributionHours: {
+                    he50hours: minutesToTime(distributionMinutes.he50minutes),
+                    he75hours: minutesToTime(distributionMinutes.he75minutes),
+                    he100hours: minutesToTime(distributionMinutes.he100minutes)
+                },
+                values: defineValue(distributionMinutes, wageAtCalculation),
+                wageId,
+                wageAtCalculation,
+                payDate: extractPayDate(formattedDate, finalIsHoliday),
+                isDayOff: finalIsDayOff,
+                isHoliday: finalIsHoliday,
+                bankedMinutes: bankMinutes(finalWorkedMinutes, finalIsHoliday)
+            }
+
+            const newOvertime = await Overtime.findOneAndUpdate({ createdBy: userId, _id: overtimeId },
+                updateFields, {
+                returnDocument: 'after',
+                runValidators: true,
+                session
+            })
+            const newMealVoucher = await updateMealVoucherService(newOvertime, session)
+            return { newOvertime, newMealVoucher }
+        })
+        res.status(StatusCodes.OK).json(result)
+    } finally {
+        await session.endSession()
+    }
+}
+
+// --------------------------- DELETE apenas um registro de hora extra específico do usuário ------------------------------------------
+const deleteOvertime = async (req, res) => {
+    const { user: { userId }, params: { id: overtimeId } } = req
+    const result = await deleteOvertimeService(userId, overtimeId)
+    res.status(StatusCodes.OK).json(result)
+}
+
+// --------------------------- DELETE vários registros de hora extra específico do usuário ------------------------------------------
+const multiDeleteOvertime = async (req, res) => {
+    const { body: { overtimes }, user: { userId } } = req
+
+    //validações
+    const validadedOvertimes = validadeIdArray(overtimes, 'extras')
+
+    let deleted = []
+    let rejected = []
+
+    for (const overtimeId of validadedOvertimes) {
+        try {
+            if (!mongoose.isValidObjectId(overtimeId)) throw new BadRequestError('Objeto inválido.')
+            const overtime = await deleteOvertimeService(userId, overtimeId)
+            deleted.push(overtime)
+        } catch (error) {
+            rejected.push({ id: overtimeId, msg: error.message })
+        }
+
+    }
+    res.status(StatusCodes.OK).json({ deleted, rejected })
+}
+
+module.exports = { getAllOvertime, getOvertime, createOvertime, updateOvertime, deleteOvertime, multiDeleteOvertime }

@@ -1,0 +1,68 @@
+/* overtime.css — estilos exclusivos da tela de horas extras (overtime.html) */
+.checkbox-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.checkbox-field input {
+  width: 16px;
+  height: 16px;
+}
+
+.checkbox-field label {
+  font-size: 0.88rem;
+  color: var(--text);
+  margin-bottom: 0;
+}
+
+.badge.holiday {
+  background: rgba(226, 164, 0, 0.15);
+  color: var(--amber-ink);
+}
+
+.badge.day-off {
+  background: rgba(176, 105, 241, 0.12);
+  color: rgb(163, 106, 219);
+}
+
+.badge.status-compensated,
+.badge.status-partial {
+  background: rgba(214, 40, 40, 0.12);
+  color: var(--danger);
+}
+
+.badge.status-paid {
+  background: rgba(47, 111, 98, 0.12);
+  color: var(--teal);
+}
+
+.badge.status-banked {
+  background: rgba(22, 129, 216, 0.12);
+  color: rgb(77, 170, 247);
+}
+
+/* =========================================================
+   Resumo — cards HE: horas e R$ em linhas próprias
+   ========================================================= */
+/* Container query: o clamp abaixo (cqi) se baseia na largura do próprio card */
+.summary-card {
+  container-type: inline-size;
+}
+
+/* Valor de horas: cor padrão do tema (var(--text) — branco no modo escuro).
+   clamp de container + nowrap garantem que "120:03 (120,05h)"
+   nunca quebre linha, encolhendo conforme a largura do card. */
+.summary-card .value.hours-value {
+  display: block;
+  white-space: nowrap;
+  font-size: clamp(15px, 8cqi, 22px);
+}
+
+/* Valor em R$ abaixo das horas, menor e em âmbar (âmbar-ink no claro; teal no escuro) */
+.summary-card .value-money {
+  display: block;
+  margin-top: 4px;
+  color: var(--amber-ink);
+}

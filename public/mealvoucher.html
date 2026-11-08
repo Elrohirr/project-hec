@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vale-refeição — Controle de Horas Extras</title>
+      <script src="js/theme-init.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/components.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="app-header">
+      <div class="header-left">
+        <p class="brand-name">Hour Flow - Controle de Horas e Pagamentos</p>
+        <nav class="app-nav">
+          <a href="dashboard.html">Início</a>
+          <a href="overtime.html">Horas extras</a>
+          <a href="nightshift.html">Turno noturno</a>
+          <a href="mealvoucher.html" class="active">Vale-refeição</a>
+          <a href="bank.html">Banco de Horas</a>
+          <a href="import.html">Registro Automático</a>
+        </nav>
+      </div>
+      <div class="user-area">
+        <span id="user-greeting"></span>
+        <a href="account.html">Minha conta</a>
+        <button id="logout-button" class="ghost-button" type="button">Sair</button>
+      </div>
+    </header>
+
+    <main class="app-content">
+      <div class="page-heading">
+        <h2>Vale-refeição</h2>
+      </div>
+
+      <!-- Resumo: soma do valor total só dos registros da página atual (a API não retorna um total agregado aqui) -->
+      <section class="summary-cards" id="summary-cards">
+        <div class="summary-card">
+          <span class="label">Quantidade de vales - HE e noturno</span>
+          <span class="value" id="summary-count">—</span>
+        </div>
+        <div class="summary-card">
+          <span class="label">Total - Hora extra</span>
+          <span class="value" id="summary-overtime">—</span>
+        </div>
+        <div class="summary-card">
+          <span class="label">Total - Turno noturno</span>
+          <span class="value" id="summary-nightshift">—</span>
+        </div>
+        <div class="summary-card total">
+          <span class="label">Total</span>
+          <span class="value" id="summary-subtotal">—</span>
+        </div>
+      </section>
+
+      <section class="table-card">
+        <div class="table-toolbar filters-toolbar">
+          <div class="filter-field">
+            <label for="source-filter">Origem</label>
+            <select id="source-filter">
+              <option value="">Todas</option>
+              <option value="overtime">Hora extra</option>
+              <option value="nightShift">Turno noturno</option>
+            </select>
+          </div>
+          <div class="filter-field">
+            <label for="filter-pay-month-start">Pgto. de</label>
+            <input type="month" id="filter-pay-month-start">
+          </div>
+          <div class="filter-field">
+            <label for="filter-pay-month-end">Pgto. até</label>
+            <input type="month" id="filter-pay-month-end">
+          </div>
+          <div class="filter-field">
+            <label for="filter-sort">Ordenar por</label>
+            <select id="filter-sort">
+              <option value="-date">Mais recentes primeiro</option>
+              <option value="date">Mais antigos primeiro</option>
+              <option value="-payDate">Pagamento mais recente</option>
+              <option value="payDate">Pagamento mais antigo</option>
+            </select>
+          </div>
+          <button type="button" id="apply-filters-button" class="ghost-button-light small">Filtrar</button>
+          <button type="button" id="clear-filters-button" class="ghost-button-light small">Limpar</button>
+        </div>
+
+        <div class="table-scroll">
+          <table class="overtime-table">
+            <thead>
+              <tr>
+                <th>Data</th>
+                <th>Origem</th>
+                <th>Regra</th>
+                <th>Quantidade</th>
+                <th>Valor unitário</th>
+                <th>Valor total</th>
+                <th>Mês pgto.</th>
+              </tr>
+            </thead>
+            <tbody id="mealvoucher-table-body">
+              <!-- linhas geradas via JS -->
+            </tbody>
+          </table>
+        </div>
+        <div id="empty-state" class="empty-state" hidden>Nenhum vale encontrado.</div>
+
+        <div class="table-footer">
+          <div class="limit-field">
+            <label for="page-limit">Registros por página</label>
+            <select id="page-limit" class="scope-select">
+              <option value="10">10</option>
+              <option value="20">20</option>
+              <option value="30">30</option>
+              <option value="40">40</option>
+              <option value="50">50</option>
+            </select>
+          </div>
+          <span id="page-indicator">—</span>
+          <div class="pagination-buttons">
+            <button type="button" id="prev-page-button">Anterior</button>
+            <button type="button" id="next-page-button">Próxima</button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/auth-guard.js"></script>
+  <script src="js/header.js"></script>
+  <script src="js/filterState.js"></script>
+  <script src="js/format.js"></script>
+  <script src="js/mealvoucher.js"></script>
+  <script src="js/theme.js"></script>
+</body>
+</html>

@@ -1,0 +1,248 @@
+const PDFExtractPromise = require('pdf.js-extract')
+const { timeToMinutes, minutesToTime } = require('../utils/timeConversion')
+const { findColumn } = require('../utils/tools')
+const { BadRequestError } = require('../errors')
+
+// extrai os dados brutos do pdf - usado em pdf ponto e contracheque
+async function extractTableFromPdf(buffer) {
+    const PDFExtract = await PDFExtractPromise
+    const pdfExtract = new PDFExtract()
+    const options = {}
+    return new Promise((resolve, reject) => {
+        pdfExtract.extractBuffer(buffer, options, (err, data) => {
+            if (err) return reject(err)
+            resolve(data)
+        })
+    })
+}
+
+// remove strs vazias do pdf - - usado em pdf ponto e contracheque
+function clearEmptyStr(items) {
+    for (let i = items.length - 1; i >= 0; i--) {
+        if (items[i].str === ' ' || items[i].str === '') {
+            items.splice(i, 1)
+        }
+    }
+    return items
+}
+
+// pipeline para extração de dados de forma "burra" de várias tabelas do ponto
+function extractionPDFPipeline(data) {
+
+    // iteração para cada página que contém a table com os dados
+    let finalDoc = []
+    for (let p = 0; p <= data.pages.length - 1; p += 2) {
+
+        // stage 1 - remove ruídos e pega posições referenciais do pdf
+        const items = clearEmptyStr(data.pages[p].content)
+
+        const totaisLine = items.find(item => item.str.includes('Totais'))
+        const firstDate = items.filter(item => item.str.startsWith('01/') && item.x <= 15.7 + 1 && item.x >= 15.7 - 1)
+        if (firstDate.length === 0) { // lançamento de erro para PDFs importados que não são do espelho do ponto
+            throw new BadRequestError('PDF não reconhecido como espelho de ponto. Verifique se o arquivo enviado é o relatório correto.')
+        }
+        let yRef = firstDate[0].y  // referencia inicial y do primeiro dia de dados
+
+        // stage 2 - filtra somente os valores em que y já representa linhas de dados utilizáveis dos dias e depois ordena em ordem crescente por y
+        var itemFiltred = items.filter((object) => object.y > yRef - 1)
+        var itemSorted = itemFiltred.sort(({ y: a }, { y: b }) => a - b)
+
+        // stage 3 - agrupamento de y's próximos em uma lista de dias e ordenação dos x's para cada item dia do array
+        let itemArray = []
+        var tempArray = []
+
+        for (let i = 0; i <= itemSorted.length - 1; i++) {
+            if (itemSorted[i].y > totaisLine.y - 1) {
+                tempArray.sort(({ x: a }, { x: b }) => a - b)
+                itemArray.push(tempArray)
+                break
+            }
+            if (itemSorted[i].y >= yRef - 1 && itemSorted[i].y <= yRef + 1) {
+                tempArray.push(itemSorted[i])
+            }
+            else {
+                tempArray.sort(({ x: a }, { x: b }) => a - b)
+                itemArray.push(tempArray)
+                yRef = itemSorted[i].y
+                tempArray = []
+                tempArray.push(itemSorted[i])
+            }
+        }
+
+        // stage 4 - mapeamento dos grupos "dias" e montagem do mês, jogando pra dentro do documento final ao sair do loop de páginas
+        const map = [
+            { column: 'Data', x: 15.7 },
+            { column: 'Horário', x: 78 },
+            { column: 'Marcações', x: 168.8 },
+            { column: 'H.Trab', x: 303 },
+            { column: 'H.E.', x: 345.5 },
+            { column: 'Ad.N.', x: 388 },
+            { column: 'Ad.N HE.N', x: 430.6 },
+            { column: 'Vl.Lanche', x: 479 },
+            { column: 'Descontos', x: 521 },
+            { column: 'Débito', x: 558 },
+            { column: 'Crédito', x: 600.7 },
+            { column: 'Justificativa', x: 630.85 },
+        ]
+
+        let monthDoc = []
+        for (let i = 0; i <= itemArray.length - 1; i++) {
+            let day = {}
+            let cell = itemArray[i]
+            for (let j = 0; j <= cell.length - 1; j++) {
+                const column = findColumn(cell[j].x, map)
+                const content = cell[j].str
+                day[column] = content
+            }
+            monthDoc.push(day)
+        }
+        finalDoc.push(...monthDoc)
+    }
+
+    return finalDoc
+}
+
+// remove dias trabalhados que não geram registros de hora extra, adicional noturno e nem banco de horas
+function filterEmptyDays(data) {
+    for (let i = data.length - 1; i >= 0; i--) {
+        if ((!Object.hasOwn(data[i], 'H.E.') &&
+            !Object.hasOwn(data[i], 'Ad.N.') &&
+            !Object.hasOwn(data[i], 'Ad.N HE.N') &&
+            !Object.hasOwn(data[i], 'Débito') &&
+            !Object.hasOwn(data[i], 'Crédito'))) {
+            data.splice(i, 1)
+        }
+    }
+    return data
+}
+
+function extractDateFromDay(str) {
+    const slicedStr = str.slice(0, 10)
+    const [day, month, year] = slicedStr.split('/')
+    return [year, month, day].join('-')
+}
+
+// transforma a extração em dados válidos para os services a utilizados no /confirm do registro automático
+function getRegistersByDay(data) {
+    let previewArray = []
+    let needsReviewArray = []
+    for (let i = 0; i <= data.length - 1; i++) {
+
+        // registros em datas de feriado
+        if (data[i].Horário === 'Feriado' && Object.hasOwn(data[i], 'H.E.')) {
+            const date = extractDateFromDay(data[i].Data)
+            previewArray.push({
+                type: 'Hora extra',
+                date,
+                workedHours: data[i]['H.E.'],
+                isHoliday: true
+            })
+        }
+
+        // registros de datas que tenham horas trabalhadas em dias de folga
+        if (Object.hasOwn(data[i], 'H.Trab') && (data[i].Horário === 'FOLG' || data[i].Horário === 'FOL2')) {
+            const date = extractDateFromDay(data[i].Data)
+            previewArray.push({
+                type: 'Hora extra',
+                date,
+                workedHours: data[i]['H.Trab'],
+                isDayOff: true
+            })
+
+            // registros de hora extra em dias de trabalho normal (prorrogações/antecipações)
+        } else if (Object.hasOwn(data[i], 'Crédito')) {
+            // alguns minutos podem vir como ìmpar. Nesses casos, pegar o valor de H.Trab - errado
+            const date = extractDateFromDay(data[i].Data)
+            const credit = timeToMinutes(data[i].Crédito)
+            if (credit % 2 !== 0) {
+                needsReviewArray.push({
+                    date,
+                    msg: `Erro ao tentar registrar a hora extra do dia ${date}. Favor verificar com o administrador.`
+                })
+            } else {
+                previewArray.push({
+                    type: 'Hora extra',
+                    date,
+                    workedHours: minutesToTime(credit / 2),
+                    isDayOff: false
+                })
+            }
+        }
+
+        // registros de turno noturno, tanto em dias de escala quanto com hora extra
+        if (Object.hasOwn(data[i], 'Ad.N.') || Object.hasOwn(data[i], 'Ad.N HE.N')) {
+            const date = extractDateFromDay(data[i].Data)
+            previewArray.push({
+                type: 'Turno noturno',
+                date,
+                nightHours: data[i]['Ad.N.'] || data[i]['Ad.N HE.N']
+            })
+        }
+
+        // registros de débito (compensações)
+        if (Object.hasOwn(data[i], 'Débito')) {
+            const date = extractDateFromDay(data[i].Data)
+            previewArray.push({
+                type: 'Compensação',
+                date,
+                hoursNeeded: data[i].Débito
+            })
+        }
+    }
+    return { previewArray, needsReviewArray }
+}
+
+// extrai salário-hora e mês referência do CQ
+function getRefs(data) {
+    // pega o mês de referência do CQ
+    const dateRegex = /^\d{2}\/\d{4}$/
+    const monthRef = data.find(item => dateRegex.test(item.str))
+    if (!monthRef) throw new BadRequestError('Mês referência não encontrado no PDF do Contracheque.')
+
+    // pega o salário-hora referência do CQ
+    const monetaryRegex = /^(?:\d{1,3}(?:\.\d{3})+|\d+),\d{2}$/
+    const parseBR = s => parseFloat(s.replace(/\./g, '').replace(',', '.'))
+
+    const wageLabel = data.find(i => i.str === 'Salário-Hora')
+    if (!wageLabel) throw new BadRequestError('Salário-hora não encontrado no PDF do Contracheque.')
+
+    const wageItem = data.find(i =>
+        monetaryRegex.test(i.str.trim()) &&
+        Math.abs(i.y - (wageLabel.y + 12)) < 1 &&
+        i.x >= wageLabel.x - 1
+    )
+    if (!wageItem) throw new BadRequestError('Valor do salário-hora não encontrado no PDF do Contracheque.')
+    const wageRef = parseBR(wageItem.str)
+
+    return { monthRef: monthRef.str, wageRef }
+}
+
+// pipeline para extração dos dados das rúbricas do CQ
+function getRubrics(data) {
+
+    // pega a primeira rúbrica do CQ
+    const rubricLabel = data.find(i => i.str === 'Rubrica')
+    if (!rubricLabel) throw new BadRequestError('Rúbrica não encontrado no PDF do Contracheque.')
+
+    const rubricRef = data.find(i =>
+        i.str.length === 4 &&
+        Math.abs(i.y - (rubricLabel.y + 17)) < 1 &&
+        i.x >= rubricLabel.x - 1
+    )
+    if (!rubricRef) throw new BadRequestError('Nenhuma rúbrica valida encontrada no PDF do Contracheque.')
+
+    // pega a parte final do CQ, dados que não serão utilizados
+    const totaisLine = data.find(item => item.str.includes('Total Proventos'))
+
+    // remove o cabeçalho do CQ
+    var itemFiltred = data.filter((object) => object.y > rubricRef.y - 1)
+    var itemFiltredFinal = itemFiltred.filter((object) => object.y < totaisLine.y - 1)
+
+    return itemFiltredFinal
+}
+
+module.exports = {
+    extractTableFromPdf, extractionPDFPipeline,
+    filterEmptyDays, getRegistersByDay,
+    clearEmptyStr, getRefs, getRubrics
+}

@@ -1,0 +1,55 @@
+const mongoose = require('mongoose')
+
+const NightShiftSchema = new mongoose.Schema({
+    createdBy: {
+        type: mongoose.Types.ObjectId,
+        ref: 'User',
+        required: [true, 'Por favor, insira um usuário']
+    },
+    createdAt: {
+        type: Date,
+        default: Date.now
+    },
+    date: {
+        type: Date,
+        required: [true, 'Por favor insira uma data']
+    },
+    nightHoursClock: {
+        type: String,
+        default: '07:00'
+    },
+    nightMinutesClock: {
+        type: Number,
+        required: true
+    },
+    nightHoursReduced: {
+        type: String,
+        default: '08:00'
+    },
+    nightMinutesReduced: {
+        type: Number,
+        required: true
+    },
+    nightShiftValue: {
+        type: Number,
+        required: true
+    },
+    wageId: {
+        type: mongoose.Types.ObjectId,
+        ref: 'Wage',
+        required: [true, 'Por favor, insira um valor de salário-hora.']
+    },
+    wageAtCalculation: {
+        type: Number,
+        required: true
+    },
+    payDate: {
+        type: Date,
+        required: true
+    }
+})
+
+NightShiftSchema.index({ createdBy: 1, wageId: 1 })
+NightShiftSchema.index({ createdBy: 1, date: 1 }, { unique: true })
+
+module.exports = mongoose.model('nightShift', NightShiftSchema)
