@@ -1,4 +1,11 @@
 [{
+  "version":"3.1.2",
+    "date":"12-11-2026",
+    "highlights":[
+      "Corrigido um bug onde a confirmação de compensação por meio do registro automático não funcionava corretamente."
+    ]
+},
+  {
   "version":"3.1.1",
     "date":"05-11-2026",
     "highlights":[

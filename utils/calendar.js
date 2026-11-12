@@ -35,44 +35,27 @@ function createHolidaysTable(year){
         const formattedDate = dateToString(movelHolidayDate)
         holidays.push({date:formattedDate, name:movelHoliday.nome})
     }
-    return holidays
-}
-
-// retorna quantos domingos tem no mês especificado
-function countSundays(month, year){
-    let count = 0
-    let date = new Date(year,month,1)
-    
-    while (date.getMonth() === month) {
-        if (date.getDay() === 0) {
-            count++
-        }
-        date.setDate(date.getDate() + 1)
-    }
-    return count
+    return Object.fromEntries(holidays.map(holiday => [holiday.date, holiday.name]))
 }
 
 // retorna quantos dias tem o mês, quantidade de DSR e dias trabalhados
-function dsrDays(year, month){
-    const holidayTable = createHolidaysTable(year)
+function dsrDays(year, month, holidayTable){
     let daysInMonth = 0
-    let sundays = 0
+    let dsr = 0
     let date = new Date(year, month, 1)
     while (date.getMonth() === month) {
-        // checa se o dia é domingo
-        if (date.getDay() === 0){
-            sundays++
+        // checa se o dia é domingo e feriado, se apenas domingo ou se é feriado
+        if (date.getDay() === 0 || Object.hasOwn(holidayTable, dateToString(date))) {
+            dsr++
+        } else if (date.getDay() === 0) {
+            dsr++
         }
-        // checa se o dia é feriado
-        if (dateToString(date))
         date.setDate(date.getDate() + 1)
         daysInMonth++
         
     }
-    const workedDays = daysInMonth - sundays
-    return {daysInMonth, sundays, workedDays}
+    const workingDays = daysInMonth - dsr
+    return {daysInMonth, dsr, workingDays}
 }
 
-console.log(dsrDays(2026,0))
-
-module.exports = {countSundays, dsrDays}
+module.exports = { createHolidaysTable, dsrDays }

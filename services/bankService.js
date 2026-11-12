@@ -1,4 +1,6 @@
+const mongoose = require('mongoose')
 const Overtime = require('../models/Overtime')
+const BankCompensation = require('../models/BankCompensation')
 const { getClosedMonthCutoff } = require('../utils/rules')
 const { timeToMinutes } = require('../utils/timeConversion')
 const { capitalize, roundCurrency } = require('../utils/tools')
@@ -73,4 +75,44 @@ async function findEligibleOvetimes(userId, hoursNeeded, date, session) {
     return entries
 }
 
-module.exports = { findEligibleOvetimes }
+// --------------------------- Cria o arquivo de compensação - usado pelo controller e pelo registro automáatico ---------------------------
+async function confirmCompensationService(userId, hoursNeeded, date) {
+    const session = await mongoose.startSession()
+    try {
+        const result = await session.withTransaction(async () => {
+            const eligibles = await findEligibleOvetimes(userId, hoursNeeded, date, session)
+            const minutesNeeded = timeToMinutes(hoursNeeded)
+
+            for (const overtime of eligibles) {
+                await Overtime.findByIdAndUpdate(
+                    overtime.overtimeId,
+                    {
+                        $inc: {
+                            compensatedMinutes: overtime.minutesUsed,
+                            "compensatedMinutesByTier.he50minutes": overtime.minutesUsedByTier.he50,
+                            "compensatedMinutesByTier.he75minutes": overtime.minutesUsedByTier.he75,
+                            "compensatedMinutesByTier.he100minutes": overtime.minutesUsedByTier.he100,
+                            compensatedValue: overtime.valueLost
+                        }
+                    }, { runValidators: true, session })
+            }
+
+            const createObject = {
+                createdBy: userId,
+                date,
+                totalMinutes: minutesNeeded,
+                entries: eligibles,
+                source: 'manual', // refatorar quando entrar o pdf import
+                status: 'active'
+            }
+
+            const bankCompensation = await BankCompensation.create(createObject)
+            return bankCompensation
+        })
+        return result
+    } finally {
+        await session.endSession()
+    }
+}
+
+module.exports = { findEligibleOvetimes, confirmCompensationService }
