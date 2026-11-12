@@ -28,9 +28,10 @@ const confirmBankCompensation = async (req, res) => {
 
     // validações
     if (!date) throw new BadRequestError('Por favor, informe a data da compensação.')
+    const formattedDate = validateDate(date)
     validateFormat(hoursNeeded, false)
 
-    const bankCompensation = await confirmCompensationService(userId, hoursNeeded, date)
+    const bankCompensation = await confirmCompensationService(userId, hoursNeeded, formattedDate)
     res.status(StatusCodes.CREATED).json(bankCompensation)
 }
 
