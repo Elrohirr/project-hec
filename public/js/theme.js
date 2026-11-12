@@ -75,12 +75,9 @@
     }
 
     var logoutButton = document.getElementById('logout-button');
-    var privacyToggle = userArea.querySelector('.privacy-toggle');
     var toggle = buildToggle();
 
-    if (privacyToggle) {
-      userArea.insertBefore(toggle, privacyToggle);
-    } else if (logoutButton) {
+    if (logoutButton) {
       userArea.insertBefore(toggle, logoutButton);
     } else {
       userArea.appendChild(toggle);

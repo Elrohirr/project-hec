@@ -1,0 +1,21 @@
+{
+  "fixos": [
+    { "mes": 1,  "dia": 1,  "nome": "Confraternização Universal", "escopo": "nacional" },
+    { "mes": 4,  "dia": 21, "nome": "Tiradentes", "escopo": "nacional" },
+    { "mes": 5, "dia": 1, "nome": "Dia do Trabalhador","escopo": "nacional" },
+    { "mes": 9, "dia": 7, "nome": "Independência do Brasil", "escopo": "nacional" },
+    { "mes": 9, "dia": 8, "nome": "Nossa Senhora da Vitória","escopo": "municipal" },
+    { "mes": 10, "dia": 12, "nome": "Nossa Senhora Aparecida","escopo": "nacional" },
+    { "mes": 11, "dia": 2, "nome": "Finados","escopo": "nacional" },
+    { "mes": 11, "dia": 15, "nome": "Proclamação da República","escopo": "nacional" },
+    { "mes": 11, "dia": 20, "nome": "Consciência Negra","escopo": "nacional" },
+    { "mes": 12,  "dia": 25, "nome": "Natal","escopo": "nacional" }
+  ],
+  "moveis": [
+    { "nome": "Carnaval", "offsetPascoa": -47,  "escopo": "facultativo" },
+    { "nome": "Sexta-feira Santa", "offsetPascoa": -2,  "escopo": "municipal" },
+    { "nome": "Nossa Senhora da Penha", "offsetPascoa": 8,  "escopo": "municipal" },
+    { "nome": "Corpus Christi",    "offsetPascoa": 60,  "escopo": "nacional" }
+  ]
+}
+

@@ -76,9 +76,17 @@ function timetoNumber(hhmm) {
     return roundCurrency(Number(hour) + (Number(minute) / 60), 2)
 }
 
+// converte uma data em string YYYY-MM-DD
+function dateToString(date) {
+    const year = new Date(date).getFullYear()
+    const month = (new Date(date).getMonth() + 1).toString().padStart(2, '0')
+    const day = (new Date(date).getDate()).toString().padStart(2, '0')
+    return [year, month, day].join("-")
+}
+
 module.exports = {
     timeToMinutes, minutesToTime,
     convertToReducedNightMinutes,
     validateFormat, timetoNumber,
-    validateDate
+    validateDate, dateToString
 }

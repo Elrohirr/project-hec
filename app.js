@@ -54,6 +54,7 @@ const importRouter = require('./routes/import')
 const bankRouter = require('./routes/bank')
 const receivablesRouter = require('./routes/receivables')
 const graphicRouter = require('./routes/graphic')
+const dsrRouter = require('./routes/dsr')
 
 // middlewares
 const authenticateUser = require('./middleware/authentication')
@@ -77,6 +78,7 @@ app.use('/api/v1/preview', authenticateUser, importRouter)
 app.use('/api/v1/bank', authenticateUser, bankRouter)
 app.use('/api/v1/receivables', authenticateUser, receivablesRouter)
 app.use('/api/v1/graphic', authenticateUser, graphicRouter)
+app.use('/api/v1/dsr', authenticateUser, dsrRouter)
 
 app.use(notFoundMiddleware)
 app.use(errorHandlerMiddleware)

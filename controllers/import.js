@@ -1,7 +1,7 @@
 const { StatusCodes } = require('http-status-codes')
 const { createOvertimeService } = require('../services/overtimeService')
 const { createNightShiftService } = require('../services/nightShiftService')
-const { confirmCompensation } = require('../services/bankService')
+const { confirmCompensationService } = require('../services/bankService')
 const { extractTableFromPdf, extractionPDFPipeline, filterEmptyDays, getRegistersByDay, clearEmptyStr, getRefs, getRubrics } = require('../services/importService')
 const { BadRequestError } = require('../errors')
 
@@ -97,7 +97,7 @@ const confirmPDFImport = async (req, res) => {
     const onlyCompensations = registers.filter(day => day.type === 'Compensação')
     for (let i = 0; i <= onlyCompensations.length - 1; i++) {
         try {
-            const bankCompensation = await confirmCompensation(userId, onlyCompensations[i].hoursNeeded, onlyCompensations[i].date)
+            const bankCompensation = await confirmCompensationService(userId, onlyCompensations[i].hoursNeeded, onlyCompensations[i].date)
             created.push(bankCompensation)
         } catch (error) {
             if (error.code === 11000) {

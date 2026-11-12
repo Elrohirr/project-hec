@@ -196,21 +196,6 @@
   border-color: var(--paper);
 }
 
-.privacy-toggle {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 7px 8px;
-  min-width: 34px;
-  height: auto;
-}
-
-.privacy-toggle svg {
-  width: 18px;
-  height: 18px;
-  display: block;
-}
-
 /* Botão de menu mobile (hambúrguer) — escondido no desktop, gerado pelo header.js */
 .menu-toggle {
   display: none;
