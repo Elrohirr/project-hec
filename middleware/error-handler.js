@@ -15,8 +15,9 @@ const errorHandlerMiddleware = (err, req, res, next) => {
       customError.msg = `Não é permitido gerar dois registros de turno noturno para a mesma data.`
     } else if ((/bankcompensations/i.test(err.message))) {
       customError.msg = `Não é permitido gerar dois registros de compensação para a mesma data.`
-    }
-    else {
+    } else if ((/debtbanks/i.test(err.message))) {
+      customError.msg = `Não é permitido gerar dois registros de débito de banco para a mesma data.`
+    } else {
       customError.msg = `Não é permitido criar dois registros de hora extra para a mesma data.`
     }
   }

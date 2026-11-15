@@ -2,6 +2,8 @@ const mongoose = require('mongoose')
 const Overtime = require('../models/Overtime')
 const NightShift = require('../models/NightShift')
 const MealVoucher = require('../models/MealVoucher')
+const { createHolidaysTable, dsrDays } = require('../utils/calendar')
+const { roundCurrency } = require('../utils/tools')
 
 async function overtimeReceivableService(userId, scope) {
 
@@ -175,10 +177,35 @@ async function mealVoucherReceivableService(userId, scope) {
     return totals
 }
 
+async function dsrReceivableService(userId, scope) {
+
+    // calcula os valores de hora extra e turno noturno do range de data solicitado
+    const [overtimeTotals, nightShiftTotal] = await Promise.all([
+        overtimeNetReceivableService(userId, scope),
+        nightShiftReceivableService(userId, scope)
+    ])
+
+    // pelo range de data, calcula a quantidade de dias de dsr
+    const holidayTable = createHolidaysTable(scope.$gte.getFullYear())
+    const dsr = dsrDays(scope.$gte.getFullYear(), scope.$gte.getMonth(), holidayTable)
+
+    const dsrValue = roundCurrency((overtimeTotals.overtimeNetReceivable + nightShiftTotal.nightShiftValue) / dsr.workingDays * dsr.dsr)
+
+    return {
+        overtimeTotals: overtimeTotals.overtimeNetReceivable,
+        nightShiftTotals: nightShiftTotal.nightShiftValue,
+        daysInMonth: dsr.daysInMonth,
+        dsr: dsr.dsr,
+        workingDays: dsr.workingDays,
+        dsrValue
+    }
+}
+
 module.exports = {
     overtimeReceivableService,
     overtimeNetReceivableService,
     nightShiftReceivableService,
-    mealVoucherReceivableService
+    mealVoucherReceivableService,
+    dsrReceivableService
 }
 

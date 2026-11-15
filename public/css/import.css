@@ -7,25 +7,6 @@
   gap: 24px;
 }
 
-/* 1. Quadro de avisos: card estático, usa tokens para herdar dark mode */
-.import-notices {
-  border-left: 4px solid var(--amber);
-}
-
-.import-notices ul {
-  margin: 0;
-  padding-left: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  font-size: 0.9rem;
-  color: var(--text);
-}
-
-.import-notices li::marker {
-  color: var(--amber-ink);
-}
-
 /* 2. Zona de drag-and-drop */
 .import-dropzone {
   border: 2px dashed var(--line);

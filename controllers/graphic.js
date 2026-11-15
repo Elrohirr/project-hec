@@ -1,10 +1,11 @@
 const mongoose = require('mongoose')
 const { StatusCodes } = require('http-status-codes')
 const Overtime = require('../models/Overtime')
+const NightShift = require('../models/NightShift')
 const { BadRequestError } = require('../errors')
 
 // -------------------- aggregate único para retornar quantidade de hora extra e valor pago aos meses -------------------------------- 
-const getMonthlyTotalsGraph = async (req, res) => {
+const getOvertimeMonthlyTotals = async (req, res) => {
     const { query: { year }, user: { userId } } = req
 
     const yearNumber = year ? Number(year) : new Date().getFullYear()
@@ -14,12 +15,12 @@ const getMonthlyTotalsGraph = async (req, res) => {
 
     const userObjectId = new mongoose.Types.ObjectId(userId)
 
-    // ------------------ cobre os dois casos do aggregate: hora extra feita e recebidos no ano ao longo dos meses -------------------
     const yearRange = {
         $gte: new Date(Date.UTC(yearNumber, 0, 1)),
         $lt: new Date(Date.UTC(yearNumber + 1, 0, 1))
     }
 
+    // ------------------ cobre os dois casos do aggregate: hora extra feita e recebidos no ano ao longo dos meses -------------------
     const [minutesAgg, valuesAgg] = await Promise.all([
         // soma de hora extra feitas por tier agrupadas por mês
         Overtime.aggregate([
@@ -124,8 +125,79 @@ const getMonthlyTotalsGraph = async (req, res) => {
         months[v.month - 1].values = { he50: v.val50, he75: v.val75, he100: v.val100, holiday: v.valHoliday }
     })
 
+    res.status(StatusCodes.OK).json(months)
+}
+
+const getMonthlyNightShiftGraph = async (req, res) => {
+    const { query: { year }, user: { userId } } = req
+
+    const yearNumber = year ? Number(year) : new Date().getFullYear()
+    if (!Number.isInteger(yearNumber)) {
+        throw new BadRequestError('Ano inválido')
+    }
+
+    const userObjectId = new mongoose.Types.ObjectId(userId)
+
+    const yearRange = {
+        $gte: new Date(Date.UTC(yearNumber, 0, 1)),
+        $lt: new Date(Date.UTC(yearNumber + 1, 0, 1))
+    }
+
+    // ------------------ cobre os dois casos do aggregate: turnos noturnos feitos e recebidos no ano ao longo dos meses -------------------
+    const [minutesAgg, valuesAgg] = await Promise.all([
+
+        // soma de minutos de turnos noturnos
+        NightShift.aggregate([
+            { $match: { createdBy: userObjectId, date: yearRange } },
+            {
+                $group: {
+                    _id: { $month: "$date" },
+                    nightMinutesReduced: { $sum: "$nightMinutesReduced" }
+                }
+            },
+            {
+                $project: {
+                    _id: 0, month: '$_id',
+                    nightMinutesReduced: 1
+                }
+            },
+            { $sort: { month: 1 } }
+        ]),
+
+        // soma de pagamentos de turnos noturnos
+        NightShift.aggregate([
+            { $match: { createdBy: userObjectId, payDate: yearRange } },
+            {
+                $group: {
+                    _id: { $month: "$payDate" },
+                    totalNightShiftValue: { $sum: "$nightShiftValue" }
+                }
+            },
+            {
+                $project: {
+                    _id: 0, month: '$_id',
+                    totalNightShiftValue: { $round: ["$totalNightShiftValue", 2] }
+                }
+            },
+            { $sort: { month: 1 } }
+        ])
+    ])
+
+    const months = Array.from({ length: 12 }, (_, i) => ({
+        month: i + 1,
+        minutes: 0,
+        values: 0
+    }))
+
+    minutesAgg.forEach(m => {
+        months[m.month - 1].minutes = m.nightMinutesReduced
+    })
+
+    valuesAgg.forEach(v => {
+        months[v.month - 1].values = v.totalNightShiftValue
+    })
 
     res.status(StatusCodes.OK).json(months)
 }
 
-module.exports = { getMonthlyTotalsGraph }
+module.exports = { getOvertimeMonthlyTotals, getMonthlyNightShiftGraph }

@@ -342,6 +342,24 @@
   font-size: 1.05rem;
 }
 
+.notices {
+  border-left: 4px solid var(--amber);
+}
+
+.notices ul {
+  margin: 0;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 0.9rem;
+  color: var(--text);
+}
+
+.notices li::marker {
+  color: var(--amber-ink);
+}
+
 .table-card {
   background: var(--paper-raised);
   border: 1px solid var(--line);
@@ -673,11 +691,11 @@
   color: var(--teal);
 }
 
-[data-theme="dark"] .import-notices li::marker {
+[data-theme="dark"] .notices li::marker {
   color: var(--teal);
 }
 
-[data-theme="dark"] .import-notices {
+[data-theme="dark"] .notices {
   border-left-color: var(--teal);
 }
 

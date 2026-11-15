@@ -228,14 +228,14 @@ const Api = {
   },
 
   /** Todos os receivables do dashboard — GET /receivables?scope=current|total|previous.
-   *  Retorna os quatro agregados de uma vez (HE bruto, HE líquido, noturno e vales). */
+   *  Retorna os cinco agregados de uma vez (HE bruto, HE líquido, noturno, vales e DSR). */
   async getReceivables(scope = 'current') {
     return this.request(`/receivables?scope=${encodeURIComponent(scope)}`, {
       method: 'GET'
     });
   },
 
-  /** Totais mensais de HE — GET /graphic?year=YYYY.
+  /** Totais mensais de HE — GET /graphic/overtime?year=YYYY.
    *  Retorna sempre 12 itens [{ month: 1-12, minutes: { he50, he75, he100, holiday },
    *  values: { he50, he75, he100, holiday } }]. `minutes` agrupa por `date`
    *  (realização); `values` é o líquido agrupado por `payDate` (pagamento). */
@@ -246,7 +246,23 @@ const Api = {
     if (!Number.isInteger(yearNumber)) {
       throw new ApiError('Ano inválido para o gráfico.', 400);
     }
-    return this.request(`/graphic?year=${encodeURIComponent(yearNumber)}`, {
+    return this.request(`/graphic/overtime?year=${encodeURIComponent(yearNumber)}`, {
+      method: 'GET'
+    });
+  },
+
+  /** Totais mensais de HE — GET /graphic/nightshift?year=YYYY.
+ *  Retorna sempre 12 itens [{ month: 1-12, minutes: { he50, he75, he100, holiday },
+ *  values: { he50, he75, he100, holiday } }]. `minutes` agrupa por `date`
+ *  (realização); `values` é o líquido agrupado por `payDate` (pagamento). */
+  async getMonthlyNightShiftGraph(year) {
+    // Falha cedo com mensagem clara em vez de gerar `?year=undefined`,
+    // que o backend rejeitaria com 400 ("Ano inválido").
+    const yearNumber = Number(year);
+    if (!Number.isInteger(yearNumber)) {
+      throw new ApiError('Ano inválido para o gráfico.', 400);
+    }
+    return this.request(`/graphic/nightshift?year=${encodeURIComponent(yearNumber)}`, {
       method: 'GET'
     });
   },

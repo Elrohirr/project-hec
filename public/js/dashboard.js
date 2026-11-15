@@ -254,6 +254,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const overtimeLiquidLines = document.getElementById('overtime-liquid-receivable-lines');
   const nightShiftLines = document.getElementById('nightshift-receivable-lines');
   const mealVoucherLines = document.getElementById('mealvoucher-receivable-lines');
+  const dsrLines = document.getElementById('dsr-receivable-lines')
 
   const liquidInfoButton = document.getElementById('liquid-info-button');
 
@@ -340,7 +341,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // visível até a resposta chegar (evita "piscar" a cada troca de escopo).
     if (isLoading && !hasData) {
       const placeholder = [renderRow({ label: 'Carregando…' })];
-      const containers = [overtimeLines, overtimeLiquidLines, nightShiftLines, mealVoucherLines];
+      const containers = [overtimeLines, overtimeLiquidLines, nightShiftLines, mealVoucherLines, dsrLines];
       containers.forEach((container) => renderLines(container, placeholder));
     }
   }
@@ -499,6 +500,39 @@ document.addEventListener('DOMContentLoaded', () => {
       })
     ]);
   }
+
+  // ---- Card: DSR ---------------------------------------------------
+
+  function renderDSR(totals) {
+    const safe = totals || {};
+    const overtimeTotals = Number(safe.overtimeTotals) || 0;
+    const nightShiftTotals = Number(safe.nightShiftTotals) || 0;
+    const daysInMonth = Number(safe.daysInMonth) || 0
+    const dsr = Number(safe.dsr) || 0
+    const workingDays = Number(safe.workingDays) || 0
+    const dsrValue = Number(safe.dsrValue) || 0
+
+    renderLines(dsrLines, [
+      renderRow({
+        label: 'Total de Hora Extra',
+        value: formatCurrencyBRL(overtimeTotals)
+      }),
+      renderRow({
+        label: 'Total de Adicional Noturno',
+        value: formatCurrencyBRL(nightShiftTotals)
+      }),
+      renderRow({
+        label: 'Dias do Mês / DSR / Dias Úteis',
+        value: `${daysInMonth} / ${dsr} / ${workingDays}`
+      }),
+      renderRow({
+        label: 'Total a receber DSR',
+        value: formatCurrencyBRL(dsrValue),
+        total: true
+      })
+    ]);
+  }
+
   // ---- Requisição única ------------------------------------------------------
 
   async function fetchReceivables(scope) {
@@ -514,10 +548,11 @@ document.addEventListener('DOMContentLoaded', () => {
       renderOvertimeLiquido(data?.overtimeNetReceivables, data?.overtimeReceivables);
       renderNightShift(data?.nightShiftReceivables);
       renderMealVoucher(data?.mealVoucherReceivables);
+      renderDSR(data?.dsrReceivables)
     } catch (err) {
       if (currentRequest !== requestId) return;
       if (!hasData) {
-        [overtimeLines, overtimeLiquidLines, nightShiftLines, mealVoucherLines]
+        [overtimeLines, overtimeLiquidLines, nightShiftLines, mealVoucherLines, dsrLines]
           .forEach((container) => renderLines(container, []));
       }
       showError(err.message || 'Não foi possível carregar os valores a receber.');

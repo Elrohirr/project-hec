@@ -1,8 +1,9 @@
 const express = require('express')
 const router = express.Router()
-const { getMonthlyTotalsGraph } = require('../controllers/graphic')
+const { getOvertimeMonthlyTotals, getMonthlyNightShiftGraph } = require('../controllers/graphic')
 
-router.get('/', getMonthlyTotalsGraph)
+router.get('/overtime', getOvertimeMonthlyTotals)
+router.get('/nightshift', getMonthlyNightShiftGraph)
 
 module.exports = router
 

@@ -1,13 +1,14 @@
 const mongoose = require('mongoose')
 const Overtime = require('../models/Overtime')
 const BankCompensation = require('../models/BankCompensation')
+const DebtBank = require('../models/DebtBank')
 const { getClosedMonthCutoff } = require('../utils/rules')
 const { timeToMinutes } = require('../utils/timeConversion')
 const { capitalize, roundCurrency } = require('../utils/tools')
 const { BadRequestError } = require('../errors')
 
 // --------------------------- Encontra as horas extras elegíveis para compensar - usado na simulação e confirmação do banco de horas ---------------------------
-async function findEligibleOvetimes(userId, hoursNeeded, date, session) {
+async function findEligibleOvertimes(userId, hoursNeeded, date, session) {
     const cutOffDate = getClosedMonthCutoff(date)
     const minutesNeeded = timeToMinutes(hoursNeeded)
     if (!minutesNeeded || minutesNeeded <= 0) throw new BadRequestError('As horas a compensar devem ser maiores que 0')
@@ -70,7 +71,14 @@ async function findEligibleOvetimes(userId, hoursNeeded, date, session) {
 
         if (remaining <= 0) break
     }
-    if (remaining > 0) throw new BadRequestError('Não há hora extra suficente no banco para a data específicada.')
+    // caso não haja hora disponível para criar a compensação, os minutos restantes viram débito
+    if (remaining > 0) {
+        return {
+            msg: `Não há horas suficientes no banco de horas. Caso confirme a compensação, ${remaining} minutos virarão débito.`,
+            entries,
+            remaining
+        }
+    }
 
     return entries
 }
@@ -80,10 +88,22 @@ async function confirmCompensationService(userId, hoursNeeded, date) {
     const session = await mongoose.startSession()
     try {
         const result = await session.withTransaction(async () => {
-            const eligibles = await findEligibleOvetimes(userId, hoursNeeded, date, session)
-            const minutesNeeded = timeToMinutes(hoursNeeded)
+            const { entries, remaining } = await findEligibleOvertimes(userId, hoursNeeded, date, session)
 
-            for (const overtime of eligibles) {
+            // se o banco estiver zerado, é apenas criado o débito e retornado, sem criação de compensação
+            if (entries.length === 0) {
+                const [debt] = await DebtBank.create([{
+                    createdBy: userId,
+                    date: date,
+                    debtMinutes: remaining,
+                    minutesLeft: remaining
+                }], { session })
+                return { debt }
+            }
+
+            const minutesNeeded = timeToMinutes(hoursNeeded) - remaining
+
+            for (const overtime of entries) {
                 await Overtime.findByIdAndUpdate(
                     overtime.overtimeId,
                     {
@@ -101,13 +121,27 @@ async function confirmCompensationService(userId, hoursNeeded, date) {
                 createdBy: userId,
                 date,
                 totalMinutes: minutesNeeded,
-                entries: eligibles,
-                source: 'manual', // refatorar quando entrar o pdf import
+                entries,
                 status: 'active'
             }
 
-            const bankCompensation = await BankCompensation.create(createObject)
-            return bankCompensation
+            const [bankCompensation] = await BankCompensation.create([createObject], { session })
+
+            // se houver compensação com débito, o sistema registra as compensações e, 
+            // se tiver remaining, cria o documento de DebtBank, 
+            // anexando o documento de BankCompensation
+            if (remaining > 0) {
+                const [debt] = await DebtBank.create([{
+                    createdBy: userId,
+                    date: date,
+                    debtMinutes: remaining,
+                    minutesLeft: remaining,
+                    originCompensation: bankCompensation._id
+                }], { session })
+
+                return { bankCompensation, debt }
+            }
+            return { bankCompensation }
         })
         return result
     } finally {
@@ -115,4 +149,4 @@ async function confirmCompensationService(userId, hoursNeeded, date) {
     }
 }
 
-module.exports = { findEligibleOvetimes, confirmCompensationService }
+module.exports = { findEligibleOvertimes, confirmCompensationService }

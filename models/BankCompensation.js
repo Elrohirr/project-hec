@@ -33,11 +33,6 @@ const BankCompesationSchema = new mongoose.Schema({
         }],
         required: true
     },
-    source: {
-        type: String,
-        enum: ['manual', 'pdf_import'],
-        required: true
-    },
     status: {
         type: String,
         enum: ['active', 'cancelled'],

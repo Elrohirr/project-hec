@@ -2,7 +2,8 @@ const mongoose = require('mongoose')
 const { StatusCodes } = require('http-status-codes')
 const Overtime = require('../models/Overtime')
 const BankCompensation = require('../models/BankCompensation')
-const { findEligibleOvetimes, confirmCompensationService } = require('../services/bankService')
+const DebtBank = require('../models/DebtBank')
+const { findEligibleOvertimes, confirmCompensationService } = require('../services/bankService')
 const { getClosedMonthCutoff } = require('../utils/rules')
 const { validateFormat, validateDate } = require('../utils/timeConversion')
 const { BadRequestError, NotFoundError } = require('../errors')
@@ -17,7 +18,7 @@ const simulateBankCompensation = async (req, res) => {
     const formattedDate = validateDate(date)
     validateFormat(hoursNeeded, false)
 
-    const entries = await findEligibleOvetimes(userId, hoursNeeded, formattedDate)
+    const entries = await findEligibleOvertimes(userId, hoursNeeded, formattedDate)
     res.status(StatusCodes.OK).json(entries)
 }
 
@@ -119,7 +120,7 @@ const cancelBankCompensation = async (req, res) => {
             // validações para se o banco de horas está valido para cancelamento
             if (!bankCompensation) throw new NotFoundError('Banco de horas não encontrado')
             if (bankCompensation.status === 'cancelled') throw new BadRequestError('Banco de hora selecionado já se encontra cancelado')
-            if (bankCompensation.source === 'pdf_import') throw new BadRequestError('Compensações vindas de PDF import não podem ser canceladas. Verifique com o administrador')
+            if (await DebtBank.findOne({ originCompensation: bankCompId }).session(session)) throw new BadRequestError('Essa compensação possui uma dívida. Necesário cancelar a dívida primeiro antes de cancelar o banco.')
 
             // iteração sobre cada documento de overtime dentro de entries para restaurar ao valor original
             for (const overtime of bankCompensation.entries) {
@@ -144,7 +145,13 @@ const cancelBankCompensation = async (req, res) => {
     }
 }
 
+const getAllDebtBank = async (req, res) => {
+    const { user: { userId } } = req
+    const debtBank = await DebtBank.find({ createdBy: userId })
+    res.status(StatusCodes.OK).json(debtBank)
+}
+
 module.exports = {
     simulateBankCompensation, confirmBankCompensation,
-    getAllBankCompensation, cancelBankCompensation
+    getAllBankCompensation, cancelBankCompensation, getAllDebtBank
 }
