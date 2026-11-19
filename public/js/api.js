@@ -297,6 +297,22 @@ const Api = {
     });
   },
 
+  /**
+   * GET /bank/debt -> rota do router bank (mount /bank), controller getAllDebtBank.
+   * Lista todas as dívidas de banco.
+   */
+  async getBankDebts() {
+    return this.request('/bank/debt', { method: 'GET' });
+  },
+
+  /**
+   * GET /bank/debt/:id -> rota do router bank (mount /bank), controller cancelDebt.
+   * Cancela uma dívida, devolvendo às horas extras os minutos que ela abateu.
+   */
+  async cancelDebt(id) {
+    return this.request(`/bank/debt/${id}`, { method: 'DELETE' });
+  },
+
   // ---- Importação de ponto via PDF - /api/v1/preview -----------------------
 
   /** POST /preview - envia o espelho de ponto (campo multer "file") e recebe { array: { previewArray, needsReviewArray } }. */

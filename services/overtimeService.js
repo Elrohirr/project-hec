@@ -1,5 +1,6 @@
 const mongoose = require('mongoose')
 const Overtime = require('../models/Overtime')
+const { absorvOvertime, undoOvertimeAbsorptions } = require('../services/bankService')
 const { getWageAt, calcDistribution, extractPayDate, defineValue, bankMinutes } = require('../utils/rules')
 const { timeToMinutes, minutesToTime, validateFormat, validateDate } = require('../utils/timeConversion')
 const { createMealVoucherService, deleteMealVoucherService } = require('./mealVoucherService')
@@ -44,7 +45,13 @@ async function createOvertimeService({ date, workedHours, isHoliday = false, isD
 
             const [overtime] = await Overtime.create([createFields], { session })
             const mealVoucher = await createMealVoucherService(overtime, session)
-            return { overtime, mealVoucher }
+            const absorptions = await absorvOvertime(userId, overtime, session)
+
+            const overtimeFinal = absorptions.length
+                ? await Overtime.findById(overtime._id).session(session)
+                : overtime
+
+            return { overtime: overtimeFinal, absorptions, mealVoucher }
         })
     } finally {
         await session.endSession()

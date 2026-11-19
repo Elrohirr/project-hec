@@ -22,8 +22,8 @@
           <a href="overtime.html">Horas extras</a>
           <a href="nightshift.html">Turno noturno</a>
           <a href="mealvoucher.html">Vale-refeição</a>
+          <a href="dsr.html">DSR</a>
           <a href="bank.html" class="active">Banco de Horas</a>
-          <!--<a href="dsr.html">DSR</a>-->
           <a href="import.html">Registro Automático</a>
         </nav>
       </div>
@@ -102,6 +102,14 @@
           <h3>Resultado <span id="bank-result-badge" class="badge" hidden></span></h3>
           <p class="section-hint">Horas extras que serão usadas para compensar <span id="bank-preview-requested">—</span>.</p>
 
+          <div id="bank-debt-warning" class="bank-debt-warning" hidden>
+            <span class="bank-debt-warning-icon">⚠️</span>
+            <span class="bank-debt-warning-text">
+              Dívida a registrar: <strong id="bank-debt-warning-minutes">—</strong>.
+              O excedente vira dívida e será abatido 1 a 1 pelas próximas horas extras.
+            </span>
+          </div>
+
           <div class="table-scroll" id="bank-result-table-wrap" hidden>
             <table class="overtime-table">
               <thead>
@@ -134,7 +142,6 @@
                 <th>Horas usadas</th>
                 <th>Valor perdido</th>
                 <th>Estado</th>
-                <th>Origem</th>
                 <th>Ações</th>
               </tr>
             </thead>
@@ -143,7 +150,31 @@
         </div>
         <div id="bank-history-empty" class="empty-state" hidden>Não há compensações registradas ainda.</div>
       </section>
-      </div>
+
+      <!-- Dívidas do banco: GET /bank/debt (router bank, getAllDebtBank) -->
+      <section class="account-section">
+        <h3>Dívidas do banco</h3>
+        <p class="section-hint">Débitos registrados quando não havia horas suficientes no banco. São abatidos 1 a 1 pelas próximas horas extras.</p>
+
+        <div class="table-scroll">
+          <table class="overtime-table">
+            <thead>
+              <tr>
+                <th>Data</th>
+                <th>Dívida</th>
+                <th>Restante</th>
+                <th>Situação</th>
+                <th>Origem</th>
+                <th>Abatimentos</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="bank-debts-body"></tbody>
+          </table>
+        </div>
+        <div id="bank-debts-empty" class="empty-state">Nenhuma dívida registrada.</div>
+      </section>
+    </div>
     </main>
   </div>
 

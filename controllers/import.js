@@ -1,9 +1,29 @@
 const { StatusCodes } = require('http-status-codes')
 const { createOvertimeService } = require('../services/overtimeService')
 const { createNightShiftService } = require('../services/nightShiftService')
-const { confirmCompensationService } = require('../services/bankService')
+const { confirmCompensationService, checkForDebts } = require('../services/bankService')
 const { extractTableFromPdf, extractionPDFPipeline, filterEmptyDays, getRegistersByDay, clearEmptyStr, getRefs, getRubrics } = require('../services/importService')
 const { BadRequestError } = require('../errors')
+const { timeToMinutes, minutesToTime } = require('../utils/timeConversion')
+
+// converte o crédito do ponto em minutos realmente trabalhados, considerando a dívida aberta:
+// a parte do crédito que paga dívida vale 1 a 1; o que passar disso vale em dobro
+function creditToWorkedMinutes(creditMinutes, debtMinutes) {
+    if (creditMinutes <= debtMinutes) return { workedMinutes: creditMinutes }
+    const excess = creditMinutes - debtMinutes
+    if (excess % 2 !== 0) return { error: true }
+    return { workedMinutes: debtMinutes + excess / 2 }
+}
+
+function buildRejection(register, error) {
+    return {
+        type: register.type,
+        date: register.date,
+        msg: error.code === 11000
+            ? `Hora extra do dia ${register.date} já cadastrada no sistema.`
+            : error.message
+    }
+}
 
 // --------------------------- extrai dados do pdf do ponto e monta a preview --------------------------------
 const importPDFPreview = async (req, res) => {
@@ -25,14 +45,59 @@ const confirmPDFImport = async (req, res) => {
     let created = []
     let rejected = []
     for (let i = 0; i <= registers.length - 1; i++) {
-        // ------------------------------------------------ cria o registro de hora extra ------------------------------------------------------
-        if (registers[i].type === 'Hora extra') {
+        // ------------------------------------------------ cria o registro de compensação - tem precedencia à hora extra ------------------------------------------------------
+        if (registers[i].type === 'Compensação') {
+            try {
+                const bankCompensation = await confirmCompensationService(userId, registers[i].hoursNeeded, registers[i].date)
+                created.push(bankCompensation)
+            } catch (error) {
+                if (error.code === 11000) {
+                    const errorFields = {
+                        type: registers[i].type,
+                        date: registers[i].date,
+                        msg: `Compensação do dia ${registers[i].date} já cadastrada no sistema.`
+                    }
+                    rejected.push(errorFields)
+                } else {
+                    const errorFields = {
+                        type: registers[i].type,
+                        date: registers[i].date,
+                        msg: error.message
+                    }
+                    rejected.push(errorFields)
+                }
+            }
+            // --------------------- cria os registros de horas extra em dias de trabalho normal (prorrogações/antecipações) -----------------------------------------
+        } else if (registers[i].type === 'Hora extra' && Object.hasOwn(registers[i], 'creditForm')) {
+            try {
+                const debtMinutes = await checkForDebts(userId, registers[i].date)
+                const { workedMinutes, error } = creditToWorkedMinutes(timeToMinutes(registers[i].workedHours), debtMinutes)
+
+                if (error) {
+                    rejected.push({
+                        type: registers[i].type,
+                        date: registers[i].date,
+                        msg: `Crédito do dia ${registers[i].date} inconsistente com as dívidas abertas. Verifique o ponto com o administrador.`
+                    })
+                } else {
+                    const overtime = await createOvertimeService({
+                        date: registers[i].date,
+                        workedHours: minutesToTime(workedMinutes),
+                        userId
+                    })
+                    created.push(overtime)
+                }
+            } catch (error) {
+                rejected.push(buildRejection(registers[i], error))
+            }
+            // ------------------------------------ cria os registros de horas extra de feriado ou férias ------------------------------------------------------
+        } else if (registers[i].type === 'Hora extra') {
             const createFields = {
                 date: registers[i].date,
                 workedHours: registers[i].workedHours,
                 isDayOff: registers[i].isDayOff,
                 isHoliday: registers[i].isHoliday,
-                userId
+                userId: userId
             }
             try {
                 const overtime = await createOvertimeService(createFields)
@@ -82,7 +147,7 @@ const confirmPDFImport = async (req, res) => {
                 }
             }
             // ------------------------------------------------ para types desconhecidos e que não são type === compensação -> envia ao rejected ------------------------------------------------------
-        } else if (registers[i].type !== 'Compensação') {
+        } else {
             const unknowFields = {
                 type: 'Desconhecido',
                 docType: registers[i].type,
@@ -93,7 +158,7 @@ const confirmPDFImport = async (req, res) => {
         }
     }
 
-    // após criar todos os registros de hora extra e turno noturno, serão criados os registros de banco de horas, se houver
+    /*// após criar todos os registros de hora extra e turno noturno, serão criados os registros de banco de horas, se houver
     const onlyCompensations = registers.filter(day => day.type === 'Compensação')
     for (let i = 0; i <= onlyCompensations.length - 1; i++) {
         try {
@@ -116,7 +181,7 @@ const confirmPDFImport = async (req, res) => {
                 rejected.push(errorFields)
             }
         }
-    }
+    }*/
 
     res.status(StatusCodes.OK).json({ created, rejected })
 }

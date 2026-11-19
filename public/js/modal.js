@@ -33,7 +33,16 @@ function createModal(options) {
   closeBtn.innerHTML = '&times;';
   closeBtn.setAttribute('aria-label', 'Fechar');
 
-  head.appendChild(title);
+  if (opts.headerActions) {
+    var actions = document.createElement('div');
+    actions.className = 'modal-head-actions';
+    actions.innerHTML = opts.headerActions;
+    head.appendChild(title);
+    head.appendChild(actions);
+  } else {
+    head.appendChild(title);
+  }
+
   head.appendChild(closeBtn);
 
   var body = document.createElement('div');
@@ -75,5 +84,11 @@ function createModal(options) {
     if (e.key === 'Escape') close();
   });
 
-  return { open: open, close: close, el: overlay };
+  return {
+    open: open,
+    close: close,
+    el: overlay,
+    title: title,
+    body: body
+  };
 }

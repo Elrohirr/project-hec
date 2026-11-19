@@ -32,6 +32,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const historyBody = document.getElementById('bank-history-body');
   const historyEmpty = document.getElementById('bank-history-empty');
 
+  const debtsBody = document.getElementById('bank-debts-body');
+  const debtsEmpty = document.getElementById('bank-debts-empty');
+
   const confirmButton = document.getElementById('confirm-bank-button');
   const successBox = document.getElementById('bank-success-box');
 
@@ -107,6 +110,17 @@ document.addEventListener('DOMContentLoaded', () => {
         <td>-----</td>
       </tr>
     `;
+  }
+
+  function setDebtWarning(remaining) {
+    const warning = document.getElementById('bank-debt-warning');
+    const minutesEl = document.getElementById('bank-debt-warning-minutes');
+    if (remaining > 0) {
+      minutesEl.textContent = minutesToHHMM(remaining);
+      warning.hidden = false;
+    } else {
+      warning.hidden = true;
+    }
   }
 
   function buildCancelButton(item) {
@@ -236,7 +250,6 @@ document.addEventListener('DOMContentLoaded', () => {
         <td class="numeric">${minutesToHHMM(item.totalMinutes)}</td>
         <td class="numeric">${currencyFormatter.format(totalValueLost)}</td>
         <td><span class="badge ${isCancelled ? 'bank-cancelled' : 'bank-active'}">${isCancelled ? 'Cancelado' : 'Ativo'}</span></td>
-        <td><span class="source-tag">${item.source === 'pdf_import' ? 'PDF import' : 'Manual'}</span></td>
         <td><div class="row-actions"></div></td>
       `;
       const actions = tr.querySelector('.row-actions');
@@ -253,6 +266,98 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       historyBody.appendChild(tr);
     });
+  }
+
+  function debtEntriesHtml(entries) {
+    const list = Array.isArray(entries) ? entries : [];
+    if (!list.length) return '';
+    return `<ul class="debt-entries">${list
+      .map(
+        (e) =>
+          `<li>${formatDate(e.overtimeDate)} — ${minutesToHHMM(Number(e.minutesUsed) || 0)}</li>`
+      )
+      .join('')}</ul>`;
+  }
+
+  function buildDebtRow(item) {
+    const tr = document.createElement('tr');
+    const debtMinutes = Number(item.debtMinutes) || 0;
+    const minutesLeft = Number(item.minutesLeft) || 0;
+    const isActive = minutesLeft > 0;
+
+    tr.innerHTML = `
+      <td>${formatDate(item.date)}</td>
+      <td class="numeric">${minutesToHHMM(debtMinutes)}</td>
+      <td class="numeric">${minutesToHHMM(minutesLeft)}</td>
+      <td><span class="badge ${isActive ? 'bank-debt-active' : 'bank-debt-paid'}">${isActive ? 'Ativa' : 'Quitada'}</span></td>
+      <td>${item.originCompensation ? 'Compensação parcial' : 'Sem horas no banco'}</td>
+      <td>${debtEntriesHtml(item.entriesOvertime)}</td>
+      <td><div class="row-actions"></div></td>
+    `;
+    const actions = tr.querySelector('.row-actions');
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'icon-button';
+    button.textContent = 'Cancelar';
+    button.addEventListener('click', () => cancelDebt(item, button));
+    actions.appendChild(button);
+    return tr;
+  }
+
+  function renderDebts(list) {
+    debtsBody.innerHTML = '';
+    const rows = Array.isArray(list) ? list : [];
+    if (!rows.length) {
+      debtsEmpty.hidden = false;
+      return;
+    }
+    debtsEmpty.hidden = true;
+    rows.forEach((item) => debtsBody.appendChild(buildDebtRow(item)));
+  }
+
+  async function loadDebts() {
+    const data = await Api.getBankDebts();
+    renderDebts(data);
+  }
+
+  function cancelDebt(item, button) {
+    const modal = createModal({
+      title: 'Cancelar dívida',
+      body: `
+      <div class="cancel-debt-text">
+        Cancelar esta dívida devolve às horas extras os minutos que ela abateu.
+      </div>
+    `,
+      onClose: () => {
+        button.disabled = false;
+        button.textContent = 'Cancelar';
+      }
+    });
+    const confirmBtn = document.createElement('button');
+    confirmBtn.type = 'button';
+    confirmBtn.className = 'primary-button';
+    confirmBtn.textContent = 'Sim, cancelar';
+    confirmBtn.addEventListener('click', async () => {
+      await doCancelDebt(item, button);
+      modal.close();
+    });
+    modal.el.querySelector('.modal-body').appendChild(confirmBtn);
+    modal.open();
+  }
+
+  async function doCancelDebt(item, button) {
+    button.disabled = true;
+    button.textContent = 'Cancelando…';
+    try {
+      await Api.cancelDebt(item._id);
+      setSuccess('Dívida cancelada com sucesso.');
+      await loadBank();
+      await loadDebts();
+    } catch (err) {
+      showError(err.message || 'Não foi possível cancelar a dívida.');
+      button.disabled = false;
+      button.textContent = 'Cancelar';
+    }
   }
 
   async function loadBank() {
@@ -325,10 +430,13 @@ document.addEventListener('DOMContentLoaded', () => {
     simulateButton.disabled = true;
     simulateButton.textContent = 'Simulando…';
     try {
-      const entries = await Api.previewBankCompensation({ date, hoursNeeded });
-      lastSimulation = { date, hoursNeeded };
+      const data = await Api.previewBankCompensation({ date, hoursNeeded });
+      const entries = Array.isArray(data) ? data : (data?.entries || []);
+      const remaining = Array.isArray(data) ? 0 : Number(data?.remaining || 0);
+      lastSimulation = { date, hoursNeeded, remaining };
       previewRequested.textContent = hoursNeeded;
       setResultState('simulacao', entries);
+      setDebtWarning(remaining);
     } catch (err) {
       showError(err.message || 'Não foi possível simular a compensação.');
     } finally {
@@ -357,11 +465,22 @@ document.addEventListener('DOMContentLoaded', () => {
     confirmButton.textContent = 'Confirmando…';
     try {
       const result = await Api.confirmBankCompensation({ date, hoursNeeded });
-      setSuccess('Compensação confirmada com sucesso.');
+      const debt = result?.debt;
+      let successMessage = 'Compensação confirmada com sucesso.';
+      if (debt) {
+        const debtMinutes = Number(debt.debtMinutes || 0);
+        if (result?.bankCompensation) {
+          successMessage = `Banco registrado e dívida de ${minutesToHHMM(debtMinutes)} criada.`;
+        } else {
+          successMessage = `Dívida de ${minutesToHHMM(debtMinutes)} registrada (não havia horas no banco).`;
+        }
+      }
+      setSuccess(successMessage);
       previewRequested.textContent = hoursNeeded;
       lastSimulation = { date, hoursNeeded };
-      setResultState('confirmado', result?.entries || []);
+      setResultState('confirmado', result?.bankCompensation?.entries || []);
       await loadBank();
+      await loadDebts();
     } catch (err) {
       showError(err.message || 'Não foi possível confirmar a compensação.');
     } finally {
@@ -382,5 +501,9 @@ document.addEventListener('DOMContentLoaded', () => {
     comp75El.textContent = '—';
     comp100El.textContent = '—';
     showError(err.message || 'Não foi possível carregar o saldo e o histórico do banco de horas.');
+  });
+
+  loadDebts().catch((err) => {
+    showError(err.message || 'Não foi possível carregar as dívidas do banco.');
   });
 });

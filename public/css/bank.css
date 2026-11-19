@@ -70,3 +70,61 @@
   background: rgba(47, 111, 98, 0.12);
   color: var(--teal);
 }
+
+.badge.bank-debt-active {
+  background: rgba(226, 164, 0, 0.15);
+  color: var(--amber-ink);
+}
+
+.badge.bank-debt-paid {
+  background: rgba(47, 111, 98, 0.12);
+  color: var(--teal);
+}
+
+.bank-debt-warning {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: rgba(226, 164, 0, 0.08);
+  border: 1px solid rgba(226, 164, 0, 0.35);
+  border-radius: var(--radius);
+  font-size: 0.85rem;
+  color: var(--amber-ink);
+}
+
+.bank-debt-warning[hidden] {
+  display: none;
+}
+
+.bank-debt-warning-icon {
+  font-size: 1.1rem;
+}
+
+.bank-debt-warning-text {
+  display: block;
+}
+
+.debt-entries {
+  margin: 0 0 0 16px;
+  padding: 0;
+  list-style: none;
+  font-size: 0.78rem;
+}
+
+.debt-entries li {
+  position: relative;
+  padding: 1px 0 1px 12px;
+}
+
+.debt-entries li::before {
+  content: '›';
+  position: absolute;
+  left: 0;
+  color: var(--ink-soft);
+}
+
+.no-action {
+  color: var(--ink-soft);
+  white-space: nowrap;
+}

@@ -142,6 +142,7 @@
   font-weight: 500;
   padding-bottom: 2px;
   border-bottom: 2px solid transparent;
+  transition: color 0.2s, border-color 0.2s;
 }
 
 .app-nav a:hover {
@@ -544,6 +545,8 @@
   display: flex;
   gap: 6px;
   white-space: nowrap;
+  justify-content: center;
+  align-items: center;
 }
 
 .icon-button.actions-toggle {
@@ -833,6 +836,7 @@ body.modal-open {
 
 .modal {
   background: var(--paper-raised);
+  color: var(--text);
   border: 1px solid var(--line);
   border-radius: var(--radius);
   box-shadow: var(--shadow-card);
@@ -842,17 +846,22 @@ body.modal-open {
   overflow-y: auto;
 }
 
+.modal-title {
+  align-self: center;
+  margin-left: 20px;
+  color: var(--text);
+}
+
 .modal-head {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 20px;
+  align-items: stretch;
+  gap: 24px;
   border-bottom: 1px solid var(--line);
 }
 
-.modal-title {
-  font-family: var(--font-display);
-  margin: 0;
+.modal-head-actions {
+  display: flex;
+  align-items: stretch;
 }
 
 .modal-close {
@@ -862,14 +871,97 @@ body.modal-open {
   line-height: 1;
   cursor: pointer;
   color: var(--ink-soft);
+  margin-left: auto;
+  align-self: center;
 }
 
 .modal-close:hover {
   color: var(--danger);
 }
 
+.modal-tabs {
+  display: flex;
+  align-items: stretch;
+  gap: 20px;
+}
+
+.modal-tab {
+  display: flex;
+  align-items: center;
+  padding: 2px 2px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--ink-soft);
+  font: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.modal-tab:hover {
+  color: var(--text);
+}
+
+.modal-tab.active {
+  color: var(--text-color);
+  font-weight: 600;
+  border-bottom-color: var(--amber);
+}
+
+[data-theme="dark"] .modal-tab.active {
+  border-bottom-color: var(--teal);
+}
+
 .modal-body {
   padding: 20px;
+}
+
+.cancel-debt-text {
+  margin-bottom: 16px;
+}
+
+.roadmap-item {
+  padding: 16px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.roadmap-item:last-child {
+  border-bottom: none;
+}
+
+.roadmap-item h4 {
+  margin: 10px 0 6px;
+  color: var(--text);
+}
+
+.roadmap-item p {
+  margin: 0;
+  color: var(--ink-soft);
+  line-height: 1.5;
+}
+
+.roadmap-status {
+  display: inline-block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 5px;
+}
+
+.roadmap-status.in-progress {
+  color: var(--teal);
+  background: rgba(53, 214, 168, 0.12);
+}
+
+.roadmap-status.planned {
+  color: var(--blue-ink);
+  background: rgba(124, 192, 251, 0.12);
+}
+
+.roadmap-status.future {
+  color: var(--ink-soft);
+  background: var(--surface);
 }
 
 @media (max-width: 480px) {

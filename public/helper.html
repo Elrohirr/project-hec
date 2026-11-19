@@ -33,7 +33,9 @@
     <a href="#horas-extras">Horas extras</a>
     <a href="#adicional-noturno">Adicional noturno</a>
     <a href="#vale-lanche">Vale lanche</a>
+    <a href="#dsr">DSR</a>
     <a href="#banco-de-horas">Banco de horas</a>
+    <a href="#banco-negativo">Banco negativo</a>
     <a href="#pdf">Registro automático</a>
     <a href="#regras">Regras em resumo</a>
     <a href="#faq">Dúvidas frequentes</a>
@@ -138,6 +140,25 @@
       <p>Essa regra é fixa: não depende de qual dos dois vales teria maior valor.</p>
     </section>
 
+    <section id="dsr" class="searchable">
+      <h2>Descanso semanal remunerado</h2>
+      <p>Assim como o vale refeição, o descanso semanal remunerado sobre adicionais (DSR) é cálculado <strong>automaticamente</strong> a partir dos seus registros de hora extra e de turno noturno. Você não precisa lançá-los à mão</p>
+      <div class="dsr-calculation">
+        <span class="dsr-calculation-label">Cálculo:</span>
+          <div class="dsr-formula">
+            <div class="dsr-fraction">
+              <div class="dsr-numerator">Hora extra + Adicional noturno</div>
+              <div class="dsr-denominator">Dias úteis do mês de referência</div>
+            </div>
+            <span class="dsr-multiply">×</span>
+            <div class="dsr-result-factor">Dias de DSR do mês de referência</div>
+        </div>
+      </div>
+      <p>Mês de referência é o mês anterior ao do pagamento. Ex: o ponto de agosto é pago na folha de setembro. A linha de janeiro usa dezembro do ano anterior.</p>
+      <p>Dias de DSR = domingos + feriados que não caem em domingo (nacionais e municipais). Dias úteis = dias do mês − dias de DSR.</p>
+      <p>Os valores são uma ESTIMATIVA. Podem ter pequena diferença em relação à folha real, e meses ainda não pagos mudam conforme novos registros de hora extra e turno noturno.</p>
+    </section>
+
     <section id="banco-de-horas" class="searchable">
       <h2>Banco de horas</h2>
       <p>O banco de horas guarda o saldo das horas extras destinadas a compensação, separado por faixa (50%, 75% e 100%).</p>
@@ -154,6 +175,15 @@
       <p>Cancelar uma compensação devolve exatamente o que foi consumido, com os mesmos valores da época. Compensações que vieram de importação de PDF <strong>não podem ser canceladas</strong>.</p>
       <h3>Saldo</h3>
       <p>O saldo é a diferença entre as horas destinadas ao banco e as já compensadas. O saldo geral considera apenas as horas disponíveis para compensação.</p>
+    </section>
+
+    <section id="banco-negativo" class="searchable">
+      <h2>Banco negativo</h2>
+      <p>Caso você crie uma compensação com o banco de horas zerado, uma dívida será criada, que será abatida usando registros de hora extra posteriores a data do registro.</p>
+      <p>Diferentemente do banco de horas em que toda hora extra entra dobrada no banco, o abatimento usa a regra 1 pra 1, ou seja, uma hora extra abate uma hora de dívida.</p>
+      <p>Caso uma hora extra abata totalmente uma dívida e sobre, o excedente vira hora extra normal, seguindo as mesmas regras de criação.</p>
+      <p>A ordem de abatimento é sempre da dívida mais antiga para a mais recente, igual consumo de hora extra para compensação</p>
+      <p>Mesmo uma hora extra sendo usado para abater uma dívida, o ticket ainda é gerado. Isso pode mudar com o futuro</p>
     </section>
 
     <section id="pdf" class="searchable">

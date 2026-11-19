@@ -24,7 +24,18 @@ const DebtBankSchema = new mongoose.Schema({
         type: [{
             overtimeId: { type: mongoose.Types.ObjectId, ref: 'Overtime', required: true },
             overtimeDate: { type: Date, required: true },
-            minutesUsed: { type: Number, required: true, min: 1 }
+            minutesUsed: { type: Number, required: true, min: 1 },
+            minutesUsedByTier: {
+                he50: { type: Number, default: 0 },
+                he75: { type: Number, default: 0 },
+                he100: { type: Number, default: 0 }
+            },
+            valueLost: { type: Number, default: 0 },
+            valueLostByTier: {
+                he50: { type: Number, default: 0 },
+                he75: { type: Number, default: 0 },
+                he100: { type: Number, default: 0 }
+            }
         }]
     },
     originCompensation: {
@@ -32,7 +43,11 @@ const DebtBankSchema = new mongoose.Schema({
         ref: 'BankCompensation',
         default: null
     },
-}, { timestamps: true })
+}, {
+    timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }
+})
 
 DebtBankSchema.virtual('status').get(function () {
     const { minutesLeft = 0 } = this

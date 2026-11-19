@@ -22,15 +22,15 @@
           <a href="overtime.html">Horas extras</a>
           <a href="nightshift.html">Turno noturno</a>
           <a href="mealvoucher.html">Vale-refeição</a>
+          <a href="dsr.html">DSR</a>
           <a href="bank.html">Banco de Horas</a>
-          <!--<a href="dsr.html">DSR</a>-->
           <a href="import.html">Registro Automático</a>
         </nav>
       </div>
       <div class="user-area">
         <span id="user-greeting"></span>
         <a href="account.html">Minha conta</a>
-        <button id="whatsnew-button" class="ghost-button whatsnew-button" type="button" aria-haspopup="dialog" aria-expanded="false">Novidades <span class="whatsnew-badge" hidden aria-hidden="true"></span></button>
+        <button id="whatsnew-button" class="ghost-button whatsnew-button" type="button" aria-haspopup="dialog" aria-expanded="false">Novidades<span class="whatsnew-badge" hidden aria-hidden="true"></span></button>
         <button id="logout-button" class="ghost-button" type="button">Sair</button>
       </div>
     </header>
@@ -59,6 +59,12 @@
           <p>Acompanhe os vales gerados a partir das horas extras e turnos noturnos registrados.</p>
         </a>
 
+        <a href="dsr.html" class="module-card">
+              <span class="module-icon" aria-hidden="true">💤</span>
+              <h3>Descanso Semanal Remunerado</h3>
+              <p>Acompanhe o DSR com base nos registros de horas extras e turnos noturnos.</p>
+        </a>
+
         <a href="bank.html" class="module-card">
           <span class="module-icon" aria-hidden="true">🏦</span>
           <h3>Banco de Horas</h3>
@@ -82,13 +88,6 @@
               <h3>Documentação e ajuda</h3>
               <p>Está com dúvidas? Acesse aqui a documentação do projeto e saiba como utilizá-lo.</p>
             </a>
-
-        <a class="module-card disabled" aria-disabled="true">
-              <span class="module-badge module-badge--soon">Em breve</span>
-              <span class="module-icon" aria-hidden="true">💤</span>
-              <h3>Descanso Semanal Remunerado</h3>
-              <p>Acompanhe a remuneração do descanso semanal remunerado (DSR) com base nos registros de horas extras e turnos noturnos.</p>
-        </a>
 
         <a class="module-card disabled" aria-disabled="true">
               <span class="module-badge module-badge--soon">Em breve</span>
@@ -181,6 +180,16 @@
               <h3>Descanso Semanal Remunerado</h3>
             </div>
             <div class="receivable-lines" id="dsr-receivable-lines" aria-live="polite"></div>
+          </div>
+
+          <!-- DSR a receber -->
+          <div class="account-section receivable-card">
+            <div class="receivable-card-head">
+              <h3>Sobreaviso</h3>
+            </div>
+            <div class="receivable-lines" id="dsr-receivable-lines" aria-live="polite">
+              <p>Card e módulo de sobreaviso em desenvolvimento. Será disponibilizado em futuras atualizações. Aguarde!</p>
+            </div>
           </div>
 
         </div>

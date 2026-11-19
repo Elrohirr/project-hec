@@ -134,6 +134,55 @@ tr:last-child td { border-bottom: 0; }
 .calc output { font-family: var(--font-mono); font-size: 1.5rem; color: var(--accent); }
 .calc small { display: block; color: var(--muted); margin-top: 8px; }
 
+.dsr-calculation {
+  margin: 16px 0;
+}
+
+.dsr-calculation-label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.dsr-formula {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 16px 80px;
+  width: fit-content;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+}
+
+.dsr-fraction {
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+}
+
+.dsr-numerator {
+  padding: 0 10px 8px;
+  border-bottom: 2px solid #ffffff;
+  font-weight: 600;
+}
+
+.dsr-denominator {
+  padding: 8px 10px 0;
+}
+
+.dsr-multiply {
+  font-size: 1.4rem;
+  font-weight: 600;
+}
+
+.dsr-result-factor {
+  font-weight: 600;
+  text-align: center;
+}
+
 details { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; margin-bottom: 10px; max-width: 72ch; }
 summary { cursor: pointer; padding: 12px 16px; font-weight: 600; }
 details[open] summary { border-bottom: 1px solid var(--line); }

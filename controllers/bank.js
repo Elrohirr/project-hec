@@ -3,22 +3,16 @@ const { StatusCodes } = require('http-status-codes')
 const Overtime = require('../models/Overtime')
 const BankCompensation = require('../models/BankCompensation')
 const DebtBank = require('../models/DebtBank')
-const { findEligibleOvertimes, confirmCompensationService } = require('../services/bankService')
+const { findEligibleOvertimes, confirmCompensationService, revertDebtEntries } = require('../services/bankService')
 const { getClosedMonthCutoff } = require('../utils/rules')
-const { validateFormat, validateDate } = require('../utils/timeConversion')
 const { BadRequestError, NotFoundError } = require('../errors')
 
 // --------------------------- Realiza a simulação de um banco de hroas, sem gravar no banco -----------------------------------------------------
 const simulateBankCompensation = async (req, res) => {
     const { user: { userId }, body: { date } } = req
     const hoursNeeded = (req.body.hoursNeeded || '08:00').trim()
-
-    //validações
-    if (!date) throw new BadRequestError('Por favor, informe a data da compensação.')
-    const formattedDate = validateDate(date)
-    validateFormat(hoursNeeded, false)
-
-    const entries = await findEligibleOvertimes(userId, hoursNeeded, formattedDate)
+    // validações de data e formato de hora estão em findElegiblesOvertimes
+    const entries = await findEligibleOvertimes(userId, hoursNeeded, date)
     res.status(StatusCodes.OK).json(entries)
 }
 
@@ -26,13 +20,8 @@ const simulateBankCompensation = async (req, res) => {
 const confirmBankCompensation = async (req, res) => {
     const { user: { userId }, body: { date } } = req
     const hoursNeeded = (req.body.hoursNeeded || '08:00').trim()
-
-    // validações
-    if (!date) throw new BadRequestError('Por favor, informe a data da compensação.')
-    const formattedDate = validateDate(date)
-    validateFormat(hoursNeeded, false)
-
-    const bankCompensation = await confirmCompensationService(userId, hoursNeeded, formattedDate)
+    // validações de data e formato de hora estão em findElegiblesOvertimes
+    const bankCompensation = await confirmCompensationService(userId, hoursNeeded, date)
     res.status(StatusCodes.CREATED).json(bankCompensation)
 }
 
@@ -100,7 +89,7 @@ const getAllBankCompensation = async (req, res) => {
         }
     ]))[0]
 
-    const bankCompensation = await BankCompensation.find({ createdBy: userId })
+    const bankCompensation = await BankCompensation.find({ createdBy: userId }).sort('-date')
     res.status(StatusCodes.OK).json({
         bankedMinutesTotal,
         totalValueCompensatedByTier,
@@ -137,7 +126,7 @@ const cancelBankCompensation = async (req, res) => {
                     }, { runValidators: true, session }
                 )
             }
-            await bankCompensation.updateOne({ status: 'cancelled' }, { session })
+            await BankCompensation.findOneAndDelete({ createdBy: userId, _id: bankCompId }).session(session)
         })
         res.status(StatusCodes.OK).json({ msg: 'Banco de horas cancelado com sucesso' })
     } finally {
@@ -147,11 +136,29 @@ const cancelBankCompensation = async (req, res) => {
 
 const getAllDebtBank = async (req, res) => {
     const { user: { userId } } = req
-    const debtBank = await DebtBank.find({ createdBy: userId })
+    const debtBank = await DebtBank.find({ createdBy: userId }).sort('-date')
     res.status(StatusCodes.OK).json(debtBank)
+}
+
+// --------------------------- Cancela uma dívida, devolvendo às HE o que ela havia abatido -----------------------------------------------------
+const cancelDebt = async (req, res) => {
+    const { user: { userId }, params: { id: debtId } } = req
+    const session = await mongoose.startSession()
+    try {
+        await session.withTransaction(async () => {
+            const debt = await DebtBank.findOne({ _id: debtId, createdBy: userId }).session(session)
+            if (!debt) throw new NotFoundError('Dívida não encontrada')
+
+            await revertDebtEntries(debt, session)
+            await DebtBank.deleteOne({ _id: debt._id }, { session })
+        })
+        res.status(StatusCodes.OK).json({ msg: 'Dívida cancelada com sucesso' })
+    } finally {
+        await session.endSession()
+    }
 }
 
 module.exports = {
     simulateBankCompensation, confirmBankCompensation,
-    getAllBankCompensation, cancelBankCompensation, getAllDebtBank
+    getAllBankCompensation, cancelBankCompensation, getAllDebtBank, cancelDebt
 }

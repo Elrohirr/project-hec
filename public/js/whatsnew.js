@@ -71,23 +71,105 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
+  var roadmap = [];
+
+  async function loadRoadmap() {
+    if (roadmap.length) return;
+
+    var res = await fetch('data/roadmap.json', {
+      cache: 'no-store'
+    });
+
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+
+    var data = await res.json();
+    roadmap = data.items || [];
+  }
+
+  function renderRoadmap() {
+    if (!roadmap.length) {
+      return '<p>Nenhum item no roadmap no momento.</p>';
+    }
+
+    var statusLabels = {
+      'in-progress': 'Em desenvolvimento',
+      'planned': 'Planejado',
+      'future': 'Futuro'
+    };
+
+    return roadmap.map(function (item) {
+      var status = statusLabels[item.status] || 'Não definido';
+
+      return `
+      <div class="roadmap-item">
+        <span class="roadmap-status ${item.status}">
+          ${status}
+        </span>
+
+        <h4>${item.title}</h4>
+        <p>${item.description}</p>
+      </div>
+    `;
+    }).join('');
+  }
+
   function openModal() {
     var latest = latestVersion();
     if (!latest) return;
+
     var modal = createModal({
-      title: 'Novidades',
-      body: renderBody()
+      title: 'O que há de novo?',
+      body: renderBody(),
+
+      headerActions: `
+      <div class="modal-tabs">
+        <button type="button" class="modal-tab active" data-tab="whatsnew">Novidades</button>
+        <button type="button" class="modal-tab" data-tab="roadmap">Roadmap</button>
+      </div>
+    `
     });
+
+    var tabs = modal.el.querySelectorAll('.modal-tab');
+
+    tabs.forEach(function (tab) {
+      tab.addEventListener('click', async function () {
+        var selectedTab = tab.dataset.tab;
+
+        tabs.forEach(function (t) {
+          t.classList.toggle('active', t === tab);
+        });
+
+        if (selectedTab === 'roadmap') {
+          try {
+            await loadRoadmap();
+            modal.title.textContent = 'O que há de novo?';
+            modal.body.innerHTML = renderRoadmap();
+          } catch (err) {
+            console.error('Falha ao carregar roadmap:', err);
+            modal.body.innerHTML =
+              '<p>Não foi possível carregar o roadmap.</p>';
+          }
+        } else {
+          modal.title.textContent = 'O que há de novo?';
+          modal.body.innerHTML = renderBody();
+        }
+      });
+    });
+
     modal.open();
+
     localStorage.setItem(APP_CONFIG.WHATSNEW_LS_KEY, latest.version);
     setBadge(false);
   }
 
   button.addEventListener('click', function () {
     if (!versions.length) {
-      load().then(function () { openModal(); });
+      load().then(function () {
+        openModal();
+      });
       return;
     }
+
     openModal();
   });
 

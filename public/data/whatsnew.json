@@ -1,4 +1,14 @@
 [{
+  "version":"3.2.0",
+    "date":"19-11-2026",
+    "highlights":[
+      "Adicionado o módulo de Descanso Semanal Remunerado (DSR).",
+      "Adicionado a funcionalidade de Horas Negativas em \"Banco de Horas\". Se não houver horas no banco ao tentar criar um banco de horas, o sistema emite um alerta. Caso confirme, o sistema criará uma dívida que será abatida com as horas extras após a data do registro.",
+      "Atualização da \"Documentação e ajuda\" para refletir as novas funcionalidades.",
+      "Adicionado nova tela de \"Roadmap\" junto à tela de Novidades, mostrando o que está por vir e suas fases de desenvolvimento na aplicação."
+    ]
+},
+  {
   "version":"3.1.2",
     "date":"12-11-2026",
     "highlights":[

@@ -38,7 +38,7 @@ function validateDate(date) {
     if (!date) throw new BadRequestError('Por favor, forneça a data para validação.')
     // validar formato YYYY-MM-DD
     const formatRegex = /^\d{4}-\d{2}-\d{2}$/
-    if (!formatRegex.test(date.trim())) throw new BadRequestError('Informe a data em formato YYYY-MM-DD')
+    if (!formatRegex.test(date.toString().trim())) throw new BadRequestError('Informe a data em formato YYYY-MM-DD')
 
     // validação de mês e dia estão no range correto, considerando os dias máximos dos meses e anos bissextos
     const [year, month, day] = date.split('-')

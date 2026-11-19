@@ -153,20 +153,13 @@ function getRegistersByDay(data) {
         } else if (Object.hasOwn(data[i], 'Crédito')) {
             // alguns minutos podem vir como ìmpar. Nesses casos, pegar o valor de H.Trab - errado
             const date = extractDateFromDay(data[i].Data)
-            const credit = timeToMinutes(data[i].Crédito)
-            if (credit % 2 !== 0) {
-                needsReviewArray.push({
-                    date,
-                    msg: `Erro ao tentar registrar a hora extra do dia ${date}. Favor verificar com o administrador.`
-                })
-            } else {
-                previewArray.push({
-                    type: 'Hora extra',
-                    date,
-                    workedHours: minutesToTime(credit / 2),
-                    isDayOff: false
-                })
-            }
+            previewArray.push({
+                type: 'Hora extra',
+                date,
+                workedHours: minutesToTime(timeToMinutes(data[i].Crédito)), // crédito bruto do ponto; a conversão em horas trabalhadas é feita no confirm
+                creditForm: true,
+                isDayOff: false
+            })
         }
 
         // registros de turno noturno, tanto em dias de escala quanto com hora extra

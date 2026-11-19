@@ -1,0 +1,43 @@
+{
+    "items": [
+    {
+        "title": "Atualização de data vigente de salário-hora",
+        "description": "Permitir ao usuário a alteração da data de vigência do salário-hora, resultando na revaloração dos registros de hora extra e turno noturno do período.",
+        "status": "in-progress"
+    },
+    {
+        "title": "Refatoração da regra de ticket de feriado",
+        "description": "Aplicar regra: turnos noturnos em dias de feriado geram 2 tickets de vale-refeição e um vale-lanche, se o dia de trabalho não for uma folga.",
+        "status": "in-progress"
+    },
+        {
+        "title": "Contra-checker",
+        "description": "Implementar a importação do contracheque e compará-lo com os registros do Hour Flow para verificar se está tudo correto.",
+        "status": "in-progress"
+    },
+    {
+        "title": "Gráficos de turno noturno e vale-refeição",
+        "description": "Implementar os gráficos de turno noturno e vale-refeição em seus respectivos módulos, retirando a informação do dashboard, liberando espaço de tela.",
+        "status": "planned"
+    },
+        {
+        "title": "Inconsistências",
+        "description": "Área destinada a criar relatos de inconsistências de pagamento, podendo ser geradas tanto pelo usuário quanto pelo contra-checker.",
+        "status": "planned"
+    },
+    {
+        "title": "Sobreaviso",
+        "description": "Implementar cálculo do período de sobreaviso e do período de trabalho efetivo. Implementar também o card no dashboard.",
+        "status": "future"
+    },
+    {
+        "title": "Edição de dados inconsistentes de registros do registro automático",
+        "description": "Para cada entrada do registro automático, caso já tenha um registro para aquela data, o sistema irá comparar os valores de horas trabalhas e, se forem divergentes, irá realizar o ajuste para o correto.",
+        "status": "future"
+    },
+    {
+        "title": "Modo privacidade",
+        "description": "Botão para ocultar os valores monetários do sistema.",
+        "status": "future"
+    }]
+}
