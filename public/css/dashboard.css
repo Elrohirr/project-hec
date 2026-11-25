@@ -22,8 +22,12 @@
 }
 
 .module-card:not(.disabled):hover {
-  border-color: var(--teal);
+  border-color: var(--amber);
   transform: translateY(-2px);
+}
+
+[data-theme="dark"] .module-card:not(.disabled):hover {
+  border-color: var(--teal);
 }
 
 .module-card .module-icon {
@@ -77,6 +81,11 @@
 /* Variantes prontas: escolha a cor conforme o status */
 .module-badge--soon {
   background: var(--paper-raised);
+  border: 1px solid var(--amber-ink);
+  color: var(--amber-ink);
+}
+
+[data-theme="dark"] .module-badge--soon {
   border: 1px solid var(--teal);
   color: var(--teal);
 }
@@ -205,6 +214,7 @@
   font-family: var(--font-mono);
   font-size: 1.05rem;
   color: var(--text);
+  font-variant-numeric: tabular-nums;
 }
 
 .receivable-row .hint {
@@ -428,6 +438,10 @@
   font-family: var(--font-mono);
   font-size: 0.95rem;
   margin: 0 0 2px;
+  color: var(--amber-ink);
+}
+
+[data-theme="dark"] .whatsnew-version-title {
   color: var(--teal);
 }
 

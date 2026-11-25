@@ -39,6 +39,11 @@
 }
 
 .field input:focus {
+  outline: 2px solid var(--amber);
+  outline-offset: 1px;
+  border-color: var(--amber);
+}
+[data-theme="dark"] .field input:focus {
   outline: 2px solid var(--teal);
   outline-offset: 1px;
   border-color: var(--teal);
@@ -310,12 +315,14 @@
   font-size: 1rem;
   color: var(--amber-ink);
   margin-left: 20px;
+  font-variant-numeric: tabular-nums;
 }
 
 .summary-card .value {
   font-family: var(--font-mono);
   font-size: 1.4rem;
   color: var(--text);
+  font-variant-numeric: tabular-nums;
 }
 
 .summary-card.total .value {
@@ -397,6 +404,7 @@
 
 .overtime-table td.numeric {
   font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
 }
 
 .overtime-table tbody tr:last-child td {
@@ -1015,18 +1023,19 @@ body.modal-open {
 /* Botão que liga/desliga o modo de exclusão em massa (barra de filtros) */
 .batch-toggle-button {
   margin-left: auto;
-  border-color: var(--teal);
-  color: var(--teal);
+  border-color: var(--amber-ink);
+  color: var(--amber-ink);
+  transition: 0.15s ease;
 }
 
 .batch-toggle-button:hover {
-  border-color: var(--teal);
-  color: var(--teal);
+  border-color: var(--amber);
+  color: var(--amber);
 }
 
 .batch-toggle-button.active {
-  background: var(--teal);
-  border-color: var(--teal);
+  background: var(--amber);
+  border-color: var(--amber);
   color: #fff;
 }
 
@@ -1034,10 +1043,23 @@ body.modal-open {
   color: #fff;
 }
 
+[data-theme="dark"] .batch-toggle-button {
+  border-color: var(--teal);
+  color: var(--teal);
+}
+
+[data-theme="dark"] .batch-toggle-button:hover,
+[data-theme="dark"] .batch-toggle-button.active,
+[data-theme="dark"] .batch-toggle-button.active:hover {
+  border-color: var(--teal);
+  color: #fff;
+}
+
 /* No modo escuro o --teal é claro: o texto do botão ativo precisa ser escuro. */
 [data-theme="dark"] .batch-toggle-button.active,
 [data-theme="dark"] .batch-toggle-button.active:hover {
   color: #0e1a22;
+  background: var(--teal);
 }
 
 .select-column input[type="checkbox"],
@@ -1045,8 +1067,13 @@ body.modal-open {
   width: 16px;
   height: 16px;
   cursor: pointer;
-  accent-color: var(--teal);
+  accent-color: var(--amber);
   vertical-align: middle;
+}
+
+[data-theme="dark"] .select-column input[type="checkbox"],
+[data-theme="dark"] .table-row-select {
+  accent-color: var(--teal);
 }
 
 .table-row-select:disabled {

@@ -22,13 +22,95 @@
   gap: 24px;
 }
 
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border: none;
+  border-radius: var(--radius);
+  background: var(--amber);
+  color: var(--paper-raised);
+  transition: background 0.15s ease;
+}
+
+[data-theme="dark"] .icon-button {
+  color: #0e1a22;
+  background: var(--teal);
+}
+
+.icon-button:hover {
+  background: rgba(179, 67, 43, 0.08);
+}
+
 .icon-button.details {
-  color: var(--teal);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border: none;
+  border-radius: var(--radius);
+  background: var(--amber);
+  color: var(--paper-raised);
+  transition: background 0.15s ease;
   max-height: 50px;
+}
+
+[data-theme="dark"] .icon-button.details {
+  border-color: var(--teal);
+  color: var(--paper-raised);
+  background: var(--teal);
 }
 
 .icon-button.details:hover {
   background: rgba(47, 111, 98, 0.08);
+}
+
+.icon-button.details:hover:not(:disabled) {
+  background: var(--amber-ink);
+}
+
+[data-theme="dark"] .icon-button.details:hover:not(:disabled) {
+  color: var(--paper);
+  background: var(--teal-ink);
+}
+
+.icon-button.details:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.cancel-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border: none;
+  border-radius: var(--radius);
+  background: var(--danger);
+  color: var(--paper);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.cancel-button:hover:not(:disabled) {
+  background: #8f3522;
+}
+
+.cancel-button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+[data-theme="dark"] .cancel-button {
+  color: var(--paper);
+  background: var(--danger);
+}
+
+[data-theme="dark"] .cancel-button:hover:not(:disabled) {
+  background: #8f3522;
 }
 
 /* Modal de entries do banco de horas: precisa mais largura que o padrão */

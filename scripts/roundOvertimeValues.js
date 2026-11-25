@@ -9,8 +9,8 @@
  *
  * Ajuste MONGODB_URI e o path do model conforme o seu projeto.
  */
-
-require('dotenv').config()
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 const mongoose = require('mongoose')
 const Overtime = require('../models/Overtime') // ajuste o path real do model
 

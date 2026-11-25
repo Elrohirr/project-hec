@@ -74,7 +74,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function toISODate(value) {
     if (!value) return '';
-    return String(value).slice(0, 10);
+    const d = value instanceof Date ? value : new Date(value);
+    return d.toISOString().slice(0, 10);
   }
 
   function previewKeyOf(item) {

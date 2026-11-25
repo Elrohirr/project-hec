@@ -64,6 +64,15 @@ document.addEventListener('DOMContentLoaded', () => {
     return formatCurrencyBRL(value);
   }
 
+  // Função para atualizar a cor do dsrValue baseado no tema
+  function atualizarCorDsrValue(tdElement) {
+    if (document.documentElement.getAttribute('data-theme') === 'dark') {
+      tdElement.style.color = 'var(--teal)';
+    } else {
+      tdElement.style.color = 'var(--amber-ink)';
+    }
+  }
+
   // Função para carregar os dados DSR
   async function carregarDSR(ano) {
     setYearInQuery(ano);
@@ -98,34 +107,41 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Célula: referenceDaysInMonth
         const tdReferenceDays = document.createElement('td');
+        tdReferenceDays.className = 'numeric';
         tdReferenceDays.textContent = item.referenceDaysInMonth;
         tr.appendChild(tdReferenceDays);
 
         // Célula: referenceDsrDays
         const tdReferenceDsrDays = document.createElement('td');
+        tdReferenceDsrDays.className = 'numeric';
         tdReferenceDsrDays.textContent = item.referenceDsrDays;
         tr.appendChild(tdReferenceDsrDays);
 
         // Célula: referenceWorkingDays
         const tdReferenceWorkingDays = document.createElement('td');
+        tdReferenceWorkingDays.className = 'numeric';
         tdReferenceWorkingDays.textContent = item.referenceWorkingDays;
         tr.appendChild(tdReferenceWorkingDays);
 
         // Célula: overtimeValue (R$)
         const tdOvertimeValue = document.createElement('td');
+        tdOvertimeValue.className = 'numeric';
         tdOvertimeValue.textContent = formatCurrency(item.overtimeValue);
         tr.appendChild(tdOvertimeValue);
 
         // Célula: nightShiftValue (R$)
         const tdNightShiftValue = document.createElement('td');
+        tdNightShiftValue.className = 'numeric';
         tdNightShiftValue.textContent = formatCurrency(item.nightShiftValue);
         tr.appendChild(tdNightShiftValue);
 
         // Célula: dsrValue (R$) - com destaque visual leve
         const tdDsrValue = document.createElement('td');
+        tdDsrValue.className = 'numeric';
         tdDsrValue.textContent = formatCurrency(item.dsrValue);
         tdDsrValue.style.fontWeight = '500';
-        tdDsrValue.style.color = 'var(--teal)';
+        // Cor baseada no tema: --teal no dark mode, --amber-ink no light mode
+        atualizarCorDsrValue(tdDsrValue);
         tr.appendChild(tdDsrValue);
 
         tableBody.appendChild(tr);

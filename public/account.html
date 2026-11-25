@@ -99,16 +99,20 @@
             <div class="field-row">
               <div class="field">
                 <label for="profile-name">Nome</label>
-                <input type="text" id="profile-name" name="name" autocomplete="given-name" required>
+                <input type="text" id="profile-name" name="name" autocomplete="given-name">
               </div>
               <div class="field">
                 <label for="profile-surname">Sobrenome</label>
-                <input type="text" id="profile-surname" name="surname" autocomplete="family-name" required>
+                <input type="text" id="profile-surname" name="surname" autocomplete="family-name">
               </div>
             </div>
             <div class="field">
               <label for="profile-email">Email</label>
-              <input type="email" id="profile-email" name="email" autocomplete="email" required>
+              <input type="email" id="profile-email" name="email" autocomplete="email">
+            </div>
+            <div class="field">
+              <label for="profile-password">Senha (confirmar atualização)</label>
+              <input type="password" id="profile-password" name="password" autocomplete="current-password" required>
             </div>
             <button type="submit" id="profile-submit-button" class="primary-button">Salvar alterações</button>
           </form>
@@ -166,6 +170,7 @@
   <script src="js/filterState.js"></script>
   <script src="js/theme.js"></script>
   <script src="js/format.js"></script>
+  <script src="js/modal.js"></script>
   <script src="js/wage.js"></script>
   <script src="js/account.js"></script>
 </body>

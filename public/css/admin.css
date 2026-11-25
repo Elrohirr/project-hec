@@ -1,5 +1,9 @@
 /* admin.css — estilos exclusivos da tela de administração (admin.html) */
 .icon-button.activate {
+  color: var(--amber);
+}
+
+[data-theme="dark"] .icon-button.activate {
   color: var(--teal);
 }
 

@@ -82,6 +82,14 @@
         <li>Tem que haver pelo menos um valor de salário-hora registrado por conta. Sem essa informação, a aplicação não realiza nenhum cálculo dos registros.</li>
         <li>Se existir registros de hora extra ou turno noturno que utilizem um salário-hora candidato a ser excluído, a exclusão não acontece. Primeiro, deverá ser apagado os registros que estão usando esse salário primeiro, depois realizar a exclusão.</li>
       </ul>
+      <p>É possível alterar a data de vigência de um salário-hora. Essa ação recalcula os valores de hora extra, turno noturno, compensações e dívidas entre o período 
+        da data antiga de vigência e a nova data de vigência. Há algumas regras para alterar a data do salário-hora:</p>
+        <ul>
+          <li>A nova data de vigência não pode ser uma data futura da data atual. Ex: se hoje é dia 24/11/2026, não é permitido alterar para dia 25/11/2026 em diante.</li>
+          <li>Se houver mais de um salário-hora na conta, as datas limites para alteração do salário-hora são as datas de vigência dos salários-hora vizinhos.</li>
+          <li>Se houver registros de hora extra, turno noturno, compensações ou dívidas entre a data antiga de vigência do salário-hora e a nova data e, esses registros
+          ficarem sem salário-hora vigente, a alteração é bloqueada.</li>
+        </ul>
       <p>Por hora, criar ou apagar um salário-hora não recalcula registros. O sistema mantém uma foto do registro de quando foi feito.</p>
     </section>
 

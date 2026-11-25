@@ -4,7 +4,7 @@ const { createNightShiftService } = require('../services/nightShiftService')
 const { confirmCompensationService, checkForDebts } = require('../services/bankService')
 const { extractTableFromPdf, extractionPDFPipeline, filterEmptyDays, getRegistersByDay, clearEmptyStr, getRefs, getRubrics } = require('../services/importService')
 const { BadRequestError } = require('../errors')
-const { timeToMinutes, minutesToTime } = require('../utils/timeConversion')
+const { timeToMinutes, minutesToTime, intDateFormatToBR } = require('../utils/timeConversion')
 
 // converte o crédito do ponto em minutos realmente trabalhados, considerando a dívida aberta:
 // a parte do crédito que paga dívida vale 1 a 1; o que passar disso vale em dobro
@@ -20,7 +20,7 @@ function buildRejection(register, error) {
         type: register.type,
         date: register.date,
         msg: error.code === 11000
-            ? `Hora extra do dia ${register.date} já cadastrada no sistema.`
+            ? `${register.type} do dia ${intDateFormatToBR(register.date)} já cadastrada no sistema.`
             : error.message
     }
 }
@@ -48,31 +48,20 @@ const confirmPDFImport = async (req, res) => {
         // ------------------------------------------------ cria o registro de compensação - tem precedencia à hora extra ------------------------------------------------------
         if (registers[i].type === 'Compensação') {
             try {
-                const bankCompensation = await confirmCompensationService(userId, registers[i].hoursNeeded, registers[i].date)
-                created.push(bankCompensation)
-            } catch (error) {
-                if (error.code === 11000) {
-                    const errorFields = {
-                        type: registers[i].type,
-                        date: registers[i].date,
-                        msg: `Compensação do dia ${registers[i].date} já cadastrada no sistema.`
-                    }
-                    rejected.push(errorFields)
-                } else {
-                    const errorFields = {
-                        type: registers[i].type,
-                        date: registers[i].date,
-                        msg: error.message
-                    }
-                    rejected.push(errorFields)
+                const result = await confirmCompensationService(userId, registers[i].hoursNeeded, registers[i].date)
+                // confirmCompensationService devolve { bankCompensation } ou { bankCompensation, debt } quando há compensação, ou { debt }
+                // quando não há HE elegível (nenhum documento de compensação criado).
+                if (result && result.bankCompensation) {
+                    created.push(result.bankCompensation)
                 }
+            } catch (error) {
+                rejected.push(buildRejection(registers[i], error))
             }
             // --------------------- cria os registros de horas extra em dias de trabalho normal (prorrogações/antecipações) -----------------------------------------
         } else if (registers[i].type === 'Hora extra' && Object.hasOwn(registers[i], 'creditForm')) {
             try {
                 const debtMinutes = await checkForDebts(userId, registers[i].date)
                 const { workedMinutes, error } = creditToWorkedMinutes(timeToMinutes(registers[i].workedHours), debtMinutes)
-
                 if (error) {
                     rejected.push({
                         type: registers[i].type,
@@ -103,21 +92,7 @@ const confirmPDFImport = async (req, res) => {
                 const overtime = await createOvertimeService(createFields)
                 created.push(overtime)
             } catch (error) {
-                if (error.code === 11000) {
-                    const errorFields = {
-                        type: registers[i].type,
-                        date: registers[i].date,
-                        msg: `Hora extra do dia ${registers[i].date} já cadastrada no sistema.`
-                    }
-                    rejected.push(errorFields)
-                } else {
-                    const errorFields = {
-                        type: registers[i].type,
-                        date: registers[i].date,
-                        msg: error.message
-                    }
-                    rejected.push(errorFields)
-                }
+                rejected.push(buildRejection(registers[i], error))
             }
             // ------------------------------------------------ cria o registro do turno noturno ------------------------------------------------------
         } else if (registers[i].type === 'Turno noturno') {
@@ -130,21 +105,7 @@ const confirmPDFImport = async (req, res) => {
                 const nightShift = await createNightShiftService(createFields)
                 created.push(nightShift)
             } catch (error) {
-                if (error.code === 11000) {
-                    const errorFields = {
-                        type: registers[i].type,
-                        date: registers[i].date,
-                        msg: `Turno noturno do dia ${registers[i].date} já cadastrado no sistema.`
-                    }
-                    rejected.push(errorFields)
-                } else {
-                    const errorFields = {
-                        type: registers[i].type,
-                        date: registers[i].date,
-                        msg: error.message
-                    }
-                    rejected.push(errorFields)
-                }
+                rejected.push(buildRejection(registers[i], error))
             }
             // ------------------------------------------------ para types desconhecidos e que não são type === compensação -> envia ao rejected ------------------------------------------------------
         } else {
@@ -157,32 +118,6 @@ const confirmPDFImport = async (req, res) => {
             rejected.push(unknowFields)
         }
     }
-
-    /*// após criar todos os registros de hora extra e turno noturno, serão criados os registros de banco de horas, se houver
-    const onlyCompensations = registers.filter(day => day.type === 'Compensação')
-    for (let i = 0; i <= onlyCompensations.length - 1; i++) {
-        try {
-            const bankCompensation = await confirmCompensationService(userId, onlyCompensations[i].hoursNeeded, onlyCompensations[i].date)
-            created.push(bankCompensation)
-        } catch (error) {
-            if (error.code === 11000) {
-                const errorFields = {
-                    type: onlyCompensations[i].type,
-                    date: onlyCompensations[i].date,
-                    msg: `Compensação do dia ${onlyCompensations[i].date} já cadastrada no sistema.`
-                }
-                rejected.push(errorFields)
-            } else {
-                const errorFields = {
-                    type: 'Compensação',
-                    date: onlyCompensations[i].date,
-                    msg: error.message
-                }
-                rejected.push(errorFields)
-            }
-        }
-    }*/
-
     res.status(StatusCodes.OK).json({ created, rejected })
 }
 

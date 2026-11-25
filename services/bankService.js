@@ -5,7 +5,6 @@ const DebtBank = require('../models/DebtBank')
 const { getClosedMonthCutoff, tierLoop } = require('../utils/rules')
 const { timeToMinutes, validateDate, validateFormat } = require('../utils/timeConversion')
 const { BadRequestError } = require('../errors')
-const { aggregate } = require('../models/Wage')
 
 async function checkForDebts(userId, date, session) {
     const formattedDate = validateDate(date)

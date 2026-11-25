@@ -65,6 +65,7 @@
 
 .wage-table td.numeric {
   font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
 }
 
 .wage-table tbody tr:last-child td {
@@ -96,6 +97,40 @@
 /* Ações na tabela de salários */
 .wage-actions {
   text-align: center;
+}
+
+.wage-edit {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border: none;
+  border-radius: var(--radius);
+  background: var(--amber);
+  color: var(--paper-raised);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+[data-theme="dark"] .wage-edit {
+  color: #0e1a22;
+  background: var(--teal);
+}
+
+.wage-edit:hover:not(:disabled) {
+  background: var(--amber-ink);
+}
+
+[data-theme="dark"] .wage-edit:hover:not(:disabled) {
+  color: var(--paper);
+  background: var(--teal-ink);
+}
+
+.wage-edit:disabled {
+  opacity: 0.6;
+  cursor: default;
 }
 
 .wage-delete {

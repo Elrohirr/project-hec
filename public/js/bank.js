@@ -126,7 +126,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function buildCancelButton(item) {
     const button = document.createElement('button');
     button.type = 'button';
-    button.className = 'icon-button';
+    button.className = 'icon-button cancel-button';
     button.textContent = 'Cancelar';
     button.addEventListener('click', () => cancelCompensation(item, button));
     return button;
@@ -297,7 +297,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const actions = tr.querySelector('.row-actions');
     const button = document.createElement('button');
     button.type = 'button';
-    button.className = 'icon-button';
+    button.className = 'icon-button cancel-button';
     button.textContent = 'Cancelar';
     button.addEventListener('click', () => cancelDebt(item, button));
     actions.appendChild(button);

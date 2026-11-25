@@ -1,11 +1,6 @@
 {
     "items": [
     {
-        "title": "Atualização de data vigente de salário-hora",
-        "description": "Permitir ao usuário a alteração da data de vigência do salário-hora, resultando na revaloração dos registros de hora extra e turno noturno do período.",
-        "status": "in-progress"
-    },
-    {
         "title": "Refatoração da regra de ticket de feriado",
         "description": "Aplicar regra: turnos noturnos em dias de feriado geram 2 tickets de vale-refeição e um vale-lanche, se o dia de trabalho não for uma folga.",
         "status": "in-progress"
@@ -18,7 +13,7 @@
     {
         "title": "Gráficos de turno noturno e vale-refeição",
         "description": "Implementar os gráficos de turno noturno e vale-refeição em seus respectivos módulos, retirando a informação do dashboard, liberando espaço de tela.",
-        "status": "planned"
+        "status": "in-progress"
     },
         {
         "title": "Inconsistências",

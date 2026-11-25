@@ -140,6 +140,27 @@ function getClosedMonthCutoff(date) {
     return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 2, 1));
 }
 
+const TIERS = ['he50', 'he75', 'he100']
+
+function calcValueLost(usedByTier, values, distributionMinutes) {
+    const byTier = { he50: 0, he75: 0, he100: 0 }
+
+    for (const tier of TIERS) {
+        const minutes = usedByTier?.[tier] || 0
+        const tierMinutes = distributionMinutes?.[tier + 'minutes']
+
+        // sem minutos usados ou faixa vazia: não há o que valorar (evita divisão por zero / NaN)
+        if (minutes <= 0 || !(tierMinutes > 0)) continue
+
+        const valueByMinute = values['value' + capitalize(tier)] / tierMinutes
+        byTier[tier] = roundCurrency(minutes * valueByMinute, 2)
+    }
+
+    const total = roundCurrency(byTier.he50 + byTier.he75 + byTier.he100, 2)
+    return { byTier, total }
+}
+
+// --------------------------- Aloca minutos de banco nas HEs elegíveis, faixa a faixa -----------------------------------------------------
 function tierLoop(minutesNeeded, eligibles) {
     // loop 1 - iteração sobre as horas extras elegíveis até bater a meta de compensação (minutesNeeded)
     let remaining = minutesNeeded
@@ -155,10 +176,9 @@ function tierLoop(minutesNeeded, eligibles) {
 
         // loop 2 - distribuir usedWorked entre os tiers dessa HE
         let usedByTier = { he50: 0, he75: 0, he100: 0 }
-        let valueLostByTier = { he50: 0, he75: 0, he100: 0 }
         let remainingTier = usedWorked
 
-        for (const tier of ['he50', 'he75', 'he100']) {
+        for (const tier of TIERS) {
             if (remainingTier <= 0) break
 
             // definindo o consumo por tier
@@ -168,17 +188,14 @@ function tierLoop(minutesNeeded, eligibles) {
             const usedTier = Math.min(availableTier, remainingTier)
             usedByTier[tier] = usedTier
 
-            // definindo o valor usado por tier
-            const valueByMinute = overtime.values['value' + capitalize(tier)] / overtime.distributionMinutes[tier + 'minutes']
-            valueLostByTier[tier] = roundCurrency(usedByTier[tier] * valueByMinute, 2)
-
             remainingTier = remainingTier - usedTier
         }
 
         if (remainingTier > 0) throw new BadRequestError(`Inconsistência de dados da HE ${overtime._id}: 
         bankedMinutes não corresponde à distribuição de tiers`)
 
-        const valueLostTotal = roundCurrency(valueLostByTier.he50 + valueLostByTier.he75 + valueLostByTier.he100, 2)
+        // definindo o valor usado por tier (função isolada, reaproveitada no recálculo de vigência)
+        const { byTier: valueLostByTier, total: valueLostTotal } = calcValueLost(usedByTier, overtime.values, overtime.distributionMinutes)
 
         entries.push({
             overtimeId: overtime._id,
@@ -200,7 +217,8 @@ function tierLoop(minutesNeeded, eligibles) {
 module.exports = {
     getWageAt, calcDistribution, defineValue, defineNightValue,
     extractPayDate, calcMealVoucher, getLabel,
-    getReceivableDateRange, bankMinutes, getClosedMonthCutoff, tierLoop
+    getReceivableDateRange, bankMinutes, getClosedMonthCutoff,
+    tierLoop, calcValueLost
 }
 
 

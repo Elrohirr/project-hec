@@ -11,7 +11,18 @@
 /* Destaque sutil para o valor do DSR na tabela */
 .dsr-table td:last-child {
   font-weight: 500;
+  color: var(--amber);
+}
+
+[data-theme="dark"] .dsr-table td:last-child {
   color: var(--teal);
+}
+
+/* Valores numéricos da tabela DSR: fonte monoespaçada para evitar
+   confusão entre 0 e 8, com largura uniforme para alinhamento de colunas. */
+.dsr-table td.numeric {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
 }
 
 /* Espaçamento entre cards/sections da página DSR */

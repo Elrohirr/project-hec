@@ -9,6 +9,12 @@
  *   I2  Overtime.compensatedMinutesByTier.*  == Σ entries.minutesUsedByTier.*
  *   I3  Overtime.compensatedValue            == Σ entries.valueLost   (tolerância de centavos)
  *   I4  toda entry aponta para uma Overtime existente do MESMO usuário
+ *   UNIDADES: BankCompensation.entries[].minutesUsed é em minutos de BANCO (2x o trabalhado);
+ *   DebtBank.entriesOvertime[].minutesUsed é em minutos REAIS (metade). minutesUsedByTier é sempre
+ *   em minutos trabalhados. Overtime.compensatedMinutes acumula minutos de banco.
+ *   Absorções: as HEs usadas para abater dívidas (DebtBank.entriesOvertime, qualquer status)
+ *   também entram na soma esperada. Se a absorção não tiver minutesUsedByTier, a HE é listada
+ *   como 'absorção sem detalhe por faixa' e I2/I3 não são verificadas para ela.
  *   I5  entry.valueLostByTier[tier] == minutesUsedByTier[tier] x (values[tier] / distributionMinutes[tier])
  *       (mesma conta do findEligibleOvertimes, com os values ATUAIS da HE)
  *   I6  entry.valueLost == Σ entry.valueLostByTier
@@ -27,6 +33,7 @@ require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 const mongoose = require('mongoose')
 const Overtime = require('../models/Overtime')
 const BankCompensation = require('../models/BankCompensation')
+const DebtBank = require('../models/DebtBank')
 
 const ACTIVE_STATUS = 'active'
 const MAX_LISTED = 100
@@ -54,7 +61,7 @@ const run = async () => {
             }
             const key = e.overtimeId.toString()
             if (!expected.has(key)) {
-                expected.set(key, { minutes: 0, he50: 0, he75: 0, he100: 0, value: 0, entries: 0, owner: comp.createdBy.toString() })
+                expected.set(key, { minutes: 0, he50: 0, he75: 0, he100: 0, value: 0, entries: 0, noTier: false, owner: comp.createdBy.toString() })
             }
             const acc = expected.get(key)
             acc.minutes += n(e.minutesUsed)
@@ -63,6 +70,34 @@ const run = async () => {
             acc.he100 += n(e.minutesUsedByTier?.he100)
             acc.value += n(e.valueLost)
             acc.entries += 1
+        }
+    }
+
+    // Absorções de dívida (hora negativa): também consomem minutos das HEs
+    const debts = await DebtBank.find({}).lean()
+    for (const d of debts) {
+        for (const e of d.entriesOvertime || []) {
+            if (!e.overtimeId) {
+                issues.push(`dívida ${d._id}: entry sem overtimeId`)
+                continue
+            }
+            const key = e.overtimeId.toString()
+            if (!expected.has(key)) {
+                expected.set(key, { minutes: 0, he50: 0, he75: 0, he100: 0, value: 0, entries: 0, noTier: false, owner: d.createdBy.toString() })
+            }
+            const acc = expected.get(key)
+            // DebtBank.entriesOvertime.minutesUsed é em minutos REAIS (1 min real = 1 min de dívida);
+            // Overtime.compensatedMinutes acumula minutos de BANCO (o banco é em dobro): 2x
+            acc.minutes += 2 * n(e.minutesUsed)
+            if (e.minutesUsedByTier) {
+                acc.he50 += n(e.minutesUsedByTier.he50)
+                acc.he75 += n(e.minutesUsedByTier.he75)
+                acc.he100 += n(e.minutesUsedByTier.he100)
+                acc.value += n(e.valueLost)
+                acc.entries += 1
+            } else {
+                acc.noTier = true
+            }
         }
     }
 
@@ -80,6 +115,7 @@ const run = async () => {
 
     const seen = new Set()
     let checked = 0
+    let semDetalhe = 0
     for (const o of overtimes) {
         const key = o._id.toString()
         seen.add(key)
@@ -91,13 +127,17 @@ const run = async () => {
         if (n(o.compensatedMinutes) !== exp.minutes) {
             issues.push(`${tag}: I1 minutos acumulados ${n(o.compensatedMinutes)} x entries ${exp.minutes}`)
         }
-        const t = o.compensatedMinutesByTier || {}
-        if (n(t.he50minutes) !== exp.he50 || n(t.he75minutes) !== exp.he75 || n(t.he100minutes) !== exp.he100) {
-            issues.push(`${tag}: I2 minutos por faixa (${n(t.he50minutes)}/${n(t.he75minutes)}/${n(t.he100minutes)}) x entries (${exp.he50}/${exp.he75}/${exp.he100})`)
-        }
-        const tol = CENT * Math.max(1, exp.entries)
-        if (Math.abs(n(o.compensatedValue) - exp.value) > tol) {
-            issues.push(`${tag}: I3 valor acumulado ${n(o.compensatedValue).toFixed(2)} x entries ${exp.value.toFixed(2)}`)
+        if (exp.noTier) {
+            semDetalhe++
+        } else {
+            const t = o.compensatedMinutesByTier || {}
+            if (n(t.he50minutes) !== exp.he50 || n(t.he75minutes) !== exp.he75 || n(t.he100minutes) !== exp.he100) {
+                issues.push(`${tag}: I2 minutos por faixa (${n(t.he50minutes)}/${n(t.he75minutes)}/${n(t.he100minutes)}) x entries (${exp.he50}/${exp.he75}/${exp.he100})`)
+            }
+            const tol = CENT * Math.max(1, exp.entries)
+            if (Math.abs(n(o.compensatedValue) - exp.value) > tol) {
+                issues.push(`${tag}: I3 valor acumulado ${n(o.compensatedValue).toFixed(2)} x entries ${exp.value.toFixed(2)}`)
+            }
         }
         if (o.createdBy.toString() !== exp.owner) {
             issues.push(`${tag}: I4 dono da HE difere do dono da compensação`)
@@ -109,29 +149,36 @@ const run = async () => {
     }
 
     // I5/I6: o valueLost gravado em cada entry é reproduzível a partir dos minutos usados
-    // e dos values/distribuição ATUAIS da HE (mesma conta do findEligibleOvertimes)
+    // e dos values/distribuição ATUAIS da HE (mesma conta do tierLoop). Vale para as entries
+    // das compensações e para as das dívidas (absorções).
     const byId = new Map(overtimes.map((o) => [o._id.toString(), o]))
     const r2 = (x) => Math.round((x + Number.EPSILON) * 100) / 100
+    const checkEntry = (label, e) => {
+        const o = byId.get(e.overtimeId?.toString())
+        if (!o) return
+        const tag = `${label} / HE ${o._id}`
+        let tierSum = 0
+        for (const tier of ['he50', 'he75', 'he100']) {
+            const mins = n(e.minutesUsedByTier?.[tier])
+            const dist = n(o.distributionMinutes?.[tier + 'minutes'])
+            const gross = n(o.values?.['value' + tier[0].toUpperCase() + tier.slice(1)])
+            const expectedTier = mins > 0 && dist > 0 ? r2(mins * (gross / dist)) : 0
+            const stored = n(e.valueLostByTier?.[tier])
+            tierSum += stored
+            if (Math.abs(stored - expectedTier) > CENT + 1e-9) {
+                issues.push(`${tag}: I5 ${tier} gravado ${stored.toFixed(2)} x recalculado ${expectedTier.toFixed(2)}`)
+            }
+        }
+        if (Math.abs(n(e.valueLost) - tierSum) > CENT + 1e-9) {
+            issues.push(`${tag}: I6 valueLost ${n(e.valueLost).toFixed(2)} x soma das faixas ${tierSum.toFixed(2)}`)
+        }
+    }
     for (const comp of compensations) {
-        for (const e of comp.entries || []) {
-            const o = byId.get(e.overtimeId?.toString())
-            if (!o) continue
-            const tag = `compensação ${comp._id} / HE ${o._id}`
-            let tierSum = 0
-            for (const tier of ['he50', 'he75', 'he100']) {
-                const mins = n(e.minutesUsedByTier?.[tier])
-                const dist = n(o.distributionMinutes?.[tier + 'minutes'])
-                const gross = n(o.values?.['value' + tier[0].toUpperCase() + tier.slice(1)])
-                const expectedTier = mins > 0 && dist > 0 ? r2(mins * (gross / dist)) : 0
-                const stored = n(e.valueLostByTier?.[tier])
-                tierSum += stored
-                if (Math.abs(stored - expectedTier) > CENT + 1e-9) {
-                    issues.push(`${tag}: I5 ${tier} gravado ${stored.toFixed(2)} x recalculado ${expectedTier.toFixed(2)}`)
-                }
-            }
-            if (Math.abs(n(e.valueLost) - tierSum) > CENT + 1e-9) {
-                issues.push(`${tag}: I6 valueLost ${n(e.valueLost).toFixed(2)} x soma das faixas ${tierSum.toFixed(2)}`)
-            }
+        for (const e of comp.entries || []) checkEntry(`compensação ${comp._id}`, e)
+    }
+    for (const d of debts) {
+        for (const e of d.entriesOvertime || []) {
+            if (e.minutesUsedByTier) checkEntry(`dívida ${d._id}`, e)
         }
     }
 
@@ -139,6 +186,8 @@ const run = async () => {
         compensacoesAtivas: compensations.length,
         hesVerificadas: checked,
         hesComEntries: expected.size,
+        hesComAbsorcaoSemDetalhePorFaixa: semDetalhe,
+        dividasVerificadas: debts.length,
         violacoes: issues.length
     })
     console.log('Compensações ativas por source:', bySource)

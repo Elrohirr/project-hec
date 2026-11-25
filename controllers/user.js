@@ -4,40 +4,53 @@ const Overtime = require('../models/Overtime')
 const NightShift = require('../models/NightShift')
 const MealVoucher = require('../models/MealVoucher');
 const BankCompensation = require('../models/BankCompensation')
+const DebtBank = require('../models/DebtBank')
 const Wage = require('../models/Wage')
 const { createWageService } = require('../services/userService')
 const { validateDate } = require('../utils/timeConversion');
-const { defineValue, defineNightValue } = require('../utils/rules');
+const { defineValue, defineNightValue, calcValueLost } = require('../utils/rules');
+const { roundCurrency } = require('../utils/tools')
 const { StatusCodes } = require("http-status-codes");
 const { BadRequestError, NotFoundError } = require("../errors");
 
+async function checkPassword(userId, password) {
+    const userPassword = await User.findById(userId).select('password')
+    const isPasswordCorrect = await userPassword.comparePassword(password)
+    if (!isPasswordCorrect) throw new BadRequestError("Senha atual e senha digitada não conferem.")
+}
+
 // -------------------------------------------- atualização do perfil de um usuário ------------------------------------------
 const updateProfile = async (req, res) => {
-    const { body: { name, surname, email }, user: { userId } } = req;
+    const { body: { name, surname, email, password }, user: { userId } } = req;
+
+    if (!password) throw new BadRequestError('Por favor, digite a senha para prosseguir com a atualização.')
 
     // update parcial
     const updateFields = {};
     if (name !== undefined) {
         const trimmedName = name.trim();
         if (trimmedName === "")
-            throw new BadRequestError("Nome não pode ser vazio");
+            throw new BadRequestError("Nome não pode ser vazio.");
         updateFields.name = trimmedName;
     }
     if (surname !== undefined) {
         const trimmedSurname = surname.trim();
         if (trimmedSurname === "")
-            throw new BadRequestError("Sobrenome não pode ser vazio");
+            throw new BadRequestError("Sobrenome não pode ser vazio.");
         updateFields.surname = trimmedSurname;
     }
     if (email !== undefined) {
         const trimmedEmail = email.trim();
         if (trimmedEmail === "")
-            throw new BadRequestError("E-mail não pode ser vazio");
+            throw new BadRequestError("E-mail não pode ser vazio.");
         updateFields.email = trimmedEmail;
     }
 
     if (Object.keys(updateFields).length === 0)
         throw new BadRequestError("Nenhum campo enviado para atualização");
+
+    // checagem de senha para confirmar atualização de perfil
+    await checkPassword(userId, password)
 
     const user = await User.findByIdAndUpdate(userId, updateFields, {
         returnDocument: "after",
@@ -50,8 +63,8 @@ const updateProfile = async (req, res) => {
 const updatePassword = async (req, res) => {
     const { body: { currentPassword, newPassword }, user: { userId } } = req;
     if (newPassword === "") throw new BadRequestError("Digite uma senha de no mínimo 4 caracteres.")
-    const userPassword = await User.findById(userId).select('password')
 
+    const userPassword = await User.findById(userId).select('password')
     const isPasswordCorrect = await userPassword.comparePassword(currentPassword)
     if (!isPasswordCorrect) throw new BadRequestError("Senha atual e senha digitada não conferem.")
 
@@ -107,7 +120,6 @@ const createHourlyWage = async (req, res) => {
     res.status(StatusCodes.CREATED).json({ msg: 'Novo valor de saláio hora criado. Lembre-se que os registros de hora estra e turno noturno não são editados com essa mudança.', newWage })
 }
 
-
 // -------------------------------------------- atualiza um valor de salário-hora de um usuário (apenas data de vigência) ------------------------------------------
 const updateHourlyWage = async (req, res) => {
     const { body: { effectiveFrom }, params: { id: wageId }, user: { userId } } = req
@@ -157,31 +169,6 @@ const updateHourlyWage = async (req, res) => {
                 .select(['_id', 'wageId', 'wageAtCalculation', 'nightMinutesReduced', 'nightShiftValue'])
                 .session(session).lean()
 
-            // atualiza a data do salário-hora
-            const newWage = await Wage.findOneAndUpdate({ createdBy: userId, _id: wageId },
-                { effectiveFrom: formattedDate }, {
-                returnDocument: 'after',
-                runValidators: true,
-                session
-            })
-
-            // recálculo das overtimes
-            for (const overtime of overtimeRegisters) {
-                if (overtime.compensatedMinutes > 0) throw new BadRequestError('Não é possível editar horas extras que foram compensadas parcialmente ou totalmente. Primeiro, verifique a qual compensação ela está atrelada e cancele a mesma.')
-                const updateFields = {
-                    wageId: wageObject.wageId,
-                    wageAtCalculation: wageObject.wage,
-                    values: defineValue(overtime.distributionMinutes, wageObject.wage)
-                }
-
-                await Overtime.findOneAndUpdate({ createdBy: userId, _id: overtime._id },
-                    updateFields, {
-                    returnDocument: 'after',
-                    runValidators: true,
-                    session
-                })
-            }
-
             // recálculo dos turnos noturnos
             for (const nightShift of nightShiftRegisters) {
                 const updateFields = {
@@ -198,9 +185,106 @@ const updateHourlyWage = async (req, res) => {
                 })
             }
 
+            // recálculo das horas extras
+            let changedOvertimes = []
+            for (const overtime of overtimeRegisters) {
+                const updateFields = {
+                    wageId: wageObject.wageId,
+                    wageAtCalculation: wageObject.wage,
+                    values: defineValue(overtime.distributionMinutes, wageObject.wage)
+                }
+
+                const changed = await Overtime.findOneAndUpdate({ createdBy: userId, _id: overtime._id },
+                    updateFields, {
+                    returnDocument: 'after',
+                    runValidators: true,
+                    session
+                })
+
+                changedOvertimes.push({ id: changed._id, values: changed.values, distributionMinutes: changed.distributionMinutes })
+            }
+
+            // ---------- recálculo das compensações e absorções das HEs revaloradas ----------
+            const changedById = new Map(changedOvertimes.map((o) => [o.id.toString(), o]))
+            const changedIds = changedOvertimes.map((o) => o.id)
+            let recalculatedCompensations = 0
+            let recalculatedDebts = 0
+
+            if (changedIds.length > 0) {
+                // compensações ATIVAS (as canceladas já tiveram o efeito revertido) e dívidas (qualquer status) que tocam as HEs revaloradas
+                const compensations = await BankCompensation.find({
+                    createdBy: userId,
+                    status: 'active',
+                    'entries.overtimeId': { $in: changedIds }
+                }).session(session)
+
+                const debts = await DebtBank.find({
+                    createdBy: userId,
+                    'entriesOvertime.overtimeId': { $in: changedIds }
+                }).session(session)
+
+                // soma do valueLost por HE, considerando TODAS as entries (compensações + absorções)
+                const lostByOvertime = new Map()
+
+                // revalora as entries cuja HE foi revalorada; devolve true se alguma mudou
+                const revalueEntries = (entries) => {
+                    let touched = false
+                    for (const entry of entries) {
+                        const target = changedById.get(entry.overtimeId.toString())
+                        if (!target) continue // entry de HE fora da faixa: não muda e não entra na soma
+
+                        const { byTier, total } = calcValueLost(entry.minutesUsedByTier, target.values, target.distributionMinutes)
+                        entry.valueLostByTier = byTier
+                        entry.valueLost = total
+                        touched = true
+
+                        const key = entry.overtimeId.toString()
+                        lostByOvertime.set(key, (lostByOvertime.get(key) || 0) + total)
+                    }
+                    return touched
+                }
+
+                for (const compensation of compensations) {
+                    if (revalueEntries(compensation.entries)) {
+                        compensation.markModified('entries')
+                        await compensation.save({ session })
+                        recalculatedCompensations++
+                    }
+                }
+
+                for (const debt of debts) {
+                    if (revalueEntries(debt.entriesOvertime)) {
+                        debt.markModified('entriesOvertime')
+                        await debt.save({ session })
+                        recalculatedDebts++
+                    }
+                }
+
+                // compensatedValue de cada HE afetada = soma de todas as entries (idempotente, sem acúmulo de ponto flutuante)
+                for (const [overtimeId, lost] of lostByOvertime) {
+                    await Overtime.updateOne(
+                        { _id: overtimeId, createdBy: userId },
+                        { $set: { compensatedValue: roundCurrency(lost, 2) } },
+                        { session }
+                    )
+                }
+            }
+
+            // atualiza a data do salário-hora
+            const newWage = await Wage.findOneAndUpdate({ createdBy: userId, _id: wageId },
+                { effectiveFrom: formattedDate }, {
+                returnDocument: 'after',
+                runValidators: true,
+                session
+            })
+
             return {
-                msg: `Salário-hora atualizado. ${overtimeRegisters.length} horas extras e ${nightShiftRegisters.length} turnos noturnos atualizados.`,
-                newWage
+                wage: newWage,
+                overtimes: overtimeRegisters.length,
+                nightShifts: nightShiftRegisters.length,
+                compensations: recalculatedCompensations,
+                debts: recalculatedDebts
+
             }
         })
         res.status(StatusCodes.OK).json(result)
@@ -208,7 +292,6 @@ const updateHourlyWage = async (req, res) => {
         await session.endSession()
     }
 }
-
 
 // -------------------------------------------- deleta um valor de salário-hora de um usuário ------------------------------------------
 const deleteHourlyWage = async (req, res) => {

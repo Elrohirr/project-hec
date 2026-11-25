@@ -20,8 +20,13 @@
 
 .import-dropzone:hover,
 .import-dropzone.dragover {
-  border-color: var(--teal);
+  border-color: var(--amber);
   background: rgba(47, 111, 98, 0.06);
+}
+
+[data-theme="dark"] .import-dropzone:hover,
+[data-theme="dark"] .import-dropzone.dragover {
+  border-color: var(--teal);
 }
 
 .import-dropzone:focus-visible {
@@ -104,6 +109,10 @@
 
 .badge.status-created {
   background: rgba(47, 111, 98, 0.12);
+  color: var(--amber);
+}
+
+[data-theme="dark"] .badge.status-created {
   color: var(--teal);
 }
 

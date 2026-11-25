@@ -364,10 +364,10 @@ const Api = {
     });
   },
 
-  async updateProfile({ name, surname, wage, email }) {
+  async updateProfile(data) {
     return this.request('/user/profile', {
       method: 'PATCH',
-      body: JSON.stringify({ name, surname, wage, email })
+      body: JSON.stringify(data)
     });
   },
 
@@ -405,6 +405,13 @@ const Api = {
     });
   },
 
+  /** Atualiza apenas a data de vigência de um salário-hora — PATCH /user/wage/:id. */
+  async updateWage(id, { effectiveFrom }) {
+    return this.request(`/user/wage/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ effectiveFrom })
+    });
+  },
   logout() {
     this.clearSession();
   }

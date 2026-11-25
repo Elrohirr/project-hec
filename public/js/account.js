@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const profileName = document.getElementById('profile-name');
   const profileSurname = document.getElementById('profile-surname');
   const profileEmail = document.getElementById('profile-email');
+  const profilePassword = document.getElementById('profile-password');
   const profileSubmit = document.getElementById('profile-submit-button');
   const profileError = document.getElementById('profile-error-box');
   const profileSuccess = document.getElementById('profile-success-box');
@@ -35,8 +36,6 @@ document.addEventListener('DOMContentLoaded', () => {
     button.textContent = isLoading ? loadingText : baseText;
   }
 
-  
-
   // ---- Carregar dados atuais do perfil (GET /user/profile) ------------------
   function loadProfile() {
     // O backend não expõe mais GET /user/profile.
@@ -45,9 +44,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const nameParts = userName.split(' ');
     profileName.value = nameParts[0] || '';
     profileSurname.value = nameParts.slice(1).join(' ') || '';
-    // Email e salário ficam em branco; o usuário pode digitá-los novamente
-    // e submeter o formulário (PATCH /user/profile faz update parcial).
-    profileEmail.placeholder = 'Informe novamente para atualizar';
   }
 
   // ---- Atualizar perfil (PATCH /user/profile) -------------------------------
@@ -58,25 +54,29 @@ document.addEventListener('DOMContentLoaded', () => {
     const name = profileName.value.trim();
     const surname = profileSurname.value.trim();
     const email = profileEmail.value.trim();
-    const wage = profileWage.value;
+    const password = profilePassword.value;
 
-    if (!name || !surname || !email) {
-      setMessages(profileError, profileSuccess, { error: 'Preencha nome, sobrenome e e-mail.' });
+    if (!name && !surname && !email) {
+      setMessages(profileError, profileSuccess, {
+        error: 'Informe ao menos um dado para atualização: nome, sobrenome ou e-mail.',
+      });
       return;
     }
-    if (wage === '' || Number(wage) <= 0) {
-      setMessages(profileError, profileSuccess, { error: 'Informe um salário-hora válido.' });
-      return;
-    }
+
+    const payload = { password };
+    if (name) payload.name = name;
+    if (surname) payload.surname = surname;
+    if (email) payload.email = email;
 
     setLoading(profileSubmit, true, 'Salvar alterações', 'Salvando…');
     try {
-      const updated = await Api.updateProfile({ name, surname, email, wage: Number(wage) });
+      const updated = await Api.updateProfile(payload);
       // Refletir o nome atualizado no cabeçalho (mesmo formato usado no login/registro)
       Api.setSession({ token: Api.getToken(), user: { name: `${updated.name} ${updated.surname}` } });
       const greeting = document.getElementById('user-greeting');
-      if (greeting) greeting.textContent = `Olá, ${updated.name}`;
+      if (greeting) greeting.textContent = `Olá, ${updated.name} ${updated.surname}`;
       setMessages(profileError, profileSuccess, { success: 'Perfil atualizado com sucesso!' });
+      profilePassword.value = '';
     } catch (err) {
       setMessages(profileError, profileSuccess, { error: err.message || 'Não foi possível atualizar o perfil.' });
     } finally {
