@@ -1,4 +1,12 @@
 [{
+  "version":"3.2.2",
+    "date":"25-11-2026",
+    "highlights":[
+      "Adicionado uma tabela de feriados na página \"DSR\", onde é possível ver as datas e dias da semana que vão cair os feriados do ano selecionado.",
+      "Corrigido um bug onde o card \"A Receber\" do DSR usava o horário do servidor ao invés do horário local, causando erros de cálculo no card."
+    ]
+},
+  {
   "version":"3.2.1",
     "date":"24-11-2026",
     "highlights":[
@@ -14,7 +22,7 @@
   "version":"3.2.0",
     "date":"19-11-2026",
     "highlights":[
-      "Adicionado o módulo de Descanso Semanal Remunerado (DSR).",
+      "Adicionado a página de Descanso Semanal Remunerado (DSR).",
       "Adicionado a funcionalidade de Horas Negativas em \"Banco de Horas\". Se não houver horas no banco ao tentar criar um banco de horas, o sistema emite um alerta. Caso confirme, o sistema criará uma dívida que será abatida com as horas extras após a data do registro.",
       "Atualização da \"Documentação e ajuda\" para refletir as novas funcionalidades.",
       "Adicionado nova tela de \"Roadmap\" junto à tela de Novidades, mostrando o que está por vir e suas fases de desenvolvimento na aplicação."
@@ -63,14 +71,14 @@
     "date":"06-10-2026",
     "highlights":[
       "Corrigido um bug que permitia a criação de dois registros de turno noturno no mesmo dia.",
-      "Incluído a explicação das tags do módulo \"Hora extra\" na documentação."
+      "Incluído a explicação das tags da página \"Hora extra\" na documentação."
     ]
   },
   {
     "version":"2.0.0",
     "date":"29-09-2026",
     "highlights":[
-      "Liberado função de confirmação do módulo \"Banco de Horas\". Agora, além de ser possível simular, é possível confirmar o banco de horas. Em caso de dúvidas, consulte a documentação.",
+      "Liberado função de confirmação da página \"Banco de Horas\". Agora, além de ser possível simular, é possível confirmar o banco de horas. Em caso de dúvidas, consulte a documentação.",
       "Adicionado as horas extras líquidas no card \"Hora extra - Líquido\" em dashboard.",
       "Adicionado o valor numérico de horas pagas tanto nos cards \"Bruto\" e \"Líquido\", mesmo padrão do contracheque.",
       "Pequena alteração no modo escuro: valores antes em amarelo passam a ser verde."
@@ -83,10 +91,10 @@
       "Adicionado o card \"Horas extras - Líquido\" no dashboard, contendo o valor das horas extras descontando o valor compensado com banco de horas.",
       "Alterado filtro seletor dos cards \"A receber\" em dashboard: agora um filtro controla os quatro cards.",
       "Adicionado novo filtro seletor dos cards \"A receber\" em dashboard: mês seguinte, mostrando os recebimentos do próximo mês.",
-      "Alterado UI do módulo \"Banco de Horas\".",
+      "Alterado UI da página \"Banco de Horas\".",
       "Adicionado um card \"Helper\" em dashboard, onde é possível ler sobre a ferramenta e tirar dúvidas sobre sua utilização.",
-      "Substituído a coluna \"Valor Total\" da HE pelo \"Valor Líquido\" no módulo \"Horas Extras\". O valor bruto é mostrado quando o registro contém algum marcardor de compensação, e ao passar o mouse em cima, mostra o valor bruto daquela HE, antes da compensação.",
-      "Adicionado novos marcadores no módulo \"Horas Extras\".",
+      "Substituído a coluna \"Valor Total\" da HE pelo \"Valor Líquido\" na página \"Horas Extras\". O valor bruto é mostrado quando o registro contém algum marcardor de compensação, e ao passar o mouse em cima, mostra o valor bruto daquela HE, antes da compensação.",
+      "Adicionado novos marcadores na página \"Horas Extras\".",
       "Substituído os botões da coluna \"Ações\" por um menu de ações, contendo as funções que já existiam previamente.",
       "Frases motivacionais foi desativado, pode retornar no futuro reformulado."
     ]
@@ -95,15 +103,15 @@
     "version":"1.2.2",
     "date":"14-09-2026",
     "highlights":[
-      "Inserido quatro novos cards no módulo \"Banco de Horas\" para mostrar total compensado por adicional e total."
+      "Inserido quatro novos cards na página \"Banco de Horas\" para mostrar total compensado por adicional e total."
     ]
 },
   {
     "version":"1.2.1",
     "date":"12-09-2026",
     "highlights":[
-      "Ajustado posição do card módulo \"Banco de Horas\".",
-      "Ajustado posição das tabelas no módulo \"Banco de Horas\".",
+      "Ajustado posição do card da página \"Banco de Horas\".",
+      "Ajustado posição das tabelas na página \"Banco de Horas\".",
       "Corrigido bug de undefined pra usuários ainda sem compensações.",
       "Corrigido bug de soma total de horas no banco de horas somando errado."
     ]
@@ -112,7 +120,7 @@
     "version":"1.2.0",
     "date":"11-09-2026",
     "highlights":[
-      "Implementação parcial do módulo Banco de Horas. No atual momento, só é possível simular um banco de horas com bases nos registros de hora extra já cadastrados.",
+      "Implementação parcial da página \"Banco de Horas\". No atual momento, só é possível simular um banco de horas com bases nos registros de hora extra já cadastrados.",
       "Corrigido bug no qual o valor da hora extra do usuário era alterado caso ele atualizasse um registro criado antes de mudar o salário-hora depois de alteração do salário, usando o novo salário como referência."
     ]
   },
@@ -129,7 +137,7 @@
     "version":"1.1.2",
     "date":"25-08-2026",
     "highlights":[
-      "Adicionado opção de alterar total de registros por página no rodapé da tabela em cada módulo.",
+      "Adicionado opção de alterar total de registros por página no rodapé da tabela em cada página.",
       "Filtros feitos nas páginas agora se mantém quando há troca de página.",
       "Modo escuro adicionado, com botão ativar/desativar no cabeçalho (sujeito a melhorias)."
     ]

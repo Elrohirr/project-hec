@@ -164,4 +164,16 @@ const getDSR = async (req, res) => {
     res.status(StatusCodes.OK).json(months);
 };
 
-module.exports = { getDSR }
+const getHolidays = async (req, res) => {
+    const { query: { year } } = req
+
+    const yearNumber = year ? Number(year) : new Date().getFullYear();
+    if (!Number.isInteger(yearNumber)) {
+        throw new BadRequestError("Ano inválido");
+    }
+
+    const holidayTable = createHolidaysTable(year)
+    res.status(StatusCodes.OK).json(holidayTable)
+}
+
+module.exports = { getDSR, getHolidays }

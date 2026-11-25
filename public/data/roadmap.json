@@ -21,6 +21,11 @@
         "status": "planned"
     },
     {
+        "title": "Identificação automática de feriado",
+        "description": "Ao criar um registro de hora extra, o sistema identifica automaticamente se o dia da HE é feriado ou não, não sendo mais necessário informar no momento da criação da extra.",
+        "status": "planned"
+    },
+    {
         "title": "Sobreaviso",
         "description": "Implementar cálculo do período de sobreaviso e do período de trabalho efetivo. Implementar também o card no dashboard.",
         "status": "future"

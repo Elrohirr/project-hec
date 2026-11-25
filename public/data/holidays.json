@@ -8,7 +8,7 @@
     { "mes": 10, "dia": 12, "nome": "Nossa Senhora Aparecida","escopo": "nacional" },
     { "mes": 11, "dia": 2, "nome": "Finados","escopo": "nacional" },
     { "mes": 11, "dia": 15, "nome": "Proclamação da República","escopo": "nacional" },
-    { "mes": 11, "dia": 20, "nome": "Consciência Negra","escopo": "nacional" },
+    { "mes": 11, "dia": 20, "nome": "Consciência Negra","escopo": "nacional", "since":2024 },
     { "mes": 12,  "dia": 25, "nome": "Natal","escopo": "nacional" }
   ],
   "moveis": [

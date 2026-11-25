@@ -56,34 +56,59 @@
       <section class="form-card" aria-labelledby="dsr-heading">
         <div class="receivable-card-head">
           <h3 id="dsr-heading">Tabela DSR - 12 meses</h3>
+          <div class="dsr-tabs" role="tablist" aria-label="Visualização da tabela DSR">
+            <button type="button" class="dsr-tab active" data-tab="dsr" role="tab" aria-selected="true">DSR</button>
+            <button type="button" class="dsr-tab" data-tab="feriados" role="tab" aria-selected="false">Feriados</button>
+          </div>
           <div class="receivables-scope-control chart-controls">
             <label for="dsr-year">Ano</label>
             <select id="dsr-year" class="scope-select" aria-label="Ano da tabela DSR"></select>
           </div>
         </div>
 
-        <div class="table-scroll">
-          <table class="overtime-table dsr-table">
-            <thead>
-              <tr>
-                <th>Mês Pagamento</th>
-                <th>Mês Referência</th>
-                <th>Total de Dias do Mês Ref</th>
-                <th>Total de DSR Mês Ref</th>
-                <th>Total de Dias Úteis do Mês Ref</th>
-                <th>Total Hora Extra (R$)</th>
-                <th>Total Adicional Noturno (R$)</th>
-                <th>Total Valor DSR (R$)</th>
-              </tr>
-            </thead>
-            <tbody id="dsr-table-body">
-              <!-- linhas geradas via JS -->
-            </tbody>
-          </table>
+        <div id="dsr-section">
+          <div class="table-scroll">
+            <table class="overtime-table dsr-table">
+              <thead>
+                <tr>
+                  <th>Mês Pagamento</th>
+                  <th>Mês Referência</th>
+                  <th>Total de Dias do Mês Ref</th>
+                  <th>Total de DSR Mês Ref</th>
+                  <th>Total de Dias Úteis do Mês Ref</th>
+                  <th>Total Hora Extra (R$)</th>
+                  <th>Total Adicional Noturno (R$)</th>
+                  <th>Total Valor DSR (R$)</th>
+                </tr>
+              </thead>
+              <tbody id="dsr-table-body">
+                <!-- linhas geradas via JS -->
+              </tbody>
+            </table>
+          </div>
+
+          <div id="dsr-loading" hidden>Carregando dados…</div>
+          <div id="dsr-error" class="error-box" role="alert" hidden></div>
         </div>
 
-        <div id="dsr-loading" hidden>Carregando dados…</div>
-        <div id="dsr-error" class="error-box" role="alert" hidden></div>
+        <!-- Feriados do ano selecionado -->
+        <div id="feriados-section" hidden>
+          <div class="table-scroll">
+            <table class="overtime-table feriados-table">
+              <thead>
+                <tr>
+                  <th>Data</th>
+                  <th>Dia da semana</th>
+                  <th>Feriado</th>
+                </tr>
+              </thead>
+              <tbody id="feriados-table-body"></tbody>
+            </table>
+          </div>
+          <div id="feriados-loading" hidden>Carregando feriados…</div>
+          <div id="feriados-empty" class="empty-state" hidden>Não há feriados cadastrados para este ano.</div>
+          <div id="feriados-error" class="error-box" role="alert" hidden></div>
+        </div>
       </section>
     </main>
   </div>

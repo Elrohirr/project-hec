@@ -3,6 +3,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const tableBody = document.getElementById('dsr-table-body');
   const loading = document.getElementById('dsr-loading');
   const errorBox = document.getElementById('dsr-error');
+  const dsrSection = document.getElementById('dsr-section');
+  const feriadosSection = document.getElementById('feriados-section');
+  const feriadosTableBody = document.getElementById('feriados-table-body');
+  const feriadosLoading = document.getElementById('feriados-loading');
+  const feriadosEmpty = document.getElementById('feriados-empty');
+  const feriadosError = document.getElementById('feriados-error');
 
   // Mesma janela do gráfico do dashboard: atual+2 até atual-3, em ordem decrescente.
   // Retorna o ano efetivo (o da URL, se estiver na janela; senão, o ano atual).
@@ -155,12 +161,108 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Event listener para seleção de ano
+  // Função para carregar os feriados do ano selecionado
+  async function carregarFeriados(ano) {
+    feriadosLoading.hidden = false;
+    feriadosError.hidden = true;
+    feriadosEmpty.hidden = true;
+    feriadosTableBody.innerHTML = '';
+
+    try {
+      const response = await Api.request(`/dsr/holidays?year=${ano}`);
+      const entries = Object.entries(response || {});
+
+      if (entries.length === 0) {
+        feriadosEmpty.hidden = false;
+        return;
+      }
+
+      // Ordena pela data: YYYY-MM-DD ordena corretamente como string
+      entries.sort((a, b) => a[0].localeCompare(b[0]));
+
+      for (const [dataISO, nome] of entries) {
+        const [anoStr, mesStr, diaStr] = dataISO.split('-');
+        const anoNum = Number(anoStr);
+        const mesNum = Number(mesStr);
+        const diaNum = Number(diaStr);
+
+        // Constrói a data localmente para evitar problemas de fuso horário
+        const dataLocal = new Date(anoNum, mesNum - 1, diaNum);
+        const diaSemana = dataLocal.toLocaleDateString('pt-BR', { weekday: 'long' });
+        const dataBR = `${String(diaNum).padStart(2, '0')}/${String(mesNum).padStart(2, '0')}/${anoStr}`;
+
+        const tr = document.createElement('tr');
+
+        // Célula: Data (com tag discreta quando cair em domingo)
+        const tdData = document.createElement('td');
+        tdData.textContent = dataBR;
+        if (dataLocal.getDay() === 0) {
+          const tagDomingo = document.createElement('span');
+          tagDomingo.className = 'feriado-domingo';
+          tagDomingo.textContent = 'domingo';
+          tdData.appendChild(document.createTextNode(' '));
+          tdData.appendChild(tagDomingo);
+        }
+        tr.appendChild(tdData);
+
+        // Célula: Dia da semana
+        const tdDiaSemana = document.createElement('td');
+        tdDiaSemana.textContent = diaSemana;
+        tr.appendChild(tdDiaSemana);
+
+        // Célula: Nome do feriado
+        const tdNome = document.createElement('td');
+        tdNome.textContent = nome;
+        tr.appendChild(tdNome);
+
+        feriadosTableBody.appendChild(tr);
+      }
+    } catch (err) {
+      console.error('Erro ao carregar feriados:', err);
+      feriadosError.textContent = err.message || 'Não foi possível carregar os feriados. Tente novamente em instantes.';
+      feriadosError.hidden = false;
+    } finally {
+      feriadosLoading.hidden = true;
+    }
+  }
+
+  // Alterna entre as abas DSR e Feriados
+  function alternarAba(nomeAba) {
+    const tabs = document.querySelectorAll('.dsr-tab');
+    tabs.forEach((tab) => {
+      const ativo = tab.dataset.tab === nomeAba;
+      tab.classList.toggle('active', ativo);
+      tab.setAttribute('aria-selected', ativo);
+    });
+
+    if (nomeAba === 'feriados') {
+      dsrSection.hidden = true;
+      feriadosSection.hidden = false;
+    } else {
+      dsrSection.hidden = false;
+      feriadosSection.hidden = true;
+    }
+  }
+
+  // Event listener para seleção de ano (controla ambas as abas)
   yearSelect.addEventListener('change', () => {
-    carregarDSR(Number(yearSelect.value));
+    const ano = Number(yearSelect.value);
+    carregarDSR(ano);
+    carregarFeriados(ano);
+  });
+
+  // Event listeners das abas
+  document.querySelectorAll('.dsr-tab').forEach((tab) => {
+    tab.addEventListener('click', () => {
+      alternarAba(tab.dataset.tab);
+      if (tab.dataset.tab === 'feriados') {
+        carregarFeriados(Number(yearSelect.value));
+      }
+    });
   });
 
   // Carregamento inicial: ler ano da query string ou usar ano atual
   const anoInicial = preencherAnos(getYearFromQuery());
   carregarDSR(anoInicial);
+  carregarFeriados(anoInicial);
 });

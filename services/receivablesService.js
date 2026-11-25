@@ -185,9 +185,19 @@ async function dsrReceivableService(userId, scope) {
         nightShiftReceivableService(userId, scope)
     ])
 
+    // Identifica o mês de referência (mês anterior ao pagamento)
+    const referenceDate = new Date(Date.UTC(
+        scope.$gte.getUTCFullYear(),
+        scope.$gte.getUTCMonth() - 1,
+        1
+    ))
+
+    const referenceYear = referenceDate.getUTCFullYear()
+    const referenceMonth = referenceDate.getUTCMonth()
+
     // pelo range de data, calcula a quantidade de dias de dsr
-    const holidayTable = createHolidaysTable(scope.$gte.getFullYear())
-    const dsr = dsrDays(scope.$gte.getFullYear(), scope.$gte.getMonth(), holidayTable)
+    const holidayTable = createHolidaysTable(referenceYear)
+    const dsr = dsrDays(referenceYear, referenceMonth, holidayTable)
 
     const dsrValue = roundCurrency((overtimeTotals.overtimeNetReceivable + nightShiftTotal.nightShiftValue) / dsr.workingDays * dsr.dsr)
 

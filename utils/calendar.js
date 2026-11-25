@@ -24,6 +24,10 @@ function getEaster(year) {
 function createHolidaysTable(year) {
     const holidays = []
     for (const fixedHoliday of holidaysRelation.fixos) {
+        // para feriados que foram incorporados recentemente, como o Dia da Consciência Negra
+        if (fixedHoliday.since && fixedHoliday.since > year) {
+            continue
+        }
         const fixedHolidayDate = new Date(year, fixedHoliday.mes - 1, fixedHoliday.dia)
         const formattedDate = dateToString(fixedHolidayDate)
         holidays.push({ date: formattedDate, name: fixedHoliday.nome })
@@ -46,8 +50,6 @@ function dsrDays(year, month, holidayTable) {
     while (date.getMonth() === month) {
         // checa se o dia é domingo e feriado, se apenas domingo ou se é feriado
         if (date.getDay() === 0 || Object.hasOwn(holidayTable, dateToString(date))) {
-            dsr++
-        } else if (date.getDay() === 0) {
             dsr++
         }
         date.setDate(date.getDate() + 1)
